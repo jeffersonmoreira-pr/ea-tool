@@ -1,57 +1,57 @@
 # Issue Tracker
 
-This repo uses two work-tracking surfaces because it is a training repo:
+Este repositorio usa duas superficies de rastreamento de trabalho porque e um repositorio de treinamento:
 
-- GitHub Issues for public, shareable work items.
-- `docs/backlog/` for local workshop exercises, examples, and staged practice prompts.
+- GitHub Issues para itens publicos e compartilhaveis.
+- `docs/backlog/` para exercicios locais do workshop, exemplos e prompts de pratica em etapas.
 
-Use GitHub Issues when the work should be visible on the published repository. Use `docs/backlog/` when the work is part of a classroom exercise or a local learning sequence.
+Use GitHub Issues quando o trabalho deve ficar visivel no repositorio publicado. Use `docs/backlog/` quando o trabalho fizer parte de um exercicio de aula ou de uma sequencia local de aprendizado.
 
-## GitHub Repository
+## Repositorio GitHub
 
 `paulocorcino-recv/workshop_v1`
 
-## GitHub Issue Conventions
+## Convencoes Para GitHub Issues
 
-Run `gh` commands from the repo root so the repository is inferred from `git remote -v`.
+Execute comandos `gh` a partir da raiz do repositorio para que o repositorio seja inferido por `git remote -v`.
 
-- Create an issue: `gh issue create --title "..." --body "..."`
-- Read an issue: `gh issue view <number> --comments`
-- List issues: `gh issue list --state open --json number,title,body,labels,comments`
-- Comment on an issue: `gh issue comment <number> --body "..."`
-- Apply a label: `gh issue edit <number> --add-label "..."`
-- Remove a label: `gh issue edit <number> --remove-label "..."`
-- Close an issue: `gh issue close <number> --comment "..."`
+- Criar uma issue: `gh issue create --title "..." --body "..."`
+- Ler uma issue: `gh issue view <number> --comments`
+- Listar issues: `gh issue list --state open --json number,title,body,labels,comments`
+- Comentar em uma issue: `gh issue comment <number> --body "..."`
+- Aplicar uma label: `gh issue edit <number> --add-label "..."`
+- Remover uma label: `gh issue edit <number> --remove-label "..."`
+- Fechar uma issue: `gh issue close <number> --comment "..."`
 
-## Backlog Conventions
+## Convencoes Para Backlog
 
-Use `docs/backlog/` for workshop prompts that should be versioned with the training material.
+Use `docs/backlog/` para prompts de workshop que devem ser versionados com o material de treinamento.
 
-Backlog items should be small enough for one focused agent session. Prefer this shape:
+Itens de backlog devem ser pequenos o suficiente para uma sessao focada com agente. Prefira este formato:
 
 ```markdown
-# 001 - Short Learning Goal
+# 001 - Objetivo Curto De Aprendizado
 
-## Goal
+## Objetivo
 
-What the learner and agent should accomplish.
+O que a pessoa participante e o agente devem realizar.
 
-## Starting Context
+## Contexto Inicial
 
-What files, concepts, or constraints matter.
+Quais arquivos, conceitos ou restricoes importam.
 
-## Done When
+## Pronto Quando
 
-- Observable result 1
-- Observable result 2
-- Verification step
+- Resultado observavel 1
+- Resultado observavel 2
+- Passo de verificacao
 ```
 
-## When a Skill Says "Publish to the Issue Tracker"
+## Quando Uma Skill Diz "Publish To The Issue Tracker"
 
-Create a GitHub issue unless the user explicitly says this is a local workshop exercise. For workshop exercises, create or update a file under `docs/backlog/`.
+Crie uma GitHub Issue, exceto quando o usuario disser explicitamente que isto e um exercicio local do workshop. Para exercicios de workshop, crie ou atualize um arquivo em `docs/backlog/`.
 
-## When a Skill Says "Fetch the Relevant Ticket"
+## Quando Uma Skill Diz "Fetch The Relevant Ticket"
 
-- For GitHub: run `gh issue view <number> --comments`.
-- For local backlog: read the referenced file under `docs/backlog/`.
+- Para GitHub: execute `gh issue view <number> --comments`.
+- Para backlog local: leia o arquivo referenciado em `docs/backlog/`.

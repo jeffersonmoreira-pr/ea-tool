@@ -1,29 +1,29 @@
-# Architecture Decision Records
+# Registros De Decisao De Arquitetura
 
-Use this directory for decisions that future learners and agents should respect.
+Use este diretorio para decisoes que participantes e agentes futuros devem respeitar.
 
-Create an ADR when a decision changes the shape of future work, such as choosing a framework, changing the test strategy, or defining a module boundary.
+Crie um ADR quando uma decisao mudar o formato de trabalhos futuros, como escolher um framework, mudar a estrategia de testes ou definir uma fronteira de modulo.
 
 ## Template
 
 ```markdown
-# ADR-0001 - Decision Title
+# ADR-0001 - Titulo Da Decisao
 
 ## Status
 
-Accepted
+Aceita
 
-## Context
+## Contexto
 
-What situation, constraint, or tradeoff led to this decision?
+Qual situacao, restricao ou tradeoff levou a esta decisao?
 
-## Decision
+## Decisao
 
-What did we decide?
+O que decidimos?
 
-## Consequences
+## Consequencias
 
-- What gets easier?
-- What gets harder?
-- What should future agents remember?
+- O que fica mais facil?
+- O que fica mais dificil?
+- O que agentes futuros devem lembrar?
 ```

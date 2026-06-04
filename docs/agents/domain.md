@@ -1,10 +1,10 @@
-# Domain Docs
+# Docs De Dominio
 
-This repo is a single-context training repo for agentic development. Domain documentation exists to teach agents and learners the same project vocabulary.
+Este repositorio e um ambiente de treinamento com contexto unico para desenvolvimento agentico. A documentacao de dominio existe para ensinar agentes e participantes a usar o mesmo vocabulario do projeto.
 
 ## Layout
 
-Use this layout:
+Use este layout:
 
 ```text
 /
@@ -17,45 +17,45 @@ Use this layout:
 `-- src/
 ```
 
-The repo may not have every file at all times. Missing domain docs are allowed during early exercises.
+O repositorio pode nao ter todos os arquivos o tempo todo. Docs de dominio ausentes sao aceitaveis nos primeiros exercicios.
 
-## Before Exploring
+## Antes De Explorar
 
-Before making design or architecture changes, read:
+Antes de fazer mudancas de design ou arquitetura, leia:
 
 - `AGENTS.md`
 - `docs/agents/*.md`
-- `CONTEXT.md`, if it exists
-- relevant ADRs under `docs/adr/`, if they exist
-- the relevant backlog item under `docs/backlog/`, if the task came from the local backlog
+- `CONTEXT.md`, se existir
+- ADRs relevantes em `docs/adr/`, se existirem
+- o item de backlog relevante em `docs/backlog/`, se a tarefa veio do backlog local
 
-If `CONTEXT.md` or ADRs do not exist, proceed silently and avoid pretending the project has decisions it has not written down.
+Se `CONTEXT.md` ou ADRs nao existirem, prossiga silenciosamente e evite fingir que o projeto tem decisoes que ainda nao foram registradas.
 
-## Context Document
+## Documento De Contexto
 
-Use `CONTEXT.md` for shared vocabulary:
+Use `CONTEXT.md` para vocabulario compartilhado:
 
-- product or workshop goal
-- important domain terms
-- terms to avoid
-- current architecture overview
-- constraints learners should understand
+- objetivo do produto ou do workshop
+- termos importantes de dominio
+- termos a evitar
+- visao geral da arquitetura atual
+- restricoes que participantes devem entender
 
-Agents should reuse the names in `CONTEXT.md` when writing issue titles, tests, refactor proposals, and explanations.
+Agentes devem reutilizar os nomes definidos em `CONTEXT.md` ao escrever titulos de issues, testes, propostas de refatoracao e explicacoes.
 
 ## ADRs
 
-Use `docs/adr/` for decisions that should survive a single exercise.
+Use `docs/adr/` para decisoes que devem sobreviver a um unico exercicio.
 
-Create an ADR when a decision changes how future agents should work, for example:
+Crie um ADR quando uma decisao mudar como agentes futuros devem trabalhar, por exemplo:
 
-- choosing a framework or library
-- changing the testing strategy
-- defining a persistent module boundary
-- deciding how backlog items become GitHub Issues
+- escolher um framework ou biblioteca
+- mudar a estrategia de testes
+- definir uma fronteira persistente de modulo
+- decidir como itens de backlog viram GitHub Issues
 
-Do not create an ADR for tiny implementation details that only matter inside one exercise.
+Nao crie um ADR para detalhes pequenos de implementacao que so importam dentro de um exercicio.
 
-## Workshop Rule
+## Regra Do Workshop
 
-When in doubt, keep the learning trail visible: write down the assumption, the decision, or the verification step in the smallest appropriate place.
+Na duvida, mantenha a trilha de aprendizado visivel: registre a suposicao, a decisao ou o passo de verificacao no menor lugar apropriado.

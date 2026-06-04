@@ -1,25 +1,25 @@
-# Triage Labels
+# Labels De Triagem
 
-The agentic workflow uses five canonical triage roles. This file maps those roles to the labels used in GitHub Issues.
+O fluxo agentico usa cinco papeis canonicos de triagem. Este arquivo mapeia esses papeis para as labels usadas no GitHub Issues.
 
-| Canonical role | GitHub label | Meaning |
+| Papel canonico | Label no GitHub | Significado |
 | --- | --- | --- |
-| `needs-triage` | `needs-triage` | A maintainer or instructor needs to evaluate the issue. |
-| `needs-info` | `needs-info` | The issue is waiting for more information from the reporter or learner. |
-| `ready-for-agent` | `ready-for-agent` | The issue is specific enough for an AI agent to work on with minimal extra context. |
-| `ready-for-human` | `ready-for-human` | The issue needs human judgment, teaching, or implementation. |
-| `wontfix` | `wontfix` | The issue will not be actioned. |
+| `needs-triage` | `needs-triage` | Uma pessoa mantenedora ou instrutora precisa avaliar a issue. |
+| `needs-info` | `needs-info` | A issue esta aguardando mais informacoes de quem reportou ou da pessoa participante. |
+| `ready-for-agent` | `ready-for-agent` | A issue esta especifica o suficiente para um agente de IA trabalhar com pouco contexto extra. |
+| `ready-for-human` | `ready-for-human` | A issue precisa de julgamento humano, ensino ou implementacao humana. |
+| `wontfix` | `wontfix` | A issue nao sera executada. |
 
-## Workshop Usage
+## Uso No Workshop
 
-For training, labels are also a teaching tool:
+No treinamento, labels tambem sao uma ferramenta didatica:
 
-- Use `needs-triage` to practice turning vague requests into clear tasks.
-- Use `needs-info` when the agent should ask for missing context.
-- Use `ready-for-agent` only when the issue has a clear goal, constraints, and done criteria.
-- Use `ready-for-human` when the lesson requires human design judgment.
-- Use `wontfix` to practice closing work respectfully with a reason.
+- Use `needs-triage` para praticar a transformacao de pedidos vagos em tarefas claras.
+- Use `needs-info` quando o agente deve pedir contexto faltante.
+- Use `ready-for-agent` apenas quando a issue tiver objetivo, restricoes e criterios de pronto claros.
+- Use `ready-for-human` quando a aula exigir julgamento humano de design.
+- Use `wontfix` para praticar o fechamento respeitoso de trabalho com uma justificativa.
 
-## Rule for Agents
+## Regra Para Agentes
 
-Do not invent new triage labels without being asked. If a label is missing in GitHub, tell the user and suggest creating the canonical label.
+Nao invente novas labels de triagem sem pedido explicito. Se uma label estiver faltando no GitHub, informe o usuario e sugira criar a label canonica.
