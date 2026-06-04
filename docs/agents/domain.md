@@ -52,7 +52,7 @@ Crie um ADR quando uma decisao mudar como agentes futuros devem trabalhar, por e
 - escolher um framework ou biblioteca
 - mudar a estrategia de testes
 - definir uma fronteira persistente de modulo
-- decidir como itens de backlog viram GitHub Issues
+- decidir como itens de backlog viram trabalho local versionado
 
 Nao crie um ADR para detalhes pequenos de implementacao que so importam dentro de um exercicio.
 

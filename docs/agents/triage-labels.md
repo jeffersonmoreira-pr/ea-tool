@@ -1,8 +1,8 @@
 # Labels De Triagem
 
-O fluxo agentico usa cinco papeis canonicos de triagem. Este arquivo mapeia esses papeis para as labels usadas no GitHub Issues.
+O fluxo agentico usa cinco papeis canonicos de triagem. Este arquivo mapeia esses papeis para os metadados usados nos itens locais de backlog.
 
-| Papel canonico | Label no GitHub | Significado |
+| Papel canonico | Metadado local | Significado |
 | --- | --- | --- |
 | `needs-triage` | `needs-triage` | Uma pessoa mantenedora ou instrutora precisa avaliar a issue. |
 | `needs-info` | `needs-info` | A issue esta aguardando mais informacoes de quem reportou ou da pessoa participante. |
@@ -22,4 +22,4 @@ No treinamento, labels tambem sao uma ferramenta didatica:
 
 ## Regra Para Agentes
 
-Nao invente novas labels de triagem sem pedido explicito. Se uma label estiver faltando no GitHub, informe o usuario e sugira criar a label canonica.
+Nao invente novas labels de triagem sem pedido explicito. Se um item local precisar de triagem, use um dos papeis canonicos acima.
