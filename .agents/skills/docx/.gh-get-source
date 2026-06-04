@@ -1,0 +1,7 @@
+source_url=https://github.com/anthropics/skills/tree/main/skills/docx
+owner=anthropics
+repo=skills
+branch=main
+folder_path=skills/docx
+commit=da20c92503b2e8ff1cf28ca81a0df4673debdbf7
+updated_at=2026-06-04T10:35:28-03:00
