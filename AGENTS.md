@@ -7,7 +7,7 @@ Estas regras sao intencionalmente leves. Adapte os detalhes especificos do proje
 ## O Que Adaptar Por Projeto
 
 - Objetivo do projeto e vocabulario de dominio: atualize `CONTEXT.md` quando ele existir.
-- Rastreamento de trabalho: atualize `docs/agents/issue-tracker.md` se o repositorio deixar de usar GitHub Issues ou `docs/backlog/`.
+- Rastreamento de trabalho: atualize `docs/agents/issue-tracker.md` se o repositorio deixar de usar `docs/backlog/`.
 - Labels de triagem: atualize `docs/agents/triage-labels.md` se o projeto usar labels diferentes.
 - Decisoes de arquitetura: adicione ADRs em `docs/adr/` quando decisoes precisarem orientar trabalhos futuros.
 - Convencoes do backlog: atualize `docs/backlog/README.md` quando os exercicios do workshop precisarem de outro formato.
@@ -33,11 +33,11 @@ Estas regras sao intencionalmente leves. Adapte os detalhes especificos do proje
 
 ### Issue Tracker
 
-Itens publicos e compartilhaveis vivem no GitHub Issues de `paulocorcino-recv/workshop_v1`; exercicios locais do workshop podem viver em `docs/backlog/`. Veja `docs/agents/issue-tracker.md`.
+Itens de trabalho, PRDs, exercicios e prompts de pratica vivem localmente em `docs/backlog/`. Veja `docs/agents/issue-tracker.md`.
 
 ### Labels De Triagem
 
-Este repositorio usa o vocabulario padrao de labels de triagem das skills Matt Pocock para GitHub Issues. Veja `docs/agents/triage-labels.md`.
+Este repositorio usa o vocabulario padrao de labels de triagem das skills Matt Pocock como metadados locais de backlog. Veja `docs/agents/triage-labels.md`.
 
 ### Docs De Dominio
 

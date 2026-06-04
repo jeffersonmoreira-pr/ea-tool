@@ -1,8 +1,8 @@
 # Backlog Do Workshop
 
-Use este diretorio para exercicios locais do workshop, prompts de aprendizado em etapas e issues locais geradas por `to-issues`.
+Use este diretorio para exercicios locais do workshop, prompts de aprendizado em etapas, PRDs e issues locais geradas por skills agenticas.
 
-Prefira GitHub Issues para itens publicos de trabalho. Prefira este diretorio para exercicios que fazem parte do proprio material de treinamento ou para rodadas em que participantes devem inspecionar arquivos de issue no Git.
+Use este diretorio como fonte local de rastreamento de trabalho. O objetivo e manter todo o material inspecionavel no Git e independente de servicos externos.
 
 ## Nome Dos Arquivos
 
@@ -79,4 +79,3 @@ Como a pessoa participante ou o agente deve provar que a fatia funciona.
 - Marque issues como HITL quando exigirem decisao humana, revisao ou ensino.
 - Publique bloqueadores primeiro para que issues posteriores possam referencia-los.
 - Mantenha cada issue pequena o suficiente para uma sessao focada com agente.
-- Se estiver usando GitHub Issues em vez de arquivos locais, aplique a label `needs-triage`.
