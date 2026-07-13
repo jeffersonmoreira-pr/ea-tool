@@ -139,6 +139,73 @@ test("catalog persists application name changes in browser storage", () => {
   assert.equal(reloaded.applications[0].name, "Revenue Hub Updated");
 });
 
+test("vendor CRUD enforces internal status, unique names, and referenced delete blocks", () => {
+  const catalog = catalogApi.createInitialCatalog();
+
+  const vendor = catalogApi.createVendor(catalog, { name: "Apex Labs", isInternal: true });
+  assert.deepEqual(vendor, {
+    id: "vendor-apex-labs",
+    name: "Apex Labs",
+    isInternal: true,
+  });
+  assert.equal(catalogApi.getVendorDisplayType(vendor), "Internal Vendor");
+  assert.throws(
+    () => catalogApi.createVendor(catalog, { name: " apex labs ", isInternal: false }),
+    /Vendor name must be unique\./,
+  );
+
+  const renamed = catalogApi.updateVendor(catalog, vendor.id, {
+    name: "Apex Labs Renamed",
+    isInternal: true,
+  });
+  assert.equal(renamed.name, "Apex Labs Renamed");
+  catalogApi.deleteVendor(catalog, vendor.id);
+  assert.equal(catalog.vendors.some((candidate) => candidate.name === "Apex Labs Renamed"), false);
+  assert.throws(() => catalogApi.deleteVendor(catalog, "vendor-northstar"), {
+    message: "Vendor is in use by Application: Revenue Hub.",
+  });
+});
+
+test("department CRUD enforces unique names and referenced delete blocks", () => {
+  const catalog = catalogApi.createInitialCatalog();
+
+  const department = catalogApi.createDepartment(catalog, { name: "Legal" });
+  assert.deepEqual(department, { id: "dept-legal", name: "Legal" });
+  assert.throws(
+    () => catalogApi.createDepartment(catalog, { name: " legal " }),
+    /Department name must be unique\./,
+  );
+
+  const renamed = catalogApi.updateDepartment(catalog, department.id, { name: "Legal Affairs" });
+  assert.equal(renamed.name, "Legal Affairs");
+  catalogApi.deleteDepartment(catalog, department.id);
+  assert.equal(catalog.departments.some((candidate) => candidate.name === "Legal Affairs"), false);
+  assert.throws(() => catalogApi.deleteDepartment(catalog, "dept-finance"), {
+    message: "Department is in use by Application: Revenue Hub.",
+  });
+});
+
+test("business area CRUD enforces unique names and referenced delete blocks", () => {
+  const catalog = catalogApi.createInitialCatalog();
+
+  const businessArea = catalogApi.createBusinessArea(catalog, { name: "Customer Growth" });
+  assert.deepEqual(businessArea, { id: "area-customer-growth", name: "Customer Growth" });
+  assert.throws(
+    () => catalogApi.createBusinessArea(catalog, { name: " customer growth " }),
+    /Business Area name must be unique\./,
+  );
+
+  const renamed = catalogApi.updateBusinessArea(catalog, businessArea.id, {
+    name: "Customer Growth Strategy",
+  });
+  assert.equal(renamed.name, "Customer Growth Strategy");
+  catalogApi.deleteBusinessArea(catalog, businessArea.id);
+  assert.equal(catalog.businessAreas.some((candidate) => candidate.name === "Customer Growth Strategy"), false);
+  assert.throws(() => catalogApi.deleteBusinessArea(catalog, "area-revenue"), {
+    message: "Business Area is in use by Application: Revenue Hub.",
+  });
+});
+
 test("navigation sections match the MVP catalog areas", () => {
   assert.deepEqual(catalogApi.getNavigationSections().map((section) => section.label), [
     "Executive Overview",
