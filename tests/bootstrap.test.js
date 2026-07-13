@@ -37,6 +37,14 @@ function collectText(node) {
   return `${own} ${childText}`.trim();
 }
 
+function findAll(node, predicate) {
+  const matches = predicate(node) ? [node] : [];
+  for (const child of node.children || []) {
+    matches.push(...findAll(child, predicate));
+  }
+  return matches;
+}
+
 function createElement(tagName, ownerDocument) {
   return {
     tagName: tagName.toUpperCase(),
@@ -48,6 +56,7 @@ function createElement(tagName, ownerDocument) {
     textContent: "",
     value: "",
     type: "",
+    checked: false,
     id: "",
     name: "",
     append(...nodes) {
@@ -236,4 +245,40 @@ test("browser adapter renders the initial catalog shell without network calls", 
   assert.match(text, /Revenue Hub/);
   assert.match(text, /Vendors/);
   assert.equal(networkCalls.length, 0);
+});
+
+test("browser adapter manages vendor CRUD with persisted create and rendered block messages", () => {
+  const document = createDocument();
+  const storage = createMemoryStorage();
+  const rendered = appApi.renderApp({ document, storage, catalogApi });
+
+  let vendorsSection = document.getElementById("vendors");
+  const createForm = findAll(vendorsSection, (node) => node.tagName === "FORM")[0];
+  const createInputs = findAll(createForm, (node) => node.tagName === "INPUT");
+  createInputs.find((input) => input.name === "name").value = "Apex Labs";
+  createInputs.find((input) => input.name === "isInternal").checked = true;
+  createForm.onsubmit({ preventDefault() {} });
+
+  const stored = JSON.parse(storage.snapshot()[catalogApi.CATALOG_STORAGE_KEY]);
+  const storedVendor = stored.vendors.find((vendor) => vendor.name === "Apex Labs");
+  assert.equal(storedVendor.isInternal, true);
+  assert.match(collectText(rendered.root), /Apex Labs/);
+  assert.match(collectText(rendered.root), /Internal Vendor/);
+
+  vendorsSection = document.getElementById("vendors");
+  const duplicateForm = findAll(vendorsSection, (node) => node.tagName === "FORM")[0];
+  const duplicateInputs = findAll(duplicateForm, (node) => node.tagName === "INPUT");
+  duplicateInputs.find((input) => input.name === "name").value = "Apex Labs";
+  duplicateInputs.find((input) => input.name === "isInternal").checked = true;
+  duplicateForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(vendorsSection), /Vendor name must be unique\./);
+
+  const northstarItem = findAll(vendorsSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Northstar Software"),
+  );
+  const deleteButton = findAll(northstarItem, (node) => node.tagName === "BUTTON").find(
+    (button) => button.textContent === "Delete",
+  );
+  deleteButton.onclick();
+  assert.match(collectText(vendorsSection), /Vendor is in use by Application: Revenue Hub\./);
 });
