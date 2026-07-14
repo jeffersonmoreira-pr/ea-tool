@@ -226,6 +226,22 @@
     );
   }
 
+  function appendApplicationInformationStatus(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Information Status",
+      "informationStatus",
+      [
+        { id: "Draft", name: "Draft" },
+        { id: "Verified", name: "Verified" },
+        { id: "Needs Review", name: "Needs Review" },
+      ],
+      selectedId || "Draft",
+      prefix,
+    );
+  }
+
   function getApplicationFormInput(form, name) {
     return findAllFormFields(form).find((field) => field.name === name);
   }
@@ -261,6 +277,8 @@
       criticality: getApplicationFormInput(form, "criticality").value,
       personalDataHandling: getApplicationFormInput(form, "personalDataHandling").value,
       sensitiveBusinessDataHandling: getApplicationFormInput(form, "sensitiveBusinessDataHandling").value,
+      informationStatus: getApplicationFormInput(form, "informationStatus").value,
+      lastVerificationDate: getApplicationFormInput(form, "lastVerificationDate").value,
     };
   }
 
@@ -324,6 +342,11 @@
     appendApplicationCriticality(document, form, application.criticality, prefix);
     appendApplicationPersonalDataHandling(document, form, application.personalDataHandling, prefix);
     appendApplicationSensitiveBusinessDataHandling(document, form, application.sensitiveBusinessDataHandling, prefix);
+    appendApplicationInformationStatus(document, form, application.informationStatus, prefix);
+    appendApplicationField(document, form, "Last Verification Date", "lastVerificationDate", application.lastVerificationDate, {
+      prefix,
+      type: "date",
+    });
   }
 
   function renderNavigation(document, catalogApi) {
@@ -416,6 +439,8 @@
         criticality: "medium",
         personalDataHandling: "Unknown",
         sensitiveBusinessDataHandling: "Unknown",
+        informationStatus: "Draft",
+        lastVerificationDate: "",
       },
       "application-create",
     );
@@ -465,6 +490,8 @@
         ["Criticality", application.criticality],
         ["Personal Data Handling", application.personalDataHandling],
         ["Sensitive Business Data Handling", application.sensitiveBusinessDataHandling],
+        ["Information Status", application.informationStatus],
+        ["Last Verification Date", application.lastVerificationDate || "Not set"],
       ]) {
         appendTextBlock(document, meta, "dt", "meta-list__term", term);
         appendTextBlock(document, meta, "dd", "meta-list__value", description);

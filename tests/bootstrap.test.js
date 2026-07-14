@@ -871,10 +871,18 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "criticality").value = "high";
   findField(createForm, "personalDataHandling").value = "Yes";
   findField(createForm, "sensitiveBusinessDataHandling").value = "Unknown";
+  assert.ok(findField(createForm, "informationStatus"));
+  assert.ok(findField(createForm, "lastVerificationDate"));
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Planned Date is required for planned Applications\./);
 
   findField(createForm, "plannedDate").value = "2026-08-01";
+  findField(createForm, "informationStatus").value = "Verified";
+  findField(createForm, "lastVerificationDate").value = "";
+  createForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(applicationsSection), /Last Verification Date is required for Verified Applications\./);
+
+  findField(createForm, "lastVerificationDate").value = "2026-07-14";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Dispatch Console/);
   assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
@@ -888,6 +896,10 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(rendered.root), /Criticality/);
   assert.match(collectText(rendered.root), /Personal Data Handling/);
   assert.match(collectText(rendered.root), /Sensitive Business Data Handling/);
+  assert.match(collectText(rendered.root), /Information Status/);
+  assert.match(collectText(rendered.root), /Verified/);
+  assert.match(collectText(rendered.root), /Last Verification Date/);
+  assert.match(collectText(rendered.root), /2026-07-14/);
 
   applicationsSection = document.getElementById("applications");
   createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -950,6 +962,10 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(reloadedDispatchText, /Criticality/);
   assert.match(reloadedDispatchText, /Personal Data Handling/);
   assert.match(reloadedDispatchText, /Sensitive Business Data Handling/);
+  assert.match(reloadedDispatchText, /Information Status/);
+  assert.match(reloadedDispatchText, /Verified/);
+  assert.match(reloadedDispatchText, /Last Verification Date/);
+  assert.match(reloadedDispatchText, /2026-07-14/);
   assert.match(reloadedDispatchText, /System of Innovation/);
   assert.match(reloadedDispatchText, /high/);
   assert.match(reloadedDispatchText, /Yes/);
