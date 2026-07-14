@@ -49,6 +49,8 @@
         departmentId: "dept-finance",
         businessAreaId: "area-revenue",
         lifecycleStatus: "active",
+        plannedDate: "",
+        retirementDate: "",
         pace: "system of record",
         criticality: "high",
         informationStatus: "verified",
@@ -68,6 +70,8 @@
         departmentId: "dept-operations",
         businessAreaId: "area-field",
         lifecycleStatus: "active",
+        plannedDate: "",
+        retirementDate: "",
         pace: "system of differentiation",
         criticality: "high",
         informationStatus: "draft",
@@ -87,6 +91,8 @@
         departmentId: "dept-people",
         businessAreaId: "area-workforce",
         lifecycleStatus: "active",
+        plannedDate: "",
+        retirementDate: "",
         pace: "system of record",
         criticality: "medium",
         informationStatus: "needs review",
@@ -106,6 +112,8 @@
         departmentId: "dept-finance",
         businessAreaId: "area-revenue",
         lifecycleStatus: "planned",
+        plannedDate: "2026-08-01",
+        retirementDate: "",
         pace: "system of innovation",
         criticality: "medium",
         informationStatus: "draft",
@@ -144,6 +152,7 @@
   }
 
   function normalizeApplication(application) {
+    const lifecycleStatus = normalizeLifecycleStatus(application.lifecycleStatus);
     return {
       ...clone(application),
       aliases: normalizeAliases(application.aliases),
@@ -153,6 +162,9 @@
       businessOwnerEmail: normalizeText(application.businessOwnerEmail),
       techOwnerName: normalizeText(application.techOwnerName),
       techOwnerEmail: normalizeText(application.techOwnerEmail),
+      lifecycleStatus,
+      plannedDate: normalizeText(application.plannedDate),
+      retirementDate: normalizeText(application.retirementDate),
     };
   }
 
@@ -267,6 +279,31 @@
     return nextId;
   }
 
+  function normalizeLifecycleStatus(value) {
+    const lifecycleStatus = normalizeText(value) || "active";
+    if (!["planned", "active", "retiring", "retired"].includes(lifecycleStatus)) {
+      throw new Error("Lifecycle Status must be planned, active, retiring, or retired.");
+    }
+    return lifecycleStatus;
+  }
+
+  function normalizeLifecycleInput(input) {
+    const lifecycleStatus = normalizeLifecycleStatus(input && input.lifecycleStatus);
+    const plannedDate = normalizeText(input && input.plannedDate);
+    const retirementDate = normalizeText(input && input.retirementDate);
+    if (lifecycleStatus === "planned" && !plannedDate) {
+      throw new Error("Planned Date is required for planned Applications.");
+    }
+    if (["retiring", "retired"].includes(lifecycleStatus) && !retirementDate) {
+      throw new Error(`Retirement Date is required for ${lifecycleStatus} Applications.`);
+    }
+    return {
+      lifecycleStatus,
+      plannedDate,
+      retirementDate,
+    };
+  }
+
   function normalizeApplicationInput(catalog, input, currentId) {
     const name = normalizeName(input && input.name, "Application name is required.");
     assertUniqueName(catalog.applications, name, currentId, "Application name must be unique.");
@@ -287,6 +324,7 @@
       vendorId: requireReference(catalog.vendors, input && input.vendorId, "Vendor"),
       departmentId: requireReference(catalog.departments, input && input.departmentId, "Department"),
       businessAreaId: requireReference(catalog.businessAreas, input && input.businessAreaId, "Business Area"),
+      ...normalizeLifecycleInput(input),
     };
   }
 
@@ -321,7 +359,6 @@
     const application = {
       id: createId(catalog.applications, "app", values.name),
       ...values,
-      lifecycleStatus: normalizeText(input && input.lifecycleStatus) || "active",
       pace: normalizeText(input && input.pace) || "system of record",
       criticality: normalizeText(input && input.criticality) || "medium",
       informationStatus: normalizeText(input && input.informationStatus) || "draft",
@@ -334,7 +371,6 @@
     const application = findRecord(catalog.applications, applicationId, "Application");
     const values = normalizeApplicationInput(catalog, input, applicationId);
     Object.assign(application, values, {
-      lifecycleStatus: normalizeText(input && input.lifecycleStatus) || application.lifecycleStatus,
       pace: normalizeText(input && input.pace) || application.pace,
       criticality: normalizeText(input && input.criticality) || application.criticality,
       informationStatus: normalizeText(input && input.informationStatus) || application.informationStatus,

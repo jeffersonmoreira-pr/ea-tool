@@ -286,6 +286,78 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
   assert.equal(application.vendorId, "vendor-internal");
   assert.equal(application.departmentId, "dept-operations");
   assert.equal(application.businessAreaId, "area-field");
+  assert.equal(application.lifecycleStatus, "active");
+  assert.equal(application.plannedDate, "");
+  assert.equal(application.retirementDate, "");
+
+  const lifecycleApplicationInput = {
+    description: "Lifecycle validation application.",
+    businessOwnerName: "Maya Chen",
+    techOwnerName: "Rui Costa",
+    vendorId: "vendor-internal",
+    departmentId: "dept-operations",
+    businessAreaId: "area-field",
+  };
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Planned Missing Date",
+        lifecycleStatus: "planned",
+      }),
+    { message: "Planned Date is required for planned Applications." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Retiring Missing Date",
+        lifecycleStatus: "retiring",
+      }),
+    { message: "Retirement Date is required for retiring Applications." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Retired Missing Date",
+        lifecycleStatus: "retired",
+      }),
+    { message: "Retirement Date is required for retired Applications." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Invalid Lifecycle",
+        lifecycleStatus: "sunset",
+      }),
+    { message: "Lifecycle Status must be planned, active, retiring, or retired." },
+  );
+  const plannedApplication = catalogApi.createApplication(catalog, {
+    ...lifecycleApplicationInput,
+    name: "Planned Dispatch Console",
+    lifecycleStatus: "planned",
+    plannedDate: "2026-08-01",
+  });
+  const retiringApplication = catalogApi.createApplication(catalog, {
+    ...lifecycleApplicationInput,
+    name: "Retiring Dispatch Console",
+    lifecycleStatus: "retiring",
+    retirementDate: "2026-12-31",
+  });
+  const retiredApplication = catalogApi.createApplication(catalog, {
+    ...lifecycleApplicationInput,
+    name: "Retired Dispatch Console",
+    lifecycleStatus: "retired",
+    retirementDate: "2025-12-31",
+  });
+  assert.deepEqual(
+    [plannedApplication, application, retiringApplication, retiredApplication].map(
+      (candidate) => candidate.lifecycleStatus,
+    ),
+    ["planned", "active", "retiring", "retired"],
+  );
 
   assert.throws(
     () =>
@@ -422,9 +494,16 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "vendorId").value = "vendor-internal";
   findField(createForm, "departmentId").value = "dept-operations";
   findField(createForm, "businessAreaId").value = "area-field";
+  findField(createForm, "lifecycleStatus").value = "planned";
+  createForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(applicationsSection), /Planned Date is required for planned Applications\./);
+
+  findField(createForm, "plannedDate").value = "2026-08-01";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Dispatch Console/);
   assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
+  assert.match(collectText(rendered.root), /planned/);
+  assert.match(collectText(rendered.root), /2026-08-01/);
 
   applicationsSection = document.getElementById("applications");
   createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -435,6 +514,7 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "vendorId").value = "vendor-internal";
   findField(createForm, "departmentId").value = "dept-operations";
   findField(createForm, "businessAreaId").value = "area-field";
+  findField(createForm, "lifecycleStatus").value = "active";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Application name must be unique\./);
 
@@ -445,6 +525,12 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(editForm, "aliases").value = "Dispatch Desk";
   findField(editForm, "businessOwnerName").value = "Ana Silva";
   findField(editForm, "techOwnerName").value = "Theo Ramos";
+  findField(editForm, "lifecycleStatus").value = "retired";
+  findField(editForm, "retirementDate").value = "";
+  editForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(applicationsSection), /Retirement Date is required for retired Applications\./);
+
+  findField(editForm, "retirementDate").value = "2025-12-31";
   editForm.onsubmit({ preventDefault() {} });
 
   const reloadedDocument = createDocument();
@@ -456,6 +542,8 @@ test("browser adapter manages application create edit delete with persistence", 
   });
   assert.match(collectText(reloaded.root), /Ana Silva/);
   assert.match(collectText(reloaded.root), /Dispatch Desk/);
+  assert.match(collectText(reloaded.root), /retired/);
+  assert.match(collectText(reloaded.root), /2025-12-31/);
 
   const reloadedApplications = reloadedDocument.getElementById("applications");
   const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>

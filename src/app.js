@@ -110,6 +110,23 @@
     return select;
   }
 
+  function appendApplicationLifecycleStatus(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Lifecycle Status",
+      "lifecycleStatus",
+      [
+        { id: "planned", name: "planned" },
+        { id: "active", name: "active" },
+        { id: "retiring", name: "retiring" },
+        { id: "retired", name: "retired" },
+      ],
+      selectedId || "active",
+      prefix,
+    );
+  }
+
   function getApplicationFormInput(form, name) {
     return findAllFormFields(form).find((field) => field.name === name);
   }
@@ -136,6 +153,9 @@
       vendorId: getApplicationFormInput(form, "vendorId").value,
       departmentId: getApplicationFormInput(form, "departmentId").value,
       businessAreaId: getApplicationFormInput(form, "businessAreaId").value,
+      lifecycleStatus: getApplicationFormInput(form, "lifecycleStatus").value,
+      plannedDate: getApplicationFormInput(form, "plannedDate").value,
+      retirementDate: getApplicationFormInput(form, "retirementDate").value,
     };
   }
 
@@ -184,6 +204,15 @@
       application.businessAreaId,
       prefix,
     );
+    appendApplicationLifecycleStatus(document, form, application.lifecycleStatus, prefix);
+    appendApplicationField(document, form, "Planned Date", "plannedDate", application.plannedDate, {
+      prefix,
+      type: "date",
+    });
+    appendApplicationField(document, form, "Retirement Date", "retirementDate", application.retirementDate, {
+      prefix,
+      type: "date",
+    });
   }
 
   function renderNavigation(document, catalogApi) {
@@ -267,6 +296,9 @@
         vendorId: catalog.vendors[0] ? catalog.vendors[0].id : "",
         departmentId: catalog.departments[0] ? catalog.departments[0].id : "",
         businessAreaId: catalog.businessAreas[0] ? catalog.businessAreas[0].id : "",
+        lifecycleStatus: "active",
+        plannedDate: "",
+        retirementDate: "",
       },
       "application-create",
     );
@@ -306,6 +338,8 @@
         ["Department", department ? department.name : "Unknown"],
         ["Business Area", businessArea ? businessArea.name : "Unknown"],
         ["Lifecycle", application.lifecycleStatus],
+        ["Planned Date", application.plannedDate || "Not set"],
+        ["Retirement Date", application.retirementDate || "Not set"],
         ["PACE", application.pace],
         ["Criticality", application.criticality],
       ]) {
