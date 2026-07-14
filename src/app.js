@@ -161,6 +161,71 @@
     );
   }
 
+  function appendApplicationPace(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "PACE Classification",
+      "pace",
+      [
+        { id: "System of Record", name: "System of Record" },
+        { id: "System of Differentiation", name: "System of Differentiation" },
+        { id: "System of Innovation", name: "System of Innovation" },
+        { id: "Unclassified", name: "Unclassified" },
+      ],
+      selectedId || "Unclassified",
+      prefix,
+    );
+  }
+
+  function appendApplicationCriticality(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Criticality",
+      "criticality",
+      [
+        { id: "low", name: "low" },
+        { id: "medium", name: "medium" },
+        { id: "high", name: "high" },
+      ],
+      selectedId || "medium",
+      prefix,
+    );
+  }
+
+  function appendApplicationPersonalDataHandling(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Personal Data Handling",
+      "personalDataHandling",
+      [
+        { id: "Yes", name: "Yes" },
+        { id: "No", name: "No" },
+        { id: "Unknown", name: "Unknown" },
+      ],
+      selectedId || "Unknown",
+      prefix,
+    );
+  }
+
+  function appendApplicationSensitiveBusinessDataHandling(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Sensitive Business Data Handling",
+      "sensitiveBusinessDataHandling",
+      [
+        { id: "Yes", name: "Yes" },
+        { id: "No", name: "No" },
+        { id: "Unknown", name: "Unknown" },
+      ],
+      selectedId || "Unknown",
+      prefix,
+    );
+  }
+
   function getApplicationFormInput(form, name) {
     return findAllFormFields(form).find((field) => field.name === name);
   }
@@ -192,6 +257,10 @@
       retirementDate: getApplicationFormInput(form, "retirementDate").value,
       businessFit: getApplicationFormInput(form, "businessFit").value,
       techFit: getApplicationFormInput(form, "techFit").value,
+      pace: getApplicationFormInput(form, "pace").value,
+      criticality: getApplicationFormInput(form, "criticality").value,
+      personalDataHandling: getApplicationFormInput(form, "personalDataHandling").value,
+      sensitiveBusinessDataHandling: getApplicationFormInput(form, "sensitiveBusinessDataHandling").value,
     };
   }
 
@@ -251,6 +320,10 @@
     });
     appendApplicationBusinessFit(document, form, application.businessFit, prefix);
     appendApplicationTechFit(document, form, application.techFit, prefix);
+    appendApplicationPace(document, form, application.pace, prefix);
+    appendApplicationCriticality(document, form, application.criticality, prefix);
+    appendApplicationPersonalDataHandling(document, form, application.personalDataHandling, prefix);
+    appendApplicationSensitiveBusinessDataHandling(document, form, application.sensitiveBusinessDataHandling, prefix);
   }
 
   function renderNavigation(document, catalogApi) {
@@ -339,6 +412,10 @@
         retirementDate: "",
         businessFit: 3,
         techFit: "medium",
+        pace: "Unclassified",
+        criticality: "medium",
+        personalDataHandling: "Unknown",
+        sensitiveBusinessDataHandling: "Unknown",
       },
       "application-create",
     );
@@ -384,8 +461,10 @@
         ["Business Fit Band", application.businessFitBand],
         ["Tech Fit", application.techFit],
         ["TIME Classification", application.timeClassification],
-        ["PACE", application.pace],
+        ["PACE Classification", application.pace],
         ["Criticality", application.criticality],
+        ["Personal Data Handling", application.personalDataHandling],
+        ["Sensitive Business Data Handling", application.sensitiveBusinessDataHandling],
       ]) {
         appendTextBlock(document, meta, "dt", "meta-list__term", term);
         appendTextBlock(document, meta, "dd", "meta-list__value", description);

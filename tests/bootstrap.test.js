@@ -756,6 +756,10 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "lifecycleStatus").value = "planned";
   findField(createForm, "businessFit").value = "4";
   findField(createForm, "techFit").value = "high";
+  findField(createForm, "pace").value = "System of Innovation";
+  findField(createForm, "criticality").value = "high";
+  findField(createForm, "personalDataHandling").value = "Yes";
+  findField(createForm, "sensitiveBusinessDataHandling").value = "Unknown";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Planned Date is required for planned Applications\./);
 
@@ -769,6 +773,10 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(rendered.root), /Tech Fit/);
   assert.match(collectText(rendered.root), /TIME Classification/);
   assert.match(collectText(rendered.root), /Invest/);
+  assert.match(collectText(rendered.root), /PACE Classification/);
+  assert.match(collectText(rendered.root), /Criticality/);
+  assert.match(collectText(rendered.root), /Personal Data Handling/);
+  assert.match(collectText(rendered.root), /Sensitive Business Data Handling/);
 
   applicationsSection = document.getElementById("applications");
   createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -782,6 +790,10 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "lifecycleStatus").value = "active";
   findField(createForm, "businessFit").value = "4";
   findField(createForm, "techFit").value = "high";
+  findField(createForm, "pace").value = "System of Record";
+  findField(createForm, "criticality").value = "medium";
+  findField(createForm, "personalDataHandling").value = "No";
+  findField(createForm, "sensitiveBusinessDataHandling").value = "No";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Application name must be unique\./);
 
@@ -795,6 +807,10 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(editForm, "lifecycleStatus").value = "retired";
   findField(editForm, "businessFit").value = "5";
   findField(editForm, "techFit").value = "low";
+  findField(editForm, "pace").value = "System of Innovation";
+  findField(editForm, "criticality").value = "high";
+  findField(editForm, "personalDataHandling").value = "Yes";
+  findField(editForm, "sensitiveBusinessDataHandling").value = "Unknown";
   findField(editForm, "retirementDate").value = "";
   editForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Retirement Date is required for retired Applications\./);
@@ -814,6 +830,14 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(reloaded.root), /retired/);
   assert.match(collectText(reloaded.root), /2025-12-31/);
   assert.match(collectText(reloaded.root), /Migrate/);
+  assert.match(collectText(reloaded.root), /PACE Classification/);
+  assert.match(collectText(reloaded.root), /Criticality/);
+  assert.match(collectText(reloaded.root), /Personal Data Handling/);
+  assert.match(collectText(reloaded.root), /Sensitive Business Data Handling/);
+  assert.match(collectText(reloaded.root), /System of Innovation/);
+  assert.match(collectText(reloaded.root), /high/);
+  assert.match(collectText(reloaded.root), /Yes/);
+  assert.match(collectText(reloaded.root), /Unknown/);
 
   const reloadedApplications = reloadedDocument.getElementById("applications");
   const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>
