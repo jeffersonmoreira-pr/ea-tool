@@ -57,7 +57,8 @@
         criticality: "high",
         personalDataHandling: "Yes",
         sensitiveBusinessDataHandling: "Yes",
-        informationStatus: "verified",
+        informationStatus: "Verified",
+        lastVerificationDate: "2026-07-01",
       },
       {
         id: "app-field-ops",
@@ -82,7 +83,8 @@
         criticality: "high",
         personalDataHandling: "No",
         sensitiveBusinessDataHandling: "Yes",
-        informationStatus: "draft",
+        informationStatus: "Draft",
+        lastVerificationDate: "",
       },
       {
         id: "app-employee-directory",
@@ -107,7 +109,8 @@
         criticality: "medium",
         personalDataHandling: "Yes",
         sensitiveBusinessDataHandling: "No",
-        informationStatus: "needs review",
+        informationStatus: "Needs Review",
+        lastVerificationDate: "",
       },
       {
         id: "app-analytics-workbench",
@@ -132,7 +135,8 @@
         criticality: "medium",
         personalDataHandling: "Unknown",
         sensitiveBusinessDataHandling: "Unknown",
-        informationStatus: "draft",
+        informationStatus: "Draft",
+        lastVerificationDate: "",
       },
     ],
   };
@@ -181,6 +185,7 @@
       "Sensitive Business Data Handling",
       { fallbackInvalid: true },
     );
+    const verification = normalizeVerificationInput(application);
     const businessFitBand = deriveBusinessFitBand(businessFit);
     return {
       ...clone(application),
@@ -202,6 +207,7 @@
       criticality,
       personalDataHandling,
       sensitiveBusinessDataHandling,
+      ...verification,
     };
   }
 
@@ -386,6 +392,20 @@
     return dataHandling;
   }
 
+  function normalizeInformationStatus(value) {
+    const informationStatus = normalizeText(value) || "Draft";
+    const legacyMap = {
+      draft: "Draft",
+      verified: "Verified",
+      "needs review": "Needs Review",
+    };
+    const normalized = legacyMap[informationStatus.toLocaleLowerCase()] || informationStatus;
+    if (!["Draft", "Verified", "Needs Review"].includes(normalized)) {
+      throw new Error("Information Status must be Draft, Verified, or Needs Review.");
+    }
+    return normalized;
+  }
+
   function deriveBusinessFitBand(businessFit) {
     if (businessFit <= 2) {
       return "low";
@@ -431,6 +451,21 @@
       lifecycleStatus,
       plannedDate,
       retirementDate,
+    };
+  }
+
+  function normalizeVerificationInput(input) {
+    const informationStatus = normalizeInformationStatus(input && input.informationStatus);
+    const lastVerificationDate = normalizeText(input && input.lastVerificationDate);
+    if (informationStatus === "Verified" && !lastVerificationDate) {
+      throw new Error("Last Verification Date is required for Verified Applications.");
+    }
+    if (lastVerificationDate && !isValidIsoDate(lastVerificationDate)) {
+      throw new Error("Last Verification Date must be a valid date.");
+    }
+    return {
+      informationStatus,
+      lastVerificationDate,
     };
   }
 
@@ -481,6 +516,7 @@
       criticality,
       personalDataHandling,
       sensitiveBusinessDataHandling,
+      ...normalizeVerificationInput(input),
     };
   }
 
@@ -515,7 +551,6 @@
     const application = {
       id: createId(catalog.applications, "app", values.name),
       ...values,
-      informationStatus: normalizeText(input && input.informationStatus) || "draft",
     };
     catalog.applications.push(application);
     return application;
@@ -524,9 +559,7 @@
   function updateApplication(catalog, applicationId, input) {
     const application = findRecord(catalog.applications, applicationId, "Application");
     const values = normalizeApplicationInput(catalog, input, applicationId);
-    Object.assign(application, values, {
-      informationStatus: normalizeText(input && input.informationStatus) || application.informationStatus,
-    });
+    Object.assign(application, values);
     return application;
   }
 

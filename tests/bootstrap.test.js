@@ -630,6 +630,100 @@ test("application catalog preserves manual PACE, criticality, and data handling 
   );
 });
 
+test("application catalog enforces information status and verification date rules", () => {
+  const catalog = catalogApi.createInitialCatalog();
+  const baseInput = {
+    description: "Application information status verification entry.",
+    businessOwnerName: "Maya Chen",
+    techOwnerName: "Rui Costa",
+    vendorId: "vendor-internal",
+    departmentId: "dept-operations",
+    businessAreaId: "area-field",
+    businessFit: 5,
+    techFit: "low",
+    pace: "Unclassified",
+    criticality: "medium",
+    personalDataHandling: "Unknown",
+    sensitiveBusinessDataHandling: "Unknown",
+    diagnosticUrl: "",
+  };
+
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...baseInput,
+        name: "Archived Information Status",
+        informationStatus: "Archived",
+      }),
+    { message: "Information Status must be Draft, Verified, or Needs Review." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...baseInput,
+        name: "Verified Missing Date",
+        informationStatus: "Verified",
+      }),
+    { message: "Last Verification Date is required for Verified Applications." },
+  );
+
+  const verified = catalogApi.createApplication(catalog, {
+    ...baseInput,
+    name: "Verified Information Status",
+    informationStatus: "Verified",
+    lastVerificationDate: "2026-07-14",
+  });
+  const draft = catalogApi.createApplication(catalog, {
+    ...baseInput,
+    name: "Draft Information Status",
+    informationStatus: "Draft",
+    lastVerificationDate: "",
+  });
+  const needsReview = catalogApi.createApplication(catalog, {
+    ...baseInput,
+    name: "Needs Review Information Status",
+    informationStatus: "Needs Review",
+    lastVerificationDate: "",
+  });
+
+  assert.deepEqual(
+    [verified, draft, needsReview].map((application) => ({
+      informationStatus: application.informationStatus,
+      lastVerificationDate: application.lastVerificationDate,
+      diagnosticUrl: application.diagnosticUrl,
+      pace: application.pace,
+      personalDataHandling: application.personalDataHandling,
+      sensitiveBusinessDataHandling: application.sensitiveBusinessDataHandling,
+    })),
+    [
+      {
+        informationStatus: "Verified",
+        lastVerificationDate: "2026-07-14",
+        diagnosticUrl: "",
+        pace: "Unclassified",
+        personalDataHandling: "Unknown",
+        sensitiveBusinessDataHandling: "Unknown",
+      },
+      {
+        informationStatus: "Draft",
+        lastVerificationDate: "",
+        diagnosticUrl: "",
+        pace: "Unclassified",
+        personalDataHandling: "Unknown",
+        sensitiveBusinessDataHandling: "Unknown",
+      },
+      {
+        informationStatus: "Needs Review",
+        lastVerificationDate: "",
+        diagnosticUrl: "",
+        pace: "Unclassified",
+        personalDataHandling: "Unknown",
+        sensitiveBusinessDataHandling: "Unknown",
+      },
+    ],
+  );
+});
+
 test("catalog derives TIME classification from manual fit assessments", () => {
   const expectedMatrix = {
     "high/high": "Invest",
