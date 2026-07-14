@@ -570,6 +570,130 @@
     return application;
   }
 
+  function makeCountBuckets(values) {
+    return Object.fromEntries(values.map((value) => [value, 0]));
+  }
+
+  function countBy(records, fieldName, buckets) {
+    const counts = { ...buckets };
+    for (const record of records) {
+      const value = record[fieldName];
+      counts[value] = (counts[value] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function countSelectedValues(records, fieldName, values) {
+    const counts = makeCountBuckets(values);
+    for (const record of records) {
+      if (Object.prototype.hasOwnProperty.call(counts, record[fieldName])) {
+        counts[record[fieldName]] += 1;
+      }
+    }
+    return counts;
+  }
+
+  function countByReferenceName(records, fieldName, references) {
+    const counts = Object.fromEntries(references.map((reference) => [reference.name, 0]));
+    const namesById = Object.fromEntries(references.map((reference) => [reference.id, reference.name]));
+    for (const record of records) {
+      const name = namesById[record[fieldName]];
+      if (name) {
+        counts[name] += 1;
+      }
+    }
+    return counts;
+  }
+
+  function filterMatches(filters, fieldName, value) {
+    return !filters[fieldName] || filters[fieldName] === value;
+  }
+
+  function matchesExecutiveFilters(application, filters) {
+    return (
+      filterMatches(filters, "departmentId", application.departmentId) &&
+      filterMatches(filters, "vendorId", application.vendorId) &&
+      filterMatches(filters, "businessAreaId", application.businessAreaId) &&
+      filterMatches(filters, "lifecycleStatus", application.lifecycleStatus) &&
+      filterMatches(filters, "timeClassification", application.timeClassification) &&
+      filterMatches(filters, "pace", application.pace) &&
+      filterMatches(filters, "criticality", application.criticality)
+    );
+  }
+
+  function makeQualityMeasure(label, count, totalApplications) {
+    return {
+      label,
+      count,
+      total: totalApplications,
+      text: `${label} ${count} of ${totalApplications}`,
+    };
+  }
+
+  function createExecutivePortfolioSummary(catalog, filters) {
+    const currentFilters = filters || {};
+    const applications = Array.isArray(catalog.applications) ? catalog.applications : [];
+    const filteredApplications = applications.filter((application) => matchesExecutiveFilters(application, currentFilters));
+    const totalApplications = applications.length;
+    const informationStatus = countSelectedValues(applications, "informationStatus", [
+      "Verified",
+      "Draft",
+      "Needs Review",
+    ]);
+    const pace = countSelectedValues(applications, "pace", [
+      "System of Record",
+      "System of Differentiation",
+      "System of Innovation",
+      "Unclassified",
+    ]);
+    const personalDataHandling = countSelectedValues(applications, "personalDataHandling", ["Yes", "Unknown"]);
+    const sensitiveBusinessDataHandling = countSelectedValues(applications, "sensitiveBusinessDataHandling", [
+      "Yes",
+      "Unknown",
+    ]);
+
+    return {
+      totalApplications,
+      filteredApplications,
+      counts: {
+        timeClassification: countSelectedValues(applications, "timeClassification", [
+          "Invest",
+          "Tolerate",
+          "Migrate",
+          "Eliminate",
+        ]),
+        pace,
+        businessArea: countByReferenceName(applications, "businessAreaId", catalog.businessAreas || []),
+        lifecycleStatus: countSelectedValues(applications, "lifecycleStatus", [
+          "active",
+          "planned",
+          "retiring",
+          "retired",
+        ]),
+        criticality: countSelectedValues(applications, "criticality", ["high", "medium", "low"]),
+        personalDataHandling,
+        sensitiveBusinessDataHandling,
+        informationStatus,
+      },
+      catalogQuality: {
+        verified: makeQualityMeasure("Verified", informationStatus.Verified, totalApplications),
+        draft: makeQualityMeasure("Draft", informationStatus.Draft, totalApplications),
+        needsReview: makeQualityMeasure("Needs Review", informationStatus["Needs Review"], totalApplications),
+        unclassified: makeQualityMeasure("Unclassified", pace.Unclassified, totalApplications),
+        personalDataUnknown: makeQualityMeasure(
+          "Personal Data Unknown",
+          personalDataHandling.Unknown,
+          totalApplications,
+        ),
+        sensitiveBusinessDataUnknown: makeQualityMeasure(
+          "Sensitive Business Data Unknown",
+          sensitiveBusinessDataHandling.Unknown,
+          totalApplications,
+        ),
+      },
+    };
+  }
+
   function updateVendor(catalog, vendorId, input) {
     if (!input || typeof input.isInternal !== "boolean") {
       throw new Error("Vendor internal status is required.");
@@ -654,6 +778,7 @@
     createApplication,
     createBusinessArea,
     createDepartment,
+    createExecutivePortfolioSummary,
     createInitialCatalog,
     createVendor,
     deleteApplication,

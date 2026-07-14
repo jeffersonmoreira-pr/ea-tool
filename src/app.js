@@ -365,7 +365,55 @@
     return nav;
   }
 
-  function renderOverview(document, catalog) {
+  function appendMetric(document, parent, label, value) {
+    const metric = makeElement(document, "div", { className: "metric" });
+    appendTextBlock(document, metric, "strong", "metric__value", String(value));
+    appendTextBlock(document, metric, "span", "metric__label", label);
+    parent.appendChild(metric);
+  }
+
+  function appendIndicatorGroup(document, parent, title, values) {
+    const group = makeElement(document, "section", { className: "indicator-group" });
+    appendTextBlock(document, group, "h2", "indicator-group__title", title);
+    const list = makeElement(document, "dl", { className: "indicator-list" });
+    for (const [label, value] of values) {
+      appendTextBlock(document, list, "dt", "indicator-list__label", label);
+      appendTextBlock(document, list, "dd", "indicator-list__value", String(value));
+    }
+    group.appendChild(list);
+    parent.appendChild(group);
+  }
+
+  function appendOverviewFilter(document, form, labelText, name, options, selectedValue) {
+    const fieldId = `overview-filter-${name}`;
+    const label = makeElement(document, "label", {
+      className: "overview-filter__label",
+      text: labelText,
+      attributes: { for: fieldId },
+    });
+    const select = makeElement(document, "select", {
+      id: fieldId,
+      name,
+      value: selectedValue || "",
+    });
+    select.appendChild(makeElement(document, "option", { text: "All", value: "", attributes: { value: "" } }));
+    for (const optionConfig of options) {
+      const option = makeElement(document, "option", {
+        text: optionConfig.name,
+        value: optionConfig.id,
+        attributes: { value: optionConfig.id },
+      });
+      if (optionConfig.id === selectedValue) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    }
+    form.append(label, select);
+    return select;
+  }
+
+  function renderOverview(document, catalog, catalogApi, filters, setFilters) {
+    const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
     const section = makeElement(document, "section", {
       className: "overview-band",
       attributes: { id: "overview" },
@@ -383,23 +431,111 @@
     section.appendChild(copy);
 
     const metrics = makeElement(document, "div", { className: "metric-strip" });
-    const items = [
-      ["Applications", catalog.applications.length],
-      ["Vendors", catalog.vendors.length],
-      ["Departments", catalog.departments.length],
-      ["Business Areas", catalog.businessAreas.length],
-    ];
-    for (const [label, value] of items) {
-      const metric = makeElement(document, "div", { className: "metric" });
-      appendTextBlock(document, metric, "strong", "metric__value", String(value));
-      appendTextBlock(document, metric, "span", "metric__label", label);
-      metrics.appendChild(metric);
-    }
+    appendMetric(document, metrics, "Applications", summary.totalApplications);
+    appendMetric(document, metrics, "Vendors", catalog.vendors.length);
+    appendMetric(document, metrics, "Departments", catalog.departments.length);
+    appendMetric(document, metrics, "Business Areas", catalog.businessAreas.length);
     section.appendChild(metrics);
+
+    const filterForm = makeElement(document, "form", {
+      className: "overview-filters",
+      attributes: { "aria-label": "Executive overview filters" },
+    });
+    appendOverviewFilter(document, filterForm, "Department", "departmentId", catalog.departments, filters.departmentId);
+    appendOverviewFilter(document, filterForm, "Vendor", "vendorId", catalog.vendors, filters.vendorId);
+    appendOverviewFilter(
+      document,
+      filterForm,
+      "Business Area",
+      "businessAreaId",
+      catalog.businessAreas,
+      filters.businessAreaId,
+    );
+    appendOverviewFilter(
+      document,
+      filterForm,
+      "Lifecycle Status",
+      "lifecycleStatus",
+      [
+        { id: "planned", name: "planned" },
+        { id: "active", name: "active" },
+        { id: "retiring", name: "retiring" },
+        { id: "retired", name: "retired" },
+      ],
+      filters.lifecycleStatus,
+    );
+    appendOverviewFilter(
+      document,
+      filterForm,
+      "TIME Classification",
+      "timeClassification",
+      [
+        { id: "Invest", name: "Invest" },
+        { id: "Tolerate", name: "Tolerate" },
+        { id: "Migrate", name: "Migrate" },
+        { id: "Eliminate", name: "Eliminate" },
+      ],
+      filters.timeClassification,
+    );
+    appendOverviewFilter(
+      document,
+      filterForm,
+      "PACE Classification",
+      "pace",
+      [
+        { id: "System of Record", name: "System of Record" },
+        { id: "System of Differentiation", name: "System of Differentiation" },
+        { id: "System of Innovation", name: "System of Innovation" },
+        { id: "Unclassified", name: "Unclassified" },
+      ],
+      filters.pace,
+    );
+    appendOverviewFilter(
+      document,
+      filterForm,
+      "Criticality",
+      "criticality",
+      [
+        { id: "low", name: "low" },
+        { id: "medium", name: "medium" },
+        { id: "high", name: "high" },
+      ],
+      filters.criticality,
+    );
+    filterForm.addEventListener("change", function onFilterChange(event) {
+      const field = event && event.target;
+      if (!field || !field.name) {
+        return;
+      }
+      setFilters({ ...filters, [field.name]: field.value });
+    });
+    section.appendChild(filterForm);
+
+    const indicators = makeElement(document, "div", { className: "indicator-grid" });
+    appendIndicatorGroup(document, indicators, "TIME", Object.entries(summary.counts.timeClassification));
+    appendIndicatorGroup(document, indicators, "PACE", Object.entries(summary.counts.pace));
+    appendIndicatorGroup(document, indicators, "Business Area", Object.entries(summary.counts.businessArea));
+    appendIndicatorGroup(document, indicators, "Lifecycle Status", Object.entries(summary.counts.lifecycleStatus));
+    appendIndicatorGroup(document, indicators, "Criticality", Object.entries(summary.counts.criticality));
+    appendIndicatorGroup(document, indicators, "Personal Data Handling", Object.entries(summary.counts.personalDataHandling));
+    appendIndicatorGroup(
+      document,
+      indicators,
+      "Sensitive Business Data Handling",
+      Object.entries(summary.counts.sensitiveBusinessDataHandling),
+    );
+    appendIndicatorGroup(
+      document,
+      indicators,
+      "Catalog Quality",
+      Object.values(summary.catalogQuality).map((measure) => [measure.label, measure.text]),
+    );
+    section.appendChild(indicators);
     return section;
   }
 
-  function renderApplications(document, catalog, catalogApi, storage, rerender) {
+  function renderApplications(document, catalog, catalogApi, storage, rerender, applications) {
+    const visibleApplications = applications || catalog.applications;
     const section = makeElement(document, "section", {
       className: "content-section",
       attributes: { id: "applications" },
@@ -411,6 +547,13 @@
       attributes: { role: "status" },
     });
     section.appendChild(status);
+    appendTextBlock(
+      document,
+      section,
+      "p",
+      "application-count",
+      `Showing ${visibleApplications.length} of ${catalog.applications.length} Applications`,
+    );
 
     const createForm = makeElement(document, "form", { className: "edit-form application-form application-form--create" });
     appendApplicationFormFields(
@@ -461,7 +604,7 @@
     section.appendChild(createForm);
 
     const list = makeElement(document, "div", { className: "application-grid" });
-    for (const application of catalog.applications) {
+    for (const application of visibleApplications) {
       const vendor = findById(catalog.vendors, application.vendorId);
       const department = findById(catalog.departments, application.departmentId);
       const businessArea = findById(catalog.businessAreas, application.businessAreaId);
@@ -661,15 +804,21 @@
     const catalogApi = options.catalogApi;
     const root = options.root || document.getElementById("app");
     const catalog = options.catalog || catalogApi.loadCatalog(storage);
+    const filters = options.filters || {};
+    const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
 
     function rerender(nextCatalog) {
-      renderApp({ document, storage, catalogApi, root, catalog: nextCatalog });
+      renderApp({ document, storage, catalogApi, root, catalog: nextCatalog, filters });
+    }
+
+    function setFilters(nextFilters) {
+      renderApp({ document, storage, catalogApi, root, catalog, filters: nextFilters });
     }
 
     root.replaceChildren(
       renderNavigation(document, catalogApi),
-      renderOverview(document, catalog),
-      renderApplications(document, catalog, catalogApi, storage, rerender),
+      renderOverview(document, catalog, catalogApi, filters, setFilters),
+      renderApplications(document, catalog, catalogApi, storage, rerender, summary.filteredApplications),
       renderMasterData(document, catalog, catalogApi, storage, rerender, {
         id: "vendors",
         title: "Vendors",

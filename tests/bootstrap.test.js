@@ -143,6 +143,59 @@ test("seed catalog contains expected portfolio records", () => {
   );
 });
 
+test("catalog executive portfolio summary counts seed indicators exactly", () => {
+  const summary = catalogApi.createExecutivePortfolioSummary(catalogApi.createInitialCatalog(), {});
+
+  assert.equal(summary.totalApplications, 4);
+  assert.deepEqual(summary.counts.timeClassification, {
+    Invest: 1,
+    Tolerate: 1,
+    Migrate: 1,
+    Eliminate: 1,
+  });
+  assert.deepEqual(summary.counts.pace, {
+    "System of Record": 2,
+    "System of Differentiation": 1,
+    "System of Innovation": 1,
+    Unclassified: 0,
+  });
+  assert.deepEqual(summary.counts.businessArea, {
+    "Revenue Management": 2,
+    "Field Operations": 1,
+    "Workforce Services": 1,
+  });
+  assert.deepEqual(summary.counts.lifecycleStatus, {
+    active: 3,
+    planned: 1,
+    retiring: 0,
+    retired: 0,
+  });
+  assert.deepEqual(summary.counts.criticality, {
+    high: 2,
+    medium: 2,
+    low: 0,
+  });
+  assert.deepEqual(summary.counts.personalDataHandling, {
+    Yes: 2,
+    Unknown: 1,
+  });
+  assert.deepEqual(summary.counts.sensitiveBusinessDataHandling, {
+    Yes: 2,
+    Unknown: 1,
+  });
+  assert.deepEqual(
+    Object.values(summary.catalogQuality).map((measure) => measure.text),
+    [
+      "Verified 1 of 4",
+      "Draft 2 of 4",
+      "Needs Review 1 of 4",
+      "Unclassified 0 of 4",
+      "Personal Data Unknown 1 of 4",
+      "Sensitive Business Data Unknown 1 of 4",
+    ],
+  );
+});
+
 test("catalog persists application name changes in browser storage", () => {
   const storage = createMemoryStorage();
   const catalog = catalogApi.loadCatalog(storage);
@@ -870,6 +923,103 @@ test("browser adapter renders the initial catalog shell without network calls", 
   assert.match(text, /Revenue Hub/);
   assert.match(text, /Vendors/);
   assert.equal(networkCalls.length, 0);
+});
+
+test("browser adapter filters applications and refreshes executive indicators after mutations", () => {
+  const document = createDocument();
+  const storage = createMemoryStorage();
+  const rendered = appApi.renderApp({ document, storage, catalogApi });
+
+  function getOverview() {
+    return document.getElementById("overview");
+  }
+
+  function getApplicationsSection() {
+    return document.getElementById("applications");
+  }
+
+  function setOverviewFilter(name, value) {
+    const overview = getOverview();
+    const form = findAll(overview, (node) => node.tagName === "FORM")[0];
+    const field = findField(form, name);
+    field.value = value;
+    form.onchange({ target: field });
+  }
+
+  for (const [name, value] of [
+    ["departmentId", "dept-finance"],
+    ["vendorId", "vendor-orbit"],
+    ["businessAreaId", "area-revenue"],
+    ["lifecycleStatus", "planned"],
+    ["timeClassification", "Migrate"],
+    ["pace", "System of Innovation"],
+    ["criticality", "medium"],
+  ]) {
+    setOverviewFilter(name, value);
+  }
+
+  let applicationsSection = getApplicationsSection();
+  let cards = findAll(applicationsSection, (node) => node.tagName === "ARTICLE" && node.className === "application-card");
+  assert.equal(cards.length, 1);
+  assert.match(collectText(cards[0]), /Analytics Workbench/);
+  assert.match(collectText(applicationsSection), /Showing 1 of 4 Applications/);
+
+  appApi.renderApp({ document, storage, catalogApi, root: rendered.root, catalog: rendered.catalog, filters: {} });
+  applicationsSection = getApplicationsSection();
+  const createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
+  findField(createForm, "name").value = "Dispatch Console";
+  findField(createForm, "description").value = "Short dispatch operations catalog entry.";
+  findField(createForm, "businessOwnerName").value = "Maya Chen";
+  findField(createForm, "techOwnerName").value = "Rui Costa";
+  findField(createForm, "vendorId").value = "vendor-internal";
+  findField(createForm, "departmentId").value = "dept-operations";
+  findField(createForm, "businessAreaId").value = "area-field";
+  findField(createForm, "lifecycleStatus").value = "active";
+  findField(createForm, "businessFit").value = "4";
+  findField(createForm, "techFit").value = "low";
+  findField(createForm, "pace").value = "System of Record";
+  findField(createForm, "criticality").value = "medium";
+  findField(createForm, "personalDataHandling").value = "Yes";
+  findField(createForm, "sensitiveBusinessDataHandling").value = "No";
+  findField(createForm, "informationStatus").value = "Draft";
+  createForm.onsubmit({ preventDefault() {} });
+
+  assert.match(collectText(getOverview()), /5\s+Applications/);
+
+  applicationsSection = getApplicationsSection();
+  const dispatchCard = findAll(applicationsSection, (node) => node.tagName === "ARTICLE").find((card) =>
+    collectText(card).includes("Dispatch Console"),
+  );
+  const editForm = findAll(dispatchCard, (node) => node.tagName === "FORM")[0];
+  findField(editForm, "businessAreaId").value = "area-revenue";
+  findField(editForm, "lifecycleStatus").value = "retired";
+  findField(editForm, "retirementDate").value = "2025-12-31";
+  findField(editForm, "businessFit").value = "5";
+  findField(editForm, "techFit").value = "low";
+  findField(editForm, "pace").value = "Unclassified";
+  findField(editForm, "criticality").value = "high";
+  findField(editForm, "personalDataHandling").value = "Unknown";
+  findField(editForm, "sensitiveBusinessDataHandling").value = "Unknown";
+  findField(editForm, "informationStatus").value = "Needs Review";
+  findField(editForm, "lastVerificationDate").value = "";
+  editForm.onsubmit({ preventDefault() {} });
+
+  const updatedOverviewText = collectText(getOverview());
+  assert.match(updatedOverviewText, /Migrate\s+2/);
+  assert.match(updatedOverviewText, /Unclassified\s+Unclassified 1 of 5/);
+  assert.match(updatedOverviewText, /Needs Review\s+Needs Review 2 of 5/);
+  assert.match(updatedOverviewText, /Personal Data Unknown\s+Personal Data Unknown 2 of 5/);
+  assert.match(updatedOverviewText, /Sensitive Business Data Unknown\s+Sensitive Business Data Unknown 2 of 5/);
+
+  applicationsSection = getApplicationsSection();
+  const updatedDispatchCard = findAll(applicationsSection, (node) => node.tagName === "ARTICLE").find((card) =>
+    collectText(card).includes("Dispatch Console"),
+  );
+  findAll(updatedDispatchCard, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+
+  assert.match(collectText(getOverview()), /4\s+Applications/);
 });
 
 test("browser adapter manages application create edit delete with persistence", () => {
