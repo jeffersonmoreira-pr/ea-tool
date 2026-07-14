@@ -635,19 +635,20 @@
     const applications = Array.isArray(catalog.applications) ? catalog.applications : [];
     const filteredApplications = applications.filter((application) => matchesExecutiveFilters(application, currentFilters));
     const totalApplications = applications.length;
-    const informationStatus = countSelectedValues(applications, "informationStatus", [
+    const totalFilteredApplications = filteredApplications.length;
+    const informationStatus = countSelectedValues(filteredApplications, "informationStatus", [
       "Verified",
       "Draft",
       "Needs Review",
     ]);
-    const pace = countSelectedValues(applications, "pace", [
+    const pace = countSelectedValues(filteredApplications, "pace", [
       "System of Record",
       "System of Differentiation",
       "System of Innovation",
       "Unclassified",
     ]);
-    const personalDataHandling = countSelectedValues(applications, "personalDataHandling", ["Yes", "Unknown"]);
-    const sensitiveBusinessDataHandling = countSelectedValues(applications, "sensitiveBusinessDataHandling", [
+    const personalDataHandling = countSelectedValues(filteredApplications, "personalDataHandling", ["Yes", "Unknown"]);
+    const sensitiveBusinessDataHandling = countSelectedValues(filteredApplications, "sensitiveBusinessDataHandling", [
       "Yes",
       "Unknown",
     ]);
@@ -656,39 +657,39 @@
       totalApplications,
       filteredApplications,
       counts: {
-        timeClassification: countSelectedValues(applications, "timeClassification", [
+        timeClassification: countSelectedValues(filteredApplications, "timeClassification", [
           "Invest",
           "Tolerate",
           "Migrate",
           "Eliminate",
         ]),
         pace,
-        businessArea: countByReferenceName(applications, "businessAreaId", catalog.businessAreas || []),
-        lifecycleStatus: countSelectedValues(applications, "lifecycleStatus", [
+        businessArea: countByReferenceName(filteredApplications, "businessAreaId", catalog.businessAreas || []),
+        lifecycleStatus: countSelectedValues(filteredApplications, "lifecycleStatus", [
           "active",
           "planned",
           "retiring",
           "retired",
         ]),
-        criticality: countSelectedValues(applications, "criticality", ["high", "medium", "low"]),
+        criticality: countSelectedValues(filteredApplications, "criticality", ["high", "medium", "low"]),
         personalDataHandling,
         sensitiveBusinessDataHandling,
         informationStatus,
       },
       catalogQuality: {
-        verified: makeQualityMeasure("Verified", informationStatus.Verified, totalApplications),
-        draft: makeQualityMeasure("Draft", informationStatus.Draft, totalApplications),
-        needsReview: makeQualityMeasure("Needs Review", informationStatus["Needs Review"], totalApplications),
-        unclassified: makeQualityMeasure("Unclassified", pace.Unclassified, totalApplications),
+        verified: makeQualityMeasure("Verified", informationStatus.Verified, totalFilteredApplications),
+        draft: makeQualityMeasure("Draft", informationStatus.Draft, totalFilteredApplications),
+        needsReview: makeQualityMeasure("Needs Review", informationStatus["Needs Review"], totalFilteredApplications),
+        unclassified: makeQualityMeasure("Unclassified", pace.Unclassified, totalFilteredApplications),
         personalDataUnknown: makeQualityMeasure(
           "Personal Data Unknown",
           personalDataHandling.Unknown,
-          totalApplications,
+          totalFilteredApplications,
         ),
         sensitiveBusinessDataUnknown: makeQualityMeasure(
           "Sensitive Business Data Unknown",
           sensitiveBusinessDataHandling.Unknown,
-          totalApplications,
+          totalFilteredApplications,
         ),
       },
     };

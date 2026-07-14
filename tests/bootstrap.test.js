@@ -963,6 +963,14 @@ test("browser adapter filters applications and refreshes executive indicators af
   assert.equal(cards.length, 1);
   assert.match(collectText(cards[0]), /Analytics Workbench/);
   assert.match(collectText(applicationsSection), /Showing 1 of 4 Applications/);
+  const filteredOverviewText = collectText(getOverview());
+  assert.match(filteredOverviewText, /Migrate\s+1/);
+  assert.match(filteredOverviewText, /System of Innovation\s+1/);
+  assert.match(filteredOverviewText, /Revenue Management\s+1/);
+  assert.match(filteredOverviewText, /planned\s+1/);
+  assert.match(filteredOverviewText, /medium\s+1/);
+  assert.match(filteredOverviewText, /Personal Data Unknown\s+Personal Data Unknown 1 of 1/);
+  assert.match(filteredOverviewText, /Sensitive Business Data Unknown\s+Sensitive Business Data Unknown 1 of 1/);
 
   appApi.renderApp({ document, storage, catalogApi, root: rendered.root, catalog: rendered.catalog, filters: {} });
   applicationsSection = getApplicationsSection();
