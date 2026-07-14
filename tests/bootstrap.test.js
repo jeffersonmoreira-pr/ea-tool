@@ -187,6 +187,10 @@ test("catalog preserves name-only update compatibility for legacy stored applica
   assert.equal(updated.name, "Legacy App Renamed");
   assert.equal(updated.businessOwnerName, "");
   assert.equal(updated.techOwnerName, "");
+  assert.equal(updated.businessFit, 3);
+  assert.equal(updated.businessFitBand, "medium");
+  assert.equal(updated.techFit, "medium");
+  assert.equal(updated.timeClassification, "Tolerate");
   assert.throws(() => catalogApi.updateApplicationName(catalog, "app-legacy", " dispatch console "), {
     message: "Application name must be unique.",
   });
@@ -271,6 +275,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
     vendorId: "vendor-internal",
     departmentId: "dept-operations",
     businessAreaId: "area-field",
+    businessFit: 4,
+    techFit: "high",
   });
 
   assert.equal(application.id, "app-dispatch-console");
@@ -289,6 +295,10 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
   assert.equal(application.lifecycleStatus, "active");
   assert.equal(application.plannedDate, "");
   assert.equal(application.retirementDate, "");
+  assert.equal(application.businessFit, 4);
+  assert.equal(application.businessFitBand, "high");
+  assert.equal(application.techFit, "high");
+  assert.equal(application.timeClassification, "Invest");
 
   const lifecycleApplicationInput = {
     description: "Lifecycle validation application.",
@@ -297,6 +307,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
     vendorId: "vendor-internal",
     departmentId: "dept-operations",
     businessAreaId: "area-field",
+    businessFit: 3,
+    techFit: "medium",
   };
   assert.throws(
     () =>
@@ -389,6 +401,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
         vendorId: "vendor-internal",
         departmentId: "dept-operations",
         businessAreaId: "area-field",
+        businessFit: 4,
+        techFit: "high",
       }),
     { message: "Application name must be unique." },
   );
@@ -402,6 +416,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
         vendorId: "vendor-internal",
         departmentId: "dept-operations",
         businessAreaId: "area-field",
+        businessFit: 4,
+        techFit: "high",
       }),
     { message: "Application description is required." },
   );
@@ -428,6 +444,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
         vendorId: "vendor-internal",
         departmentId: "dept-operations",
         businessAreaId: "area-field",
+        businessFit: 4,
+        techFit: "high",
       }),
     { message: "Tech Owner Name is required." },
   );
@@ -441,6 +459,8 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
         vendorId: "",
         departmentId: "dept-operations",
         businessAreaId: "area-field",
+        businessFit: 4,
+        techFit: "high",
       }),
     { message: "Vendor is required." },
   );
@@ -464,6 +484,99 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
       businessAreas: catalog.businessAreas.length,
     },
     { vendors: 3, departments: 3, businessAreas: 3 },
+  );
+});
+
+test("catalog derives TIME classification from manual fit assessments", () => {
+  const expectedMatrix = {
+    "high/high": "Invest",
+    "high/medium": "Invest",
+    "high/low": "Migrate",
+    "medium/high": "Tolerate",
+    "medium/medium": "Tolerate",
+    "medium/low": "Migrate",
+    "low/high": "Eliminate",
+    "low/medium": "Eliminate",
+    "low/low": "Eliminate",
+  };
+  const expectedBands = {
+    1: "low",
+    2: "low",
+    3: "medium",
+    4: "high",
+    5: "high",
+  };
+  const fitForBand = {
+    low: 1,
+    medium: 3,
+    high: 4,
+  };
+
+  for (const [businessFit, businessFitBand] of Object.entries(expectedBands)) {
+    const catalog = catalogApi.createInitialCatalog();
+    const application = catalogApi.createApplication(catalog, {
+      name: `Band ${businessFit}`,
+      description: "Fit band verification application.",
+      businessOwnerName: "Maya Chen",
+      techOwnerName: "Rui Costa",
+      vendorId: "vendor-internal",
+      departmentId: "dept-operations",
+      businessAreaId: "area-field",
+      businessFit,
+      techFit: "medium",
+    });
+    assert.equal(application.businessFitBand, businessFitBand);
+  }
+
+  for (const [combination, timeClassification] of Object.entries(expectedMatrix)) {
+    const [businessFitBand, techFit] = combination.split("/");
+    const catalog = catalogApi.createInitialCatalog();
+    const application = catalogApi.createApplication(catalog, {
+      name: `TIME ${combination}`,
+      description: "TIME matrix verification application.",
+      businessOwnerName: "Maya Chen",
+      techOwnerName: "Rui Costa",
+      vendorId: "vendor-internal",
+      departmentId: "dept-operations",
+      businessAreaId: "area-field",
+      businessFit: fitForBand[businessFitBand],
+      techFit,
+      timeClassification: "Manual Override",
+    });
+    assert.equal(application.businessFitBand, businessFitBand);
+    assert.equal(application.timeClassification, timeClassification);
+  }
+
+  const catalog = catalogApi.createInitialCatalog();
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Invalid Business Fit",
+        description: "Invalid Business Fit verification application.",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "Rui Costa",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+        businessFit: 6,
+        techFit: "medium",
+      }),
+    { message: "Business Fit must be 1, 2, 3, 4, or 5." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Invalid Tech Fit",
+        description: "Invalid Tech Fit verification application.",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "Rui Costa",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+        businessFit: 3,
+        techFit: "severe",
+      }),
+    { message: "Tech Fit must be low, medium, or high." },
   );
 });
 
@@ -515,6 +628,8 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "departmentId").value = "dept-operations";
   findField(createForm, "businessAreaId").value = "area-field";
   findField(createForm, "lifecycleStatus").value = "planned";
+  findField(createForm, "businessFit").value = "4";
+  findField(createForm, "techFit").value = "high";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Planned Date is required for planned Applications\./);
 
@@ -524,6 +639,10 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
   assert.match(collectText(rendered.root), /planned/);
   assert.match(collectText(rendered.root), /2026-08-01/);
+  assert.match(collectText(rendered.root), /Business Fit/);
+  assert.match(collectText(rendered.root), /Tech Fit/);
+  assert.match(collectText(rendered.root), /TIME Classification/);
+  assert.match(collectText(rendered.root), /Invest/);
 
   applicationsSection = document.getElementById("applications");
   createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -535,6 +654,8 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "departmentId").value = "dept-operations";
   findField(createForm, "businessAreaId").value = "area-field";
   findField(createForm, "lifecycleStatus").value = "active";
+  findField(createForm, "businessFit").value = "4";
+  findField(createForm, "techFit").value = "high";
   createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Application name must be unique\./);
 
@@ -546,6 +667,8 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(editForm, "businessOwnerName").value = "Ana Silva";
   findField(editForm, "techOwnerName").value = "Theo Ramos";
   findField(editForm, "lifecycleStatus").value = "retired";
+  findField(editForm, "businessFit").value = "5";
+  findField(editForm, "techFit").value = "low";
   findField(editForm, "retirementDate").value = "";
   editForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Retirement Date is required for retired Applications\./);
@@ -564,6 +687,7 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(reloaded.root), /Dispatch Desk/);
   assert.match(collectText(reloaded.root), /retired/);
   assert.match(collectText(reloaded.root), /2025-12-31/);
+  assert.match(collectText(reloaded.root), /Migrate/);
 
   const reloadedApplications = reloadedDocument.getElementById("applications");
   const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>

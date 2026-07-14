@@ -127,6 +127,40 @@
     );
   }
 
+  function appendApplicationBusinessFit(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Business Fit",
+      "businessFit",
+      [
+        { id: "1", name: "1" },
+        { id: "2", name: "2" },
+        { id: "3", name: "3" },
+        { id: "4", name: "4" },
+        { id: "5", name: "5" },
+      ],
+      String(selectedId || 3),
+      prefix,
+    );
+  }
+
+  function appendApplicationTechFit(document, form, selectedId, prefix) {
+    appendApplicationSelect(
+      document,
+      form,
+      "Tech Fit",
+      "techFit",
+      [
+        { id: "low", name: "low" },
+        { id: "medium", name: "medium" },
+        { id: "high", name: "high" },
+      ],
+      selectedId || "medium",
+      prefix,
+    );
+  }
+
   function getApplicationFormInput(form, name) {
     return findAllFormFields(form).find((field) => field.name === name);
   }
@@ -156,6 +190,8 @@
       lifecycleStatus: getApplicationFormInput(form, "lifecycleStatus").value,
       plannedDate: getApplicationFormInput(form, "plannedDate").value,
       retirementDate: getApplicationFormInput(form, "retirementDate").value,
+      businessFit: getApplicationFormInput(form, "businessFit").value,
+      techFit: getApplicationFormInput(form, "techFit").value,
     };
   }
 
@@ -213,6 +249,8 @@
       prefix,
       type: "date",
     });
+    appendApplicationBusinessFit(document, form, application.businessFit, prefix);
+    appendApplicationTechFit(document, form, application.techFit, prefix);
   }
 
   function renderNavigation(document, catalogApi) {
@@ -299,6 +337,8 @@
         lifecycleStatus: "active",
         plannedDate: "",
         retirementDate: "",
+        businessFit: 3,
+        techFit: "medium",
       },
       "application-create",
     );
@@ -340,6 +380,10 @@
         ["Lifecycle", application.lifecycleStatus],
         ["Planned Date", application.plannedDate || "Not set"],
         ["Retirement Date", application.retirementDate || "Not set"],
+        ["Business Fit", String(application.businessFit)],
+        ["Business Fit Band", application.businessFitBand],
+        ["Tech Fit", application.techFit],
+        ["TIME Classification", application.timeClassification],
         ["PACE", application.pace],
         ["Criticality", application.criticality],
       ]) {

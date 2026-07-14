@@ -51,6 +51,8 @@
         lifecycleStatus: "active",
         plannedDate: "",
         retirementDate: "",
+        businessFit: 4,
+        techFit: "high",
         pace: "system of record",
         criticality: "high",
         informationStatus: "verified",
@@ -72,6 +74,8 @@
         lifecycleStatus: "active",
         plannedDate: "",
         retirementDate: "",
+        businessFit: 3,
+        techFit: "medium",
         pace: "system of differentiation",
         criticality: "high",
         informationStatus: "draft",
@@ -93,6 +97,8 @@
         lifecycleStatus: "active",
         plannedDate: "",
         retirementDate: "",
+        businessFit: 2,
+        techFit: "medium",
         pace: "system of record",
         criticality: "medium",
         informationStatus: "needs review",
@@ -114,6 +120,8 @@
         lifecycleStatus: "planned",
         plannedDate: "2026-08-01",
         retirementDate: "",
+        businessFit: 5,
+        techFit: "low",
         pace: "system of innovation",
         criticality: "medium",
         informationStatus: "draft",
@@ -153,6 +161,9 @@
 
   function normalizeApplication(application) {
     const lifecycleStatus = normalizeLifecycleStatus(application.lifecycleStatus);
+    const businessFit = normalizeBusinessFit(application.businessFit === undefined ? 3 : application.businessFit);
+    const techFit = normalizeTechFit(application.techFit === undefined ? "medium" : application.techFit);
+    const businessFitBand = deriveBusinessFitBand(businessFit);
     return {
       ...clone(application),
       aliases: normalizeAliases(application.aliases),
@@ -165,6 +176,10 @@
       lifecycleStatus,
       plannedDate: normalizeText(application.plannedDate),
       retirementDate: normalizeText(application.retirementDate),
+      businessFit,
+      businessFitBand,
+      techFit,
+      timeClassification: deriveTimeClassification(businessFitBand, techFit),
     };
   }
 
@@ -287,6 +302,47 @@
     return lifecycleStatus;
   }
 
+  function normalizeBusinessFit(value) {
+    const businessFit = Number(normalizeText(value));
+    if (!Number.isInteger(businessFit) || businessFit < 1 || businessFit > 5) {
+      throw new Error("Business Fit must be 1, 2, 3, 4, or 5.");
+    }
+    return businessFit;
+  }
+
+  function normalizeTechFit(value) {
+    const techFit = normalizeText(value).toLocaleLowerCase();
+    if (!["low", "medium", "high"].includes(techFit)) {
+      throw new Error("Tech Fit must be low, medium, or high.");
+    }
+    return techFit;
+  }
+
+  function deriveBusinessFitBand(businessFit) {
+    if (businessFit <= 2) {
+      return "low";
+    }
+    if (businessFit === 3) {
+      return "medium";
+    }
+    return "high";
+  }
+
+  function deriveTimeClassification(businessFitBand, techFit) {
+    const matrix = {
+      "high/high": "Invest",
+      "high/medium": "Invest",
+      "high/low": "Migrate",
+      "medium/high": "Tolerate",
+      "medium/medium": "Tolerate",
+      "medium/low": "Migrate",
+      "low/high": "Eliminate",
+      "low/medium": "Eliminate",
+      "low/low": "Eliminate",
+    };
+    return matrix[`${businessFitBand}/${techFit}`];
+  }
+
   function normalizeLifecycleInput(input) {
     const lifecycleStatus = normalizeLifecycleStatus(input && input.lifecycleStatus);
     const plannedDate = normalizeText(input && input.plannedDate);
@@ -324,6 +380,9 @@
     const description = normalizeName(input && input.description, "Application description is required.");
     const businessOwnerName = normalizeName(input && input.businessOwnerName, "Business Owner Name is required.");
     const techOwnerName = normalizeName(input && input.techOwnerName, "Tech Owner Name is required.");
+    const businessFit = normalizeBusinessFit(input && input.businessFit);
+    const techFit = normalizeTechFit(input && input.techFit);
+    const businessFitBand = deriveBusinessFitBand(businessFit);
 
     return {
       name,
@@ -339,6 +398,10 @@
       departmentId: requireReference(catalog.departments, input && input.departmentId, "Department"),
       businessAreaId: requireReference(catalog.businessAreas, input && input.businessAreaId, "Business Area"),
       ...normalizeLifecycleInput(input),
+      businessFit,
+      businessFitBand,
+      techFit,
+      timeClassification: deriveTimeClassification(businessFitBand, techFit),
     };
   }
 
