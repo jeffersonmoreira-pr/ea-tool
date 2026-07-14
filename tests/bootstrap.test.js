@@ -154,6 +154,44 @@ test("catalog persists application name changes in browser storage", () => {
   assert.equal(reloaded.applications[0].name, "Revenue Hub Updated");
 });
 
+test("catalog preserves name-only update compatibility for legacy stored applications", () => {
+  const legacyCatalog = {
+    vendors: [{ id: "vendor-internal", name: "Internal Digital Team", type: "Internal Vendor" }],
+    departments: [{ id: "dept-operations", name: "Operations" }],
+    businessAreas: [{ id: "area-field", name: "Field Operations" }],
+    applications: [
+      {
+        id: "app-legacy",
+        name: "Legacy App",
+        description: "Stored before owner fields existed.",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      },
+      {
+        id: "app-dispatch",
+        name: "Dispatch Console",
+        description: "Stored before owner fields existed.",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      },
+    ],
+  };
+  const storage = createMemoryStorage({
+    [catalogApi.CATALOG_STORAGE_KEY]: JSON.stringify(legacyCatalog),
+  });
+  const catalog = catalogApi.loadCatalog(storage);
+
+  const updated = catalogApi.updateApplicationName(catalog, "app-legacy", "Legacy App Renamed");
+  assert.equal(updated.name, "Legacy App Renamed");
+  assert.equal(updated.businessOwnerName, "");
+  assert.equal(updated.techOwnerName, "");
+  assert.throws(() => catalogApi.updateApplicationName(catalog, "app-legacy", " dispatch console "), {
+    message: "Application name must be unique.",
+  });
+});
+
 test("vendor CRUD enforces internal status, unique names, and referenced delete blocks", () => {
   const catalog = catalogApi.createInitialCatalog();
 

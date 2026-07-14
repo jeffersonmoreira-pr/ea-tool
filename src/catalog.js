@@ -205,7 +205,10 @@
     if (!application) {
       throw new Error(`Application not found: ${applicationId}`);
     }
-    return updateApplication(catalog, applicationId, { ...application, name });
+    const nextName = normalizeName(name, "Application name is required.");
+    assertUniqueName(catalog.applications, nextName, applicationId, "Application name must be unique.");
+    application.name = nextName;
+    return application;
   }
 
   function normalizeName(name, message) {
