@@ -171,12 +171,15 @@
     const lifecycleStatus = normalizeLifecycleStatus(application.lifecycleStatus);
     const businessFit = normalizeBusinessFit(application.businessFit === undefined ? 3 : application.businessFit);
     const techFit = normalizeTechFit(application.techFit === undefined ? "medium" : application.techFit);
-    const pace = normalizePace(application.pace);
-    const criticality = normalizeCriticality(application.criticality);
-    const personalDataHandling = normalizeDataHandling(application.personalDataHandling, "Personal Data Handling");
+    const pace = normalizePace(application.pace, { fallbackInvalid: true });
+    const criticality = normalizeCriticality(application.criticality, { fallbackInvalid: true });
+    const personalDataHandling = normalizeDataHandling(application.personalDataHandling, "Personal Data Handling", {
+      fallbackInvalid: true,
+    });
     const sensitiveBusinessDataHandling = normalizeDataHandling(
       application.sensitiveBusinessDataHandling,
       "Sensitive Business Data Handling",
+      { fallbackInvalid: true },
     );
     const businessFitBand = deriveBusinessFitBand(businessFit);
     return {
@@ -337,7 +340,8 @@
     return techFit;
   }
 
-  function normalizePace(value) {
+  function normalizePace(value, options) {
+    const settings = options || {};
     const pace = normalizeText(value) || "Unclassified";
     const legacyPace = pace.toLocaleLowerCase();
     const legacyMap = {
@@ -348,6 +352,9 @@
     };
     const normalized = legacyMap[legacyPace] || pace;
     if (!["System of Record", "System of Differentiation", "System of Innovation", "Unclassified"].includes(normalized)) {
+      if (settings.fallbackInvalid) {
+        return "Unclassified";
+      }
       throw new Error(
         "PACE Classification must be System of Record, System of Differentiation, System of Innovation, or Unclassified.",
       );
@@ -355,17 +362,25 @@
     return normalized;
   }
 
-  function normalizeCriticality(value) {
+  function normalizeCriticality(value, options) {
+    const settings = options || {};
     const criticality = normalizeText(value || "medium").toLocaleLowerCase();
     if (!["low", "medium", "high"].includes(criticality)) {
+      if (settings.fallbackInvalid) {
+        return "medium";
+      }
       throw new Error("Criticality must be low, medium, or high.");
     }
     return criticality;
   }
 
-  function normalizeDataHandling(value, label) {
+  function normalizeDataHandling(value, label, options) {
+    const settings = options || {};
     const dataHandling = normalizeText(value) || "Unknown";
     if (!["Yes", "No", "Unknown"].includes(dataHandling)) {
+      if (settings.fallbackInvalid) {
+        return "Unknown";
+      }
       throw new Error(`${label} must be Yes, No, or Unknown.`);
     }
     return dataHandling;

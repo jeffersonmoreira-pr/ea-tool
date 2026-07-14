@@ -575,15 +575,32 @@ test("application catalog preserves manual PACE, criticality, and data handling 
         personalDataHandling: undefined,
         sensitiveBusinessDataHandling: undefined,
       },
+      {
+        ...record,
+        id: "app-invalid-legacy-indicators",
+        name: "Invalid Legacy Indicators",
+        pace: "core system",
+        criticality: "urgent",
+        personalDataHandling: "Maybe",
+        sensitiveBusinessDataHandling: "Restricted",
+      },
     ],
   };
   const legacyReloaded = catalogApi.loadCatalog(
     createMemoryStorage({ [catalogApi.CATALOG_STORAGE_KEY]: JSON.stringify(legacyCatalog) }),
   );
-  assert.equal(legacyReloaded.applications[0].pace, "System of Differentiation");
-  assert.equal(legacyReloaded.applications[0].criticality, "medium");
-  assert.equal(legacyReloaded.applications[0].personalDataHandling, "Unknown");
-  assert.equal(legacyReloaded.applications[0].sensitiveBusinessDataHandling, "Unknown");
+  const legacyPace = legacyReloaded.applications.find((application) => application.id === "app-legacy-pace");
+  assert.equal(legacyPace.pace, "System of Differentiation");
+  assert.equal(legacyPace.criticality, "medium");
+  assert.equal(legacyPace.personalDataHandling, "Unknown");
+  assert.equal(legacyPace.sensitiveBusinessDataHandling, "Unknown");
+  const invalidLegacyIndicators = legacyReloaded.applications.find(
+    (application) => application.id === "app-invalid-legacy-indicators",
+  );
+  assert.equal(invalidLegacyIndicators.pace, "Unclassified");
+  assert.equal(invalidLegacyIndicators.criticality, "medium");
+  assert.equal(invalidLegacyIndicators.personalDataHandling, "Unknown");
+  assert.equal(invalidLegacyIndicators.sensitiveBusinessDataHandling, "Unknown");
 
   assert.throws(() => catalogApi.createApplication(catalog, { ...baseInput, name: "Invalid Pace", pace: "core" }), {
     message:
@@ -825,24 +842,24 @@ test("browser adapter manages application create edit delete with persistence", 
     storage: reloadedStorage,
     catalogApi,
   });
-  assert.match(collectText(reloaded.root), /Ana Silva/);
-  assert.match(collectText(reloaded.root), /Dispatch Desk/);
-  assert.match(collectText(reloaded.root), /retired/);
-  assert.match(collectText(reloaded.root), /2025-12-31/);
-  assert.match(collectText(reloaded.root), /Migrate/);
-  assert.match(collectText(reloaded.root), /PACE Classification/);
-  assert.match(collectText(reloaded.root), /Criticality/);
-  assert.match(collectText(reloaded.root), /Personal Data Handling/);
-  assert.match(collectText(reloaded.root), /Sensitive Business Data Handling/);
-  assert.match(collectText(reloaded.root), /System of Innovation/);
-  assert.match(collectText(reloaded.root), /high/);
-  assert.match(collectText(reloaded.root), /Yes/);
-  assert.match(collectText(reloaded.root), /Unknown/);
-
   const reloadedApplications = reloadedDocument.getElementById("applications");
   const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>
     collectText(card).includes("Dispatch Console"),
   );
+  const reloadedDispatchText = collectText(reloadedDispatchCard);
+  assert.match(reloadedDispatchText, /Ana Silva/);
+  assert.match(reloadedDispatchText, /Dispatch Desk/);
+  assert.match(reloadedDispatchText, /retired/);
+  assert.match(reloadedDispatchText, /2025-12-31/);
+  assert.match(reloadedDispatchText, /Migrate/);
+  assert.match(reloadedDispatchText, /PACE Classification/);
+  assert.match(reloadedDispatchText, /Criticality/);
+  assert.match(reloadedDispatchText, /Personal Data Handling/);
+  assert.match(reloadedDispatchText, /Sensitive Business Data Handling/);
+  assert.match(reloadedDispatchText, /System of Innovation/);
+  assert.match(reloadedDispatchText, /high/);
+  assert.match(reloadedDispatchText, /Yes/);
+  assert.match(reloadedDispatchText, /Unknown/);
   findAll(reloadedDispatchCard, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
