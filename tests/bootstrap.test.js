@@ -602,6 +602,29 @@ test("application catalog preserves manual PACE, criticality, and data handling 
   assert.equal(invalidLegacyIndicators.personalDataHandling, "Unknown");
   assert.equal(invalidLegacyIndicators.sensitiveBusinessDataHandling, "Unknown");
 
+  const legacyVerifiedCatalog = {
+    vendors: catalog.vendors,
+    departments: catalog.departments,
+    businessAreas: catalog.businessAreas,
+    applications: [
+      {
+        ...record,
+        id: "app-legacy-verified",
+        name: "Legacy Verified",
+        informationStatus: "verified",
+        lastVerificationDate: undefined,
+      },
+    ],
+  };
+  const legacyVerifiedReloaded = catalogApi.loadCatalog(
+    createMemoryStorage({ [catalogApi.CATALOG_STORAGE_KEY]: JSON.stringify(legacyVerifiedCatalog) }),
+  );
+  const legacyVerified = legacyVerifiedReloaded.applications.find(
+    (application) => application.id === "app-legacy-verified",
+  );
+  assert.equal(legacyVerified.informationStatus, "Verified");
+  assert.equal(legacyVerified.lastVerificationDate, "");
+
   assert.throws(() => catalogApi.createApplication(catalog, { ...baseInput, name: "Invalid Pace", pace: "core" }), {
     message:
       "PACE Classification must be System of Record, System of Differentiation, System of Innovation, or Unclassified.",

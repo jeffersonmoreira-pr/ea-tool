@@ -185,7 +185,7 @@
       "Sensitive Business Data Handling",
       { fallbackInvalid: true },
     );
-    const verification = normalizeVerificationInput(application);
+    const verification = normalizeVerificationInput(application, { requireVerifiedDate: false });
     const businessFitBand = deriveBusinessFitBand(businessFit);
     return {
       ...clone(application),
@@ -454,10 +454,11 @@
     };
   }
 
-  function normalizeVerificationInput(input) {
+  function normalizeVerificationInput(input, options) {
+    const settings = options || {};
     const informationStatus = normalizeInformationStatus(input && input.informationStatus);
     const lastVerificationDate = normalizeText(input && input.lastVerificationDate);
-    if (informationStatus === "Verified" && !lastVerificationDate) {
+    if (settings.requireVerifiedDate !== false && informationStatus === "Verified" && !lastVerificationDate) {
       throw new Error("Last Verification Date is required for Verified Applications.");
     }
     if (lastVerificationDate && !isValidIsoDate(lastVerificationDate)) {
