@@ -282,3 +282,79 @@ test("browser adapter manages vendor CRUD with persisted create and rendered blo
   deleteButton.onclick();
   assert.match(collectText(vendorsSection), /Vendor is in use by Application: Revenue Hub\./);
 });
+
+test("browser adapter manages department and business area create edit delete controls", () => {
+  const document = createDocument();
+  const storage = createMemoryStorage();
+  const rendered = appApi.renderApp({ document, storage, catalogApi });
+
+  let departmentsSection = document.getElementById("departments");
+  const departmentCreateForm = findAll(departmentsSection, (node) => node.tagName === "FORM")[0];
+  findAll(departmentCreateForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
+    "Legal";
+  departmentCreateForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(rendered.root), /Legal/);
+
+  departmentsSection = document.getElementById("departments");
+  const legalItem = findAll(departmentsSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Legal"),
+  );
+  const legalEditForm = findAll(legalItem, (node) => node.tagName === "FORM")[0];
+  findAll(legalEditForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
+    "Legal Affairs";
+  legalEditForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(rendered.root), /Legal Affairs/);
+
+  departmentsSection = document.getElementById("departments");
+  const financeItem = findAll(departmentsSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Finance"),
+  );
+  findAll(financeItem, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+  assert.match(collectText(departmentsSection), /Department is in use by Application: Revenue Hub\./);
+
+  departmentsSection = document.getElementById("departments");
+  const legalAffairsItem = findAll(departmentsSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Legal Affairs"),
+  );
+  findAll(legalAffairsItem, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+  assert.doesNotMatch(collectText(rendered.root), /Legal Affairs/);
+
+  let businessAreasSection = document.getElementById("business-areas");
+  const areaCreateForm = findAll(businessAreasSection, (node) => node.tagName === "FORM")[0];
+  findAll(areaCreateForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
+    "Customer Growth";
+  areaCreateForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(rendered.root), /Customer Growth/);
+
+  businessAreasSection = document.getElementById("business-areas");
+  const growthItem = findAll(businessAreasSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Customer Growth"),
+  );
+  const growthEditForm = findAll(growthItem, (node) => node.tagName === "FORM")[0];
+  findAll(growthEditForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
+    "Customer Growth Strategy";
+  growthEditForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(rendered.root), /Customer Growth Strategy/);
+
+  businessAreasSection = document.getElementById("business-areas");
+  const revenueItem = findAll(businessAreasSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Revenue Management"),
+  );
+  findAll(revenueItem, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+  assert.match(collectText(businessAreasSection), /Business Area is in use by Application: Revenue Hub\./);
+
+  businessAreasSection = document.getElementById("business-areas");
+  const strategyItem = findAll(businessAreasSection, (node) => node.tagName === "LI").find((item) =>
+    collectText(item).includes("Customer Growth Strategy"),
+  );
+  findAll(strategyItem, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+  assert.doesNotMatch(collectText(rendered.root), /Customer Growth Strategy/);
+});
