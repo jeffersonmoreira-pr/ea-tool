@@ -297,11 +297,25 @@
     if (["retiring", "retired"].includes(lifecycleStatus) && !retirementDate) {
       throw new Error(`Retirement Date is required for ${lifecycleStatus} Applications.`);
     }
+    if (plannedDate && !isValidIsoDate(plannedDate)) {
+      throw new Error("Planned Date must be a valid date.");
+    }
+    if (retirementDate && !isValidIsoDate(retirementDate)) {
+      throw new Error("Retirement Date must be a valid date.");
+    }
     return {
       lifecycleStatus,
       plannedDate,
       retirementDate,
     };
+  }
+
+  function isValidIsoDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return false;
+    }
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
   }
 
   function normalizeApplicationInput(catalog, input, currentId) {

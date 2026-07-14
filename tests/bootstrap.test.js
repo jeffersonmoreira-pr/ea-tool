@@ -334,6 +334,26 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
       }),
     { message: "Lifecycle Status must be planned, active, retiring, or retired." },
   );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Invalid Planned Date",
+        lifecycleStatus: "planned",
+        plannedDate: "not-a-date",
+      }),
+    { message: "Planned Date must be a valid date." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...lifecycleApplicationInput,
+        name: "Invalid Retirement Date",
+        lifecycleStatus: "retiring",
+        retirementDate: "2026-02-31",
+      }),
+    { message: "Retirement Date must be a valid date." },
+  );
   const plannedApplication = catalogApi.createApplication(catalog, {
     ...lifecycleApplicationInput,
     name: "Planned Dispatch Console",
