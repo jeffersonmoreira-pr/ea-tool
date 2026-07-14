@@ -38,6 +38,13 @@
         id: "app-revenue-hub",
         name: "Revenue Hub",
         description: "Portfolio application for revenue planning and invoicing visibility.",
+        aliases: ["RevHub", "Revenue Planning"],
+        applicationUrl: "https://revenue.example.local",
+        diagnosticUrl: "",
+        businessOwnerName: "Maya Chen",
+        businessOwnerEmail: "maya.chen@example.local",
+        techOwnerName: "Theo Ramos",
+        techOwnerEmail: "theo.ramos@example.local",
         vendorId: "vendor-northstar",
         departmentId: "dept-finance",
         businessAreaId: "area-revenue",
@@ -50,6 +57,13 @@
         id: "app-field-ops",
         name: "Field Ops Portal",
         description: "Operational portal for coordinating field work and local execution.",
+        aliases: ["Field Portal"],
+        applicationUrl: "",
+        diagnosticUrl: "",
+        businessOwnerName: "Rui Costa",
+        businessOwnerEmail: "",
+        techOwnerName: "Ana Silva",
+        techOwnerEmail: "",
         vendorId: "vendor-internal",
         departmentId: "dept-operations",
         businessAreaId: "area-field",
@@ -62,6 +76,13 @@
         id: "app-employee-directory",
         name: "Employee Directory",
         description: "Reference application for employee lookup and organizational context.",
+        aliases: ["People Directory"],
+        applicationUrl: "",
+        diagnosticUrl: "",
+        businessOwnerName: "Nora Patel",
+        businessOwnerEmail: "",
+        techOwnerName: "Ilya Novak",
+        techOwnerEmail: "",
         vendorId: "vendor-internal",
         departmentId: "dept-people",
         businessAreaId: "area-workforce",
@@ -74,6 +95,13 @@
         id: "app-analytics-workbench",
         name: "Analytics Workbench",
         description: "Analytical workspace for management reporting and portfolio exploration.",
+        aliases: ["Analytics Lab"],
+        applicationUrl: "",
+        diagnosticUrl: "https://diagnostics.example.local/analytics",
+        businessOwnerName: "Priya Shah",
+        businessOwnerEmail: "priya.shah@example.local",
+        techOwnerName: "Mateo Alves",
+        techOwnerEmail: "",
         vendorId: "vendor-orbit",
         departmentId: "dept-finance",
         businessAreaId: "area-revenue",
@@ -101,13 +129,40 @@
     };
   }
 
+  function normalizeText(value) {
+    return String(value || "").trim();
+  }
+
+  function normalizeAliases(aliases) {
+    if (Array.isArray(aliases)) {
+      return aliases.map(normalizeText).filter(Boolean);
+    }
+    return normalizeText(aliases)
+      .split(",")
+      .map(normalizeText)
+      .filter(Boolean);
+  }
+
+  function normalizeApplication(application) {
+    return {
+      ...clone(application),
+      aliases: normalizeAliases(application.aliases),
+      applicationUrl: normalizeText(application.applicationUrl),
+      diagnosticUrl: normalizeText(application.diagnosticUrl),
+      businessOwnerName: normalizeText(application.businessOwnerName),
+      businessOwnerEmail: normalizeText(application.businessOwnerEmail),
+      techOwnerName: normalizeText(application.techOwnerName),
+      techOwnerEmail: normalizeText(application.techOwnerEmail),
+    };
+  }
+
   function normalizeCatalog(catalog) {
     const source = catalog && typeof catalog === "object" ? catalog : {};
     return {
       vendors: Array.isArray(source.vendors) ? source.vendors.map(normalizeVendor) : [],
       departments: Array.isArray(source.departments) ? source.departments.map(clone) : [],
       businessAreas: Array.isArray(source.businessAreas) ? source.businessAreas.map(clone) : [],
-      applications: Array.isArray(source.applications) ? source.applications.map(clone) : [],
+      applications: Array.isArray(source.applications) ? source.applications.map(normalizeApplication) : [],
     };
   }
 
@@ -146,16 +201,11 @@
   }
 
   function updateApplicationName(catalog, applicationId, name) {
-    const nextName = String(name || "").trim();
-    if (!nextName) {
-      throw new Error("Application name is required.");
-    }
     const application = catalog.applications.find((candidate) => candidate.id === applicationId);
     if (!application) {
       throw new Error(`Application not found: ${applicationId}`);
     }
-    application.name = nextName;
-    return application;
+    return updateApplication(catalog, applicationId, { ...application, name });
   }
 
   function normalizeName(name, message) {
@@ -205,6 +255,38 @@
     return record;
   }
 
+  function requireReference(records, id, label) {
+    const nextId = normalizeText(id);
+    if (!nextId) {
+      throw new Error(`${label} is required.`);
+    }
+    findRecord(records, nextId, label);
+    return nextId;
+  }
+
+  function normalizeApplicationInput(catalog, input, currentId) {
+    const name = normalizeName(input && input.name, "Application name is required.");
+    assertUniqueName(catalog.applications, name, currentId, "Application name must be unique.");
+    const description = normalizeName(input && input.description, "Application description is required.");
+    const businessOwnerName = normalizeName(input && input.businessOwnerName, "Business Owner Name is required.");
+    const techOwnerName = normalizeName(input && input.techOwnerName, "Tech Owner Name is required.");
+
+    return {
+      name,
+      description,
+      aliases: normalizeAliases(input && input.aliases),
+      applicationUrl: normalizeText(input && input.applicationUrl),
+      diagnosticUrl: normalizeText(input && input.diagnosticUrl),
+      businessOwnerName,
+      businessOwnerEmail: normalizeText(input && input.businessOwnerEmail),
+      techOwnerName,
+      techOwnerEmail: normalizeText(input && input.techOwnerEmail),
+      vendorId: requireReference(catalog.vendors, input && input.vendorId, "Vendor"),
+      departmentId: requireReference(catalog.departments, input && input.departmentId, "Department"),
+      businessAreaId: requireReference(catalog.businessAreas, input && input.businessAreaId, "Business Area"),
+    };
+  }
+
   function findReferencingApplication(catalog, fieldName, recordId) {
     return catalog.applications.find((application) => application[fieldName] === recordId);
   }
@@ -229,6 +311,38 @@
     };
     catalog.vendors.push(vendor);
     return vendor;
+  }
+
+  function createApplication(catalog, input) {
+    const values = normalizeApplicationInput(catalog, input, null);
+    const application = {
+      id: createId(catalog.applications, "app", values.name),
+      ...values,
+      lifecycleStatus: normalizeText(input && input.lifecycleStatus) || "active",
+      pace: normalizeText(input && input.pace) || "system of record",
+      criticality: normalizeText(input && input.criticality) || "medium",
+      informationStatus: normalizeText(input && input.informationStatus) || "draft",
+    };
+    catalog.applications.push(application);
+    return application;
+  }
+
+  function updateApplication(catalog, applicationId, input) {
+    const application = findRecord(catalog.applications, applicationId, "Application");
+    const values = normalizeApplicationInput(catalog, input, applicationId);
+    Object.assign(application, values, {
+      lifecycleStatus: normalizeText(input && input.lifecycleStatus) || application.lifecycleStatus,
+      pace: normalizeText(input && input.pace) || application.pace,
+      criticality: normalizeText(input && input.criticality) || application.criticality,
+      informationStatus: normalizeText(input && input.informationStatus) || application.informationStatus,
+    });
+    return application;
+  }
+
+  function deleteApplication(catalog, applicationId) {
+    const application = findRecord(catalog.applications, applicationId, "Application");
+    catalog.applications.splice(catalog.applications.indexOf(application), 1);
+    return application;
   }
 
   function updateVendor(catalog, vendorId, input) {
@@ -312,10 +426,12 @@
 
   return {
     CATALOG_STORAGE_KEY,
+    createApplication,
     createBusinessArea,
     createDepartment,
     createInitialCatalog,
     createVendor,
+    deleteApplication,
     deleteBusinessArea,
     deleteDepartment,
     deleteVendor,
@@ -323,6 +439,7 @@
     getVendorDisplayType,
     loadCatalog,
     saveCatalog,
+    updateApplication,
     updateBusinessArea,
     updateApplicationName,
     updateDepartment,

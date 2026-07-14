@@ -215,6 +215,122 @@ test("business area CRUD enforces unique names and referenced delete blocks", ()
   });
 });
 
+test("application CRUD enforces identity, owners, aliases, optional URLs, references, and delete", () => {
+  const catalog = catalogApi.createInitialCatalog();
+
+  const application = catalogApi.createApplication(catalog, {
+    name: "Dispatch Console",
+    description: "Short dispatch operations catalog entry.",
+    aliases: ["Ops Desk", "Dispatch Hub"],
+    businessOwnerName: "Maya Chen",
+    techOwnerName: "Rui Costa",
+    vendorId: "vendor-internal",
+    departmentId: "dept-operations",
+    businessAreaId: "area-field",
+  });
+
+  assert.equal(application.id, "app-dispatch-console");
+  assert.equal(application.name, "Dispatch Console");
+  assert.equal(application.description, "Short dispatch operations catalog entry.");
+  assert.deepEqual(application.aliases, ["Ops Desk", "Dispatch Hub"]);
+  assert.equal(application.applicationUrl, "");
+  assert.equal(application.diagnosticUrl, "");
+  assert.equal(application.businessOwnerName, "Maya Chen");
+  assert.equal(application.businessOwnerEmail, "");
+  assert.equal(application.techOwnerName, "Rui Costa");
+  assert.equal(application.techOwnerEmail, "");
+  assert.equal(application.vendorId, "vendor-internal");
+  assert.equal(application.departmentId, "dept-operations");
+  assert.equal(application.businessAreaId, "area-field");
+
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: " dispatch console ",
+        description: "Duplicate dispatch entry.",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "Rui Costa",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      }),
+    { message: "Application name must be unique." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Dispatch Console Blank Description",
+        description: " ",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "Rui Costa",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      }),
+    { message: "Application description is required." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Dispatch Console Blank Business Owner",
+        description: "Short dispatch operations catalog entry.",
+        businessOwnerName: " ",
+        techOwnerName: "Rui Costa",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      }),
+    { message: "Business Owner Name is required." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Dispatch Console Blank Tech Owner",
+        description: "Short dispatch operations catalog entry.",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "",
+        vendorId: "vendor-internal",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      }),
+    { message: "Tech Owner Name is required." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        name: "Dispatch Console Missing Vendor",
+        description: "Short dispatch operations catalog entry.",
+        businessOwnerName: "Maya Chen",
+        techOwnerName: "Rui Costa",
+        vendorId: "",
+        departmentId: "dept-operations",
+        businessAreaId: "area-field",
+      }),
+    { message: "Vendor is required." },
+  );
+
+  const updated = catalogApi.updateApplication(catalog, application.id, {
+    ...application,
+    aliases: ["Dispatch Desk"],
+    businessOwnerName: "Ana Silva",
+    techOwnerName: "Theo Ramos",
+  });
+  assert.deepEqual(updated.aliases, ["Dispatch Desk"]);
+  assert.equal(updated.businessOwnerName, "Ana Silva");
+  assert.equal(updated.techOwnerName, "Theo Ramos");
+
+  catalogApi.deleteApplication(catalog, application.id);
+  assert.equal(catalog.applications.some((candidate) => candidate.name === "Dispatch Console"), false);
+  assert.deepEqual(
+    {
+      vendors: catalog.vendors.length,
+      departments: catalog.departments.length,
+      businessAreas: catalog.businessAreas.length,
+    },
+    { vendors: 3, departments: 3, businessAreas: 3 },
+  );
+});
+
 test("navigation sections match the MVP catalog areas", () => {
   assert.deepEqual(catalogApi.getNavigationSections().map((section) => section.label), [
     "Executive Overview",
