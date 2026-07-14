@@ -487,6 +487,132 @@ test("application CRUD enforces identity, owners, aliases, optional URLs, refere
   );
 });
 
+test("application catalog preserves manual PACE, criticality, and data handling indicators", () => {
+  const catalog = catalogApi.createInitialCatalog();
+  const baseInput = {
+    description: "Application indicator verification entry.",
+    businessOwnerName: "Maya Chen",
+    techOwnerName: "Rui Costa",
+    vendorId: "vendor-internal",
+    departmentId: "dept-operations",
+    businessAreaId: "area-field",
+    businessFit: 5,
+    techFit: "low",
+  };
+
+  const unclassified = catalogApi.createApplication(catalog, {
+    ...baseInput,
+    name: "Unclassified Manual Pace",
+    timeClassification: "Manual Override",
+    pace: "Unclassified",
+    criticality: "low",
+    personalDataHandling: "Unknown",
+    sensitiveBusinessDataHandling: "Unknown",
+  });
+  assert.equal(unclassified.timeClassification, "Migrate");
+  assert.equal(unclassified.pace, "Unclassified");
+  assert.equal(unclassified.criticality, "low");
+  assert.equal(unclassified.personalDataHandling, "Unknown");
+  assert.equal(unclassified.sensitiveBusinessDataHandling, "Unknown");
+
+  const record = catalogApi.createApplication(catalog, {
+    ...baseInput,
+    name: "System Record Pace",
+    pace: "System of Record",
+    criticality: "medium",
+    personalDataHandling: "Yes",
+    sensitiveBusinessDataHandling: "No",
+  });
+  assert.equal(record.pace, "System of Record");
+  assert.equal(record.criticality, "medium");
+  assert.equal(record.personalDataHandling, "Yes");
+  assert.equal(record.sensitiveBusinessDataHandling, "No");
+
+  const differentiation = catalogApi.updateApplication(catalog, record.id, {
+    ...record,
+    pace: "System of Differentiation",
+    criticality: "high",
+    personalDataHandling: "No",
+    sensitiveBusinessDataHandling: "Yes",
+  });
+  assert.equal(differentiation.pace, "System of Differentiation");
+  assert.equal(differentiation.criticality, "high");
+  assert.equal(differentiation.personalDataHandling, "No");
+  assert.equal(differentiation.sensitiveBusinessDataHandling, "Yes");
+
+  const innovation = catalogApi.updateApplication(catalog, record.id, {
+    ...differentiation,
+    pace: "System of Innovation",
+    criticality: "low",
+    personalDataHandling: "Unknown",
+    sensitiveBusinessDataHandling: "Unknown",
+  });
+  assert.equal(innovation.pace, "System of Innovation");
+  assert.equal(innovation.criticality, "low");
+  assert.equal(innovation.personalDataHandling, "Unknown");
+  assert.equal(innovation.sensitiveBusinessDataHandling, "Unknown");
+
+  const storage = createMemoryStorage();
+  catalogApi.saveCatalog(storage, catalog);
+  const reloaded = catalogApi.loadCatalog(createMemoryStorage(storage.snapshot()));
+  const reloadedInnovation = reloaded.applications.find((application) => application.id === record.id);
+  assert.equal(reloadedInnovation.pace, "System of Innovation");
+  assert.equal(reloadedInnovation.criticality, "low");
+  assert.equal(reloadedInnovation.personalDataHandling, "Unknown");
+  assert.equal(reloadedInnovation.sensitiveBusinessDataHandling, "Unknown");
+
+  const legacyCatalog = {
+    vendors: catalog.vendors,
+    departments: catalog.departments,
+    businessAreas: catalog.businessAreas,
+    applications: [
+      {
+        ...record,
+        id: "app-legacy-pace",
+        name: "Legacy Pace",
+        pace: "system of differentiation",
+        criticality: undefined,
+        personalDataHandling: undefined,
+        sensitiveBusinessDataHandling: undefined,
+      },
+    ],
+  };
+  const legacyReloaded = catalogApi.loadCatalog(
+    createMemoryStorage({ [catalogApi.CATALOG_STORAGE_KEY]: JSON.stringify(legacyCatalog) }),
+  );
+  assert.equal(legacyReloaded.applications[0].pace, "System of Differentiation");
+  assert.equal(legacyReloaded.applications[0].criticality, "medium");
+  assert.equal(legacyReloaded.applications[0].personalDataHandling, "Unknown");
+  assert.equal(legacyReloaded.applications[0].sensitiveBusinessDataHandling, "Unknown");
+
+  assert.throws(() => catalogApi.createApplication(catalog, { ...baseInput, name: "Invalid Pace", pace: "core" }), {
+    message:
+      "PACE Classification must be System of Record, System of Differentiation, System of Innovation, or Unclassified.",
+  });
+  assert.throws(
+    () => catalogApi.createApplication(catalog, { ...baseInput, name: "Invalid Criticality", criticality: "urgent" }),
+    { message: "Criticality must be low, medium, or high." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...baseInput,
+        name: "Invalid Personal Data",
+        personalDataHandling: "Maybe",
+      }),
+    { message: "Personal Data Handling must be Yes, No, or Unknown." },
+  );
+  assert.throws(
+    () =>
+      catalogApi.createApplication(catalog, {
+        ...baseInput,
+        name: "Invalid Sensitive Data",
+        sensitiveBusinessDataHandling: "Maybe",
+      }),
+    { message: "Sensitive Business Data Handling must be Yes, No, or Unknown." },
+  );
+});
+
 test("catalog derives TIME classification from manual fit assessments", () => {
   const expectedMatrix = {
     "high/high": "Invest",

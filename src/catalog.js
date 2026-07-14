@@ -53,8 +53,10 @@
         retirementDate: "",
         businessFit: 4,
         techFit: "high",
-        pace: "system of record",
+        pace: "System of Record",
         criticality: "high",
+        personalDataHandling: "Yes",
+        sensitiveBusinessDataHandling: "Yes",
         informationStatus: "verified",
       },
       {
@@ -76,8 +78,10 @@
         retirementDate: "",
         businessFit: 3,
         techFit: "medium",
-        pace: "system of differentiation",
+        pace: "System of Differentiation",
         criticality: "high",
+        personalDataHandling: "No",
+        sensitiveBusinessDataHandling: "Yes",
         informationStatus: "draft",
       },
       {
@@ -99,8 +103,10 @@
         retirementDate: "",
         businessFit: 2,
         techFit: "medium",
-        pace: "system of record",
+        pace: "System of Record",
         criticality: "medium",
+        personalDataHandling: "Yes",
+        sensitiveBusinessDataHandling: "No",
         informationStatus: "needs review",
       },
       {
@@ -122,8 +128,10 @@
         retirementDate: "",
         businessFit: 5,
         techFit: "low",
-        pace: "system of innovation",
+        pace: "System of Innovation",
         criticality: "medium",
+        personalDataHandling: "Unknown",
+        sensitiveBusinessDataHandling: "Unknown",
         informationStatus: "draft",
       },
     ],
@@ -163,6 +171,13 @@
     const lifecycleStatus = normalizeLifecycleStatus(application.lifecycleStatus);
     const businessFit = normalizeBusinessFit(application.businessFit === undefined ? 3 : application.businessFit);
     const techFit = normalizeTechFit(application.techFit === undefined ? "medium" : application.techFit);
+    const pace = normalizePace(application.pace);
+    const criticality = normalizeCriticality(application.criticality);
+    const personalDataHandling = normalizeDataHandling(application.personalDataHandling, "Personal Data Handling");
+    const sensitiveBusinessDataHandling = normalizeDataHandling(
+      application.sensitiveBusinessDataHandling,
+      "Sensitive Business Data Handling",
+    );
     const businessFitBand = deriveBusinessFitBand(businessFit);
     return {
       ...clone(application),
@@ -180,6 +195,10 @@
       businessFitBand,
       techFit,
       timeClassification: deriveTimeClassification(businessFitBand, techFit),
+      pace,
+      criticality,
+      personalDataHandling,
+      sensitiveBusinessDataHandling,
     };
   }
 
@@ -318,6 +337,40 @@
     return techFit;
   }
 
+  function normalizePace(value) {
+    const pace = normalizeText(value) || "Unclassified";
+    const legacyPace = pace.toLocaleLowerCase();
+    const legacyMap = {
+      "system of record": "System of Record",
+      "system of differentiation": "System of Differentiation",
+      "system of innovation": "System of Innovation",
+      unclassified: "Unclassified",
+    };
+    const normalized = legacyMap[legacyPace] || pace;
+    if (!["System of Record", "System of Differentiation", "System of Innovation", "Unclassified"].includes(normalized)) {
+      throw new Error(
+        "PACE Classification must be System of Record, System of Differentiation, System of Innovation, or Unclassified.",
+      );
+    }
+    return normalized;
+  }
+
+  function normalizeCriticality(value) {
+    const criticality = normalizeText(value || "medium").toLocaleLowerCase();
+    if (!["low", "medium", "high"].includes(criticality)) {
+      throw new Error("Criticality must be low, medium, or high.");
+    }
+    return criticality;
+  }
+
+  function normalizeDataHandling(value, label) {
+    const dataHandling = normalizeText(value) || "Unknown";
+    if (!["Yes", "No", "Unknown"].includes(dataHandling)) {
+      throw new Error(`${label} must be Yes, No, or Unknown.`);
+    }
+    return dataHandling;
+  }
+
   function deriveBusinessFitBand(businessFit) {
     if (businessFit <= 2) {
       return "low";
@@ -382,6 +435,13 @@
     const techOwnerName = normalizeName(input && input.techOwnerName, "Tech Owner Name is required.");
     const businessFit = normalizeBusinessFit(input && input.businessFit);
     const techFit = normalizeTechFit(input && input.techFit);
+    const pace = normalizePace(input && input.pace);
+    const criticality = normalizeCriticality(input && input.criticality);
+    const personalDataHandling = normalizeDataHandling(input && input.personalDataHandling, "Personal Data Handling");
+    const sensitiveBusinessDataHandling = normalizeDataHandling(
+      input && input.sensitiveBusinessDataHandling,
+      "Sensitive Business Data Handling",
+    );
     const businessFitBand = deriveBusinessFitBand(businessFit);
 
     return {
@@ -402,6 +462,10 @@
       businessFitBand,
       techFit,
       timeClassification: deriveTimeClassification(businessFitBand, techFit),
+      pace,
+      criticality,
+      personalDataHandling,
+      sensitiveBusinessDataHandling,
     };
   }
 
@@ -436,8 +500,6 @@
     const application = {
       id: createId(catalog.applications, "app", values.name),
       ...values,
-      pace: normalizeText(input && input.pace) || "system of record",
-      criticality: normalizeText(input && input.criticality) || "medium",
       informationStatus: normalizeText(input && input.informationStatus) || "draft",
     };
     catalog.applications.push(application);
@@ -448,8 +510,6 @@
     const application = findRecord(catalog.applications, applicationId, "Application");
     const values = normalizeApplicationInput(catalog, input, applicationId);
     Object.assign(application, values, {
-      pace: normalizeText(input && input.pace) || application.pace,
-      criticality: normalizeText(input && input.criticality) || application.criticality,
       informationStatus: normalizeText(input && input.informationStatus) || application.informationStatus,
     });
     return application;
