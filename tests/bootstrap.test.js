@@ -126,6 +126,44 @@ test("static shell uses only local assets and source has no service dependency r
   assert.doesNotMatch(source, /\b(fetch|XMLHttpRequest)\b/);
 });
 
+test("README documents local execution and final MVP validation", () => {
+  const readme = readSource("README.md");
+  assert.match(readme, /Open src\/index\.html directly in a browser/);
+  assert.match(
+    readme,
+    /Data is stored in this browser's local storage under application-portfolio\.catalog\.v1/,
+  );
+
+  for (const label of [
+    "Seed data",
+    "Master data CRUD",
+    "Application CRUD",
+    "Local persistence",
+    "Derived TIME",
+    "Filters",
+    "Indicators",
+  ]) {
+    assert.match(readme, new RegExp(`\\b${label}\\b`));
+  }
+
+  const source = ["src/index.html", "src/catalog.js", "src/app.js"].map(readSource).join("\n");
+  const forbiddenScopeTerms = [
+    "SAM",
+    "CMDB",
+    "ITSM",
+    "contracts",
+    "licenses",
+    "costs",
+    "tech stack",
+    "integrations",
+    "environments",
+  ];
+  const foundForbiddenTerms = forbiddenScopeTerms.filter((term) =>
+    new RegExp(`\\b${term.replace(" ", "\\s+")}\\b`, "i").test(source),
+  );
+  assert.deepEqual(foundForbiddenTerms, []);
+});
+
 test("seed catalog contains expected portfolio records", () => {
   const catalog = catalogApi.createInitialCatalog();
   assert.deepEqual(
