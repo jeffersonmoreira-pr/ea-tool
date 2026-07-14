@@ -45,6 +45,12 @@ function findAll(node, predicate) {
   return matches;
 }
 
+function findField(form, name) {
+  return findAll(form, (node) => ["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName)).find(
+    (field) => field.name === name,
+  );
+}
+
 function createElement(tagName, ownerDocument) {
   return {
     tagName: tagName.toUpperCase(),
@@ -361,6 +367,67 @@ test("browser adapter renders the initial catalog shell without network calls", 
   assert.match(text, /Revenue Hub/);
   assert.match(text, /Vendors/);
   assert.equal(networkCalls.length, 0);
+});
+
+test("browser adapter manages application create edit delete with persistence", () => {
+  const document = createDocument();
+  const storage = createMemoryStorage();
+  const rendered = appApi.renderApp({ document, storage, catalogApi });
+
+  let applicationsSection = document.getElementById("applications");
+  let createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
+  findField(createForm, "name").value = "Dispatch Console";
+  findField(createForm, "description").value = "Short dispatch operations catalog entry.";
+  findField(createForm, "aliases").value = "Ops Desk, Dispatch Hub";
+  findField(createForm, "businessOwnerName").value = "Maya Chen";
+  findField(createForm, "techOwnerName").value = "Rui Costa";
+  findField(createForm, "vendorId").value = "vendor-internal";
+  findField(createForm, "departmentId").value = "dept-operations";
+  findField(createForm, "businessAreaId").value = "area-field";
+  createForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(rendered.root), /Dispatch Console/);
+  assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
+
+  applicationsSection = document.getElementById("applications");
+  createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
+  findField(createForm, "name").value = " dispatch console ";
+  findField(createForm, "description").value = "Short dispatch operations catalog entry.";
+  findField(createForm, "businessOwnerName").value = "Maya Chen";
+  findField(createForm, "techOwnerName").value = "Rui Costa";
+  findField(createForm, "vendorId").value = "vendor-internal";
+  findField(createForm, "departmentId").value = "dept-operations";
+  findField(createForm, "businessAreaId").value = "area-field";
+  createForm.onsubmit({ preventDefault() {} });
+  assert.match(collectText(applicationsSection), /Application name must be unique\./);
+
+  const dispatchCard = findAll(applicationsSection, (node) => node.tagName === "ARTICLE").find((card) =>
+    collectText(card).includes("Dispatch Console"),
+  );
+  const editForm = findAll(dispatchCard, (node) => node.tagName === "FORM")[0];
+  findField(editForm, "aliases").value = "Dispatch Desk";
+  findField(editForm, "businessOwnerName").value = "Ana Silva";
+  findField(editForm, "techOwnerName").value = "Theo Ramos";
+  editForm.onsubmit({ preventDefault() {} });
+
+  const reloadedDocument = createDocument();
+  const reloadedStorage = createMemoryStorage(storage.snapshot());
+  const reloaded = appApi.renderApp({
+    document: reloadedDocument,
+    storage: reloadedStorage,
+    catalogApi,
+  });
+  assert.match(collectText(reloaded.root), /Ana Silva/);
+  assert.match(collectText(reloaded.root), /Dispatch Desk/);
+
+  const reloadedApplications = reloadedDocument.getElementById("applications");
+  const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>
+    collectText(card).includes("Dispatch Console"),
+  );
+  findAll(reloadedDispatchCard, (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Delete")
+    .onclick();
+  const stored = JSON.parse(reloadedStorage.snapshot()[catalogApi.CATALOG_STORAGE_KEY]);
+  assert.equal(stored.applications.some((application) => application.name === "Dispatch Console"), false);
 });
 
 test("browser adapter manages vendor CRUD with persisted create and rendered block messages", () => {

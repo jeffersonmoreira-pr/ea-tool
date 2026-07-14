@@ -52,6 +52,140 @@
     return records.find((record) => record.id === id);
   }
 
+  function formatAliases(aliases) {
+    return Array.isArray(aliases) ? aliases.join(", ") : "";
+  }
+
+  function parseAliases(value) {
+    return String(value || "")
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function appendApplicationField(document, form, labelText, name, value, options) {
+    const settings = options || {};
+    const fieldId = `${settings.prefix}-${name}`;
+    const label = makeElement(document, "label", {
+      className: "edit-form__label",
+      text: labelText,
+      attributes: { for: fieldId },
+    });
+    const input = makeElement(document, settings.multiline ? "textarea" : "input", {
+      id: fieldId,
+      name,
+      type: settings.type || "text",
+      value: value || "",
+      attributes: settings.required ? { required: "required" } : undefined,
+    });
+    form.append(label, input);
+    return input;
+  }
+
+  function appendApplicationSelect(document, form, labelText, name, records, selectedId, prefix) {
+    const fieldId = `${prefix}-${name}`;
+    const label = makeElement(document, "label", {
+      className: "edit-form__label",
+      text: labelText,
+      attributes: { for: fieldId },
+    });
+    const select = makeElement(document, "select", {
+      id: fieldId,
+      name,
+      value: selectedId,
+      attributes: { required: "required" },
+    });
+    for (const record of records) {
+      const option = makeElement(document, "option", {
+        text: record.name,
+        value: record.id,
+        attributes: { value: record.id },
+      });
+      if (record.id === selectedId) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    }
+    form.append(label, select);
+    return select;
+  }
+
+  function getApplicationFormInput(form, name) {
+    return findAllFormFields(form).find((field) => field.name === name);
+  }
+
+  function findAllFormFields(node) {
+    const fields = ["INPUT", "TEXTAREA", "SELECT"].includes(node.tagName) ? [node] : [];
+    for (const child of node.children || []) {
+      fields.push(...findAllFormFields(child));
+    }
+    return fields;
+  }
+
+  function readApplicationForm(form) {
+    return {
+      name: getApplicationFormInput(form, "name").value,
+      description: getApplicationFormInput(form, "description").value,
+      aliases: parseAliases(getApplicationFormInput(form, "aliases").value),
+      applicationUrl: getApplicationFormInput(form, "applicationUrl").value,
+      diagnosticUrl: getApplicationFormInput(form, "diagnosticUrl").value,
+      businessOwnerName: getApplicationFormInput(form, "businessOwnerName").value,
+      businessOwnerEmail: getApplicationFormInput(form, "businessOwnerEmail").value,
+      techOwnerName: getApplicationFormInput(form, "techOwnerName").value,
+      techOwnerEmail: getApplicationFormInput(form, "techOwnerEmail").value,
+      vendorId: getApplicationFormInput(form, "vendorId").value,
+      departmentId: getApplicationFormInput(form, "departmentId").value,
+      businessAreaId: getApplicationFormInput(form, "businessAreaId").value,
+    };
+  }
+
+  function appendApplicationFormFields(document, form, catalog, application, prefix) {
+    appendApplicationField(document, form, "Application name", "name", application.name, { prefix, required: true });
+    appendApplicationField(document, form, "Description", "description", application.description, {
+      prefix,
+      required: true,
+      multiline: true,
+    });
+    appendApplicationField(document, form, "Aliases", "aliases", formatAliases(application.aliases), { prefix });
+    appendApplicationField(document, form, "Application URL", "applicationUrl", application.applicationUrl, { prefix });
+    appendApplicationField(document, form, "Diagnostic URL", "diagnosticUrl", application.diagnosticUrl, { prefix });
+    appendApplicationField(document, form, "Business Owner Name", "businessOwnerName", application.businessOwnerName, {
+      prefix,
+      required: true,
+    });
+    appendApplicationField(document, form, "Business Owner Email", "businessOwnerEmail", application.businessOwnerEmail, {
+      prefix,
+      type: "email",
+    });
+    appendApplicationField(document, form, "Tech Owner Name", "techOwnerName", application.techOwnerName, {
+      prefix,
+      required: true,
+    });
+    appendApplicationField(document, form, "Tech Owner Email", "techOwnerEmail", application.techOwnerEmail, {
+      prefix,
+      type: "email",
+    });
+    appendApplicationSelect(document, form, "Vendor", "vendorId", catalog.vendors, application.vendorId, prefix);
+    appendApplicationSelect(
+      document,
+      form,
+      "Department",
+      "departmentId",
+      catalog.departments,
+      application.departmentId,
+      prefix,
+    );
+    appendApplicationSelect(
+      document,
+      form,
+      "Business Area",
+      "businessAreaId",
+      catalog.businessAreas,
+      application.businessAreaId,
+      prefix,
+    );
+  }
+
   function renderNavigation(document, catalogApi) {
     const nav = makeElement(document, "nav", {
       className: "portfolio-nav",
@@ -109,6 +243,49 @@
     });
     appendTextBlock(document, section, "h2", "section-title", "Applications");
 
+    const status = makeElement(document, "p", {
+      className: "master-data-status application-status",
+      attributes: { role: "status" },
+    });
+    section.appendChild(status);
+
+    const createForm = makeElement(document, "form", { className: "edit-form application-form application-form--create" });
+    appendApplicationFormFields(
+      document,
+      createForm,
+      catalog,
+      {
+        name: "",
+        description: "",
+        aliases: [],
+        applicationUrl: "",
+        diagnosticUrl: "",
+        businessOwnerName: "",
+        businessOwnerEmail: "",
+        techOwnerName: "",
+        techOwnerEmail: "",
+        vendorId: catalog.vendors[0] ? catalog.vendors[0].id : "",
+        departmentId: catalog.departments[0] ? catalog.departments[0].id : "",
+        businessAreaId: catalog.businessAreas[0] ? catalog.businessAreas[0].id : "",
+      },
+      "application-create",
+    );
+    const createButton = makeElement(document, "button", { type: "submit", text: "Add Application" });
+    createForm.appendChild(createButton);
+    createForm.addEventListener("submit", function onCreate(event) {
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+      try {
+        catalogApi.createApplication(catalog, readApplicationForm(createForm));
+        catalogApi.saveCatalog(storage, catalog);
+        rerender(catalog);
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+    section.appendChild(createForm);
+
     const list = makeElement(document, "div", { className: "application-grid" });
     for (const application of catalog.applications) {
       const vendor = findById(catalog.vendors, application.vendorId);
@@ -120,6 +297,11 @@
 
       const meta = makeElement(document, "dl", { className: "meta-list" });
       for (const [term, description] of [
+        ["Aliases", formatAliases(application.aliases) || "None"],
+        ["Application URL", application.applicationUrl || "Not set"],
+        ["Diagnostic URL", application.diagnosticUrl || "Not set"],
+        ["Business Owner", application.businessOwnerEmail ? `${application.businessOwnerName} <${application.businessOwnerEmail}>` : application.businessOwnerName],
+        ["Tech Owner", application.techOwnerEmail ? `${application.techOwnerName} <${application.techOwnerEmail}>` : application.techOwnerName],
         ["Vendor", vendor ? vendor.name : "Unknown"],
         ["Department", department ? department.name : "Unknown"],
         ["Business Area", businessArea ? businessArea.name : "Unknown"],
@@ -132,31 +314,33 @@
       }
       card.appendChild(meta);
 
-      if (application.id === "app-revenue-hub") {
-        const form = makeElement(document, "form", { className: "edit-form" });
-        const label = makeElement(document, "label", {
-          className: "edit-form__label",
-          text: "Application name",
-          attributes: { for: "application-name-input" },
-        });
-        const input = makeElement(document, "input", {
-          id: "application-name-input",
-          name: "applicationName",
-          type: "text",
-          value: application.name,
-        });
-        const button = makeElement(document, "button", { type: "submit", text: "Save" });
-        form.append(label, input, button);
-        form.addEventListener("submit", function onSubmit(event) {
-          if (event && typeof event.preventDefault === "function") {
-            event.preventDefault();
-          }
-          catalogApi.updateApplicationName(catalog, application.id, input.value);
+      const form = makeElement(document, "form", { className: "edit-form application-form" });
+      appendApplicationFormFields(document, form, catalog, application, `application-${application.id}`);
+      const button = makeElement(document, "button", { type: "submit", text: "Save" });
+      form.appendChild(button);
+      form.addEventListener("submit", function onSubmit(event) {
+        if (event && typeof event.preventDefault === "function") {
+          event.preventDefault();
+        }
+        try {
+          catalogApi.updateApplication(catalog, application.id, readApplicationForm(form));
           catalogApi.saveCatalog(storage, catalog);
           rerender(catalog);
-        });
-        card.appendChild(form);
-      }
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      });
+      const deleteButton = makeElement(document, "button", {
+        className: "master-data-delete application-delete",
+        type: "button",
+        text: "Delete",
+      });
+      deleteButton.addEventListener("click", function onDelete() {
+        catalogApi.deleteApplication(catalog, application.id);
+        catalogApi.saveCatalog(storage, catalog);
+        rerender(catalog);
+      });
+      card.append(form, deleteButton);
 
       list.appendChild(card);
     }
