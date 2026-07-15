@@ -10,11 +10,11 @@ No package install, backend, or service startup is required for the MVP. The pag
 
 ## Backend (Spring Boot skeleton)
 
-A Spring Boot backend is being introduced (see [ADR-0003](docs/adr/0003-backend-compartilhado-java-spring-postgres.md)) to support corporate SSO and shared persistence. At this stage it only serves the existing frontend files from the same origin and exposes a health-check endpoint; it does not yet persist data (see the [issue tracker](docs/agents/issue-tracker.md) for planned next steps).
+A Spring Boot backend is being introduced (see [ADR-0003](docs/adr/0003-backend-compartilhado-java-spring-postgres.md)) to support corporate SSO and shared persistence. It serves the existing frontend files from the same origin, exposes a health-check endpoint, and requires an authenticated session via SSO (OIDC/Keycloak) for every other route (see the [issue tracker](docs/agents/issue-tracker.md) for planned next steps — it does not yet persist Catalog Users or authorize by Role).
 
 Requirements: JDK 21+ and Maven (or use the Maven Wrapper if added later).
 
-1. Start supporting services (PostgreSQL and Keycloak) with Docker Compose:
+1. Start supporting services (PostgreSQL and Keycloak, with a dev realm auto-imported from `docker/keycloak/ea-tool-realm.json`) with Docker Compose:
 
    ```bash
    docker compose up
@@ -27,10 +27,31 @@ Requirements: JDK 21+ and Maven (or use the Maven Wrapper if added later).
    mvn spring-boot:run
    ```
 
-3. Open http://localhost:8080/ — the existing catalog UI loads from the same origin the backend serves.
-4. Check the health endpoint: http://localhost:8080/actuator/health should respond with `{"status":"UP", ...}`.
+3. Open http://localhost:8080/ — you are redirected to Keycloak's login page. Sign in with one of the seeded dev users below; you land back on the catalog UI with a cookie session, and a top bar shows your name/email with a "Log out" action.
+4. Check the health endpoint (stays public, no login required): http://localhost:8080/actuator/health should respond with `{"status":"UP", ...}`.
 
-PostgreSQL becomes available on `localhost:5432` (db/user/password: `ea_tool`) and Keycloak on http://localhost:8081 (admin/admin), ready for the authentication and persistence work that follows this skeleton.
+PostgreSQL becomes available on `localhost:5432` (db/user/password: `ea_tool`) and the Keycloak admin console on http://localhost:8081 (admin/admin), ready for the persistence and authorization work that follows this skeleton.
+
+### Dev realm and seeded users (Keycloak)
+
+The imported `ea-tool` realm ships with a confidential client `ea-tool-backend` (dev-only secret `ea-tool-backend-secret`, already wired into `backend/src/main/resources/application.yml`) and two test users for local login:
+
+| Username      | Password      | Email                      |
+| ------------- | ------------- | --------------------------- |
+| `admin.demo`  | `admin.demo`  | admin.demo@example.com      |
+| `viewer.demo` | `viewer.demo` | viewer.demo@example.com     |
+
+### Catalog User auto-provisioning and seed admins
+
+On first successful login, the backend automatically provisions a `CatalogUser` record (email, name, Role) for the authenticated identity — no manual account creation step is needed. Logging in again with the same email reuses the existing record instead of creating a duplicate.
+
+By default every new Catalog User gets the `VIEWER` Role. To bootstrap one or more Admins on first login, list their emails in `app.seed-admins` (comma-separated), overridable via the `SEED_ADMIN_EMAILS` environment variable:
+
+```bash
+export SEED_ADMIN_EMAILS=admin.demo@example.com,another.admin@example.com
+```
+
+The default local dev configuration already seeds `admin.demo@example.com` as Admin, so logging in with the `admin.demo` user above provisions an Admin Catalog User on first login, while `viewer.demo` provisions a Viewer.
 
 ## Styling (Tailwind, local build)
 

@@ -12,6 +12,36 @@ spring:
       # the backend from backend/, so this resolves to the repository's
       # top-level src/ directory.
       static-locations: "file:${user.dir}/../src/"
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID:ea-tool-backend}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:ea-tool-backend-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            # Points at the dev realm imported by docker-compose (docker/keycloak/ea-tool-realm.json).
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/ea-tool}
+  datasource:
+    # Matches the PostgreSQL service provisioned by docker-compose.yml.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ea_tool}
+    username: ${DB_USERNAME:ea_tool}
+    password: ${DB_PASSWORD:ea_tool}
+  jpa:
+    hibernate:
+      # Dev-friendly auto-migration; revisit with Flyway/Liquibase before production use.
+      ddl-auto: update
+    open-in-view: false
+
+app:
+  # Emails provisioned as Admin (instead of the default Viewer) on first SSO
+  # login. Configurable without code changes via application.yml or the
+  # SEED_ADMIN_EMAILS environment variable (comma-separated list).
+  seed-admins: ${SEED_ADMIN_EMAILS:admin.demo@example.com}
 
 management:
   endpoints:

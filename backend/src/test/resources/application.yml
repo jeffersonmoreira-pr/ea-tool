@@ -1,0 +1,33 @@
+# Test-only override: explicit provider endpoints instead of issuer-uri so
+# the Spring context can start (and tests run) without Keycloak reachable.
+# Using issuer-uri here would trigger an eager OIDC discovery HTTP call
+# during context startup.
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: test-client
+            client-secret: test-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            authorization-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/auth
+            token-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/token
+            jwk-set-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/certs
+            user-info-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/userinfo
+  # In-memory H2 instead of the dev PostgreSQL so tests run without Docker.
+  datasource:
+    url: jdbc:h2:mem:ea-tool-test;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+app:
+  seed-admins: seed.admin@example.com
