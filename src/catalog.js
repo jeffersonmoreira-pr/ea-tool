@@ -786,6 +786,8 @@
     deleteBusinessArea,
     deleteDepartment,
     deleteVendor,
+    deriveBusinessFitBand,
+    deriveTimeClassification,
     getNavigationSections,
     getVendorDisplayType,
     loadCatalog,

@@ -1,0 +1,421 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Master Data Management | APM Insight Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-surface": "#303033",
+                    "on-primary": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#39b8fd",
+                    "surface-tint": "#4f5e7e",
+                    "secondary": "#006591",
+                    "tertiary-fixed-dim": "#e3c28a",
+                    "on-surface-variant": "#44474d",
+                    "on-primary-fixed-variant": "#374765",
+                    "secondary-fixed": "#c9e6ff",
+                    "on-secondary-fixed-variant": "#004c6e",
+                    "on-primary-container": "#8393b5",
+                    "on-primary-fixed": "#091b37",
+                    "on-secondary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-background": "#1b1b1e",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#594317",
+                    "surface-container-low": "#f5f3f6",
+                    "surface-bright": "#fbf8fb",
+                    "inverse-primary": "#b7c7eb",
+                    "surface-container-highest": "#e4e2e5",
+                    "surface-container": "#efedf0",
+                    "primary-container": "#1b2b48",
+                    "tertiary-fixed": "#ffdea7",
+                    "surface-variant": "#e4e2e5",
+                    "on-tertiary-container": "#ac8e5b",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#eae7ea",
+                    "on-secondary-fixed": "#001e2f",
+                    "secondary-fixed-dim": "#89ceff",
+                    "primary-fixed": "#d7e2ff",
+                    "outline": "#75777e",
+                    "surface": "#fbf8fb",
+                    "error-container": "#ffdad6",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-surface": "#1b1b1e",
+                    "on-secondary-container": "#004666",
+                    "background": "#fbf8fb",
+                    "tertiary-container": "#3b2800",
+                    "tertiary": "#211500",
+                    "on-tertiary-fixed": "#271900",
+                    "surface-dim": "#dbd9dc",
+                    "primary-fixed-dim": "#b7c7eb",
+                    "outline-variant": "#c5c6ce",
+                    "primary": "#041632"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "base": "4px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "lg": "24px",
+                    "container-max": "1440px"
+            },
+            "fontFamily": {
+                    "title-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "data-mono": ["Inter"]
+            },
+            "fontSize": {
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6ce; border-radius: 2px; }
+        
+        .zebra-table tr:nth-child(even) { background-color: rgba(0, 0, 0, 0.02); }
+        .interactive-row:hover { background-color: rgba(57, 184, 253, 0.05); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-gutter h-16 max-w-container-max mx-auto">
+<div class="flex items-center space-x-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">APM Insight Explorer</span>
+<nav class="hidden md:flex space-x-lg items-end h-full pt-4">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Catalog</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Analytics</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant pb-2 hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center space-x-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="bg-surface-container border border-outline-variant rounded px-10 py-1 text-body-sm focus:outline-none focus:border-secondary w-64" placeholder="Search insights..." type="text">
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-secondary transition-colors">account_circle</button>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen">
+<!-- SideNavBar (Contextual Anchor) -->
+<aside class="hidden lg:flex flex-col h-screen sticky top-16 p-md space-y-md bg-surface-container-low dark:bg-surface-container-high border-r border-outline-variant dark:border-outline w-64">
+<div class="flex items-center space-x-sm mb-lg px-2">
+<div class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">architecture</span>
+</div>
+<div>
+<h2 class="font-title-sm text-title-sm font-bold text-primary dark:text-primary-fixed-dim leading-none">APM Portfolio</h2>
+<p class="text-[10px] font-label-caps uppercase text-on-surface-variant tracking-wider">Enterprise Architecture</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps uppercase">Executive Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps uppercase">Application Catalog</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="font-label-caps text-label-caps uppercase">Analytics Matrix</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">database</span>
+<span class="font-label-caps text-label-caps uppercase">Master Data</span>
+</a>
+</nav>
+<div class="pt-md border-t border-outline-variant">
+<a class="flex items-center space-x-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-caps text-label-caps uppercase">Support</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-label-caps uppercase">Documentation</span>
+</a>
+<button class="mt-md w-full py-2 px-4 bg-primary text-on-primary rounded font-label-caps uppercase tracking-widest text-[10px] hover:opacity-90 transition-opacity">
+                    Generate Report
+                </button>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 min-w-0 p-lg overflow-y-auto">
+<header class="mb-lg flex flex-col md:flex-row md:items-center justify-between gap-md">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary">Master Data Management</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Centralized ledger for architectural metadata and global taxonomies.</p>
+</div>
+<div class="flex items-center space-x-sm">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container border border-outline-variant rounded focus:border-secondary transition-colors text-body-sm w-full md:w-80" placeholder="Search Master Data..." type="text">
+</div>
+<button class="flex items-center space-x-2 px-4 py-2 bg-secondary text-on-secondary rounded font-bold hover:bg-opacity-90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="font-label-caps text-label-caps uppercase whitespace-nowrap">Add Vendor</span>
+</button>
+</div>
+</header>
+<!-- Sub-Navigation Tabs -->
+<div class="flex space-x-lg border-b border-outline-variant mb-md">
+<button class="px-2 pb-3 text-secondary border-b-2 border-secondary font-bold font-label-caps uppercase tracking-wider text-xs">Vendors</button>
+<button class="px-2 pb-3 text-on-surface-variant font-medium font-label-caps uppercase tracking-wider text-xs hover:text-secondary transition-colors">Departments</button>
+<button class="px-2 pb-3 text-on-surface-variant font-medium font-label-caps uppercase tracking-wider text-xs hover:text-secondary transition-colors">Business Areas</button>
+</div>
+<!-- Stats Overview Cards (Summary Insights) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-lg">
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Total Vendors</span>
+<span class="font-display-lg text-display-lg text-primary mt-1">142</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Active Partnerships</span>
+<span class="font-display-lg text-display-lg text-secondary mt-1">89</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Avg App per Vendor</span>
+<span class="font-display-lg text-display-lg text-primary mt-1">4.2</span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant p-md rounded flex flex-col">
+<span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Referenced Data</span>
+<span class="font-display-lg text-display-lg text-primary mt-1">92%</span>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse zebra-table">
+<thead class="bg-surface-container-high sticky top-0 z-10">
+<tr>
+<th class="px-md py-3 font-label-caps text-label-caps uppercase text-on-surface-variant border-b border-outline-variant">Vendor Name</th>
+<th class="px-md py-3 font-label-caps text-label-caps uppercase text-on-surface-variant border-b border-outline-variant">Description</th>
+<th class="px-md py-3 font-label-caps text-label-caps uppercase text-on-surface-variant border-b border-outline-variant">Apps Linked</th>
+<th class="px-md py-3 font-label-caps text-label-caps uppercase text-on-surface-variant border-b border-outline-variant">Status</th>
+<th class="px-md py-3 font-label-caps text-label-caps uppercase text-on-surface-variant border-b border-outline-variant text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-sm">
+<tr class="interactive-row group transition-colors">
+<td class="px-md py-3 font-semibold text-primary">Microsoft Corporation</td>
+<td class="px-md py-3 text-on-surface-variant italic">Global cloud and productivity software provider.</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-2">
+<span class="font-data-mono text-data-mono">48 Applications</span>
+<div class="w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[80%]"></div>
+</div>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded-full border border-secondary text-[10px] font-bold uppercase tracking-tighter text-secondary">Strategic</span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-1 text-on-surface-variant hover:text-secondary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1 text-outline cursor-not-allowed opacity-50 relative group" title="Data is Referenced - Locked">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<div class="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-inverse-surface text-on-primary text-[10px] px-2 py-1 rounded whitespace-nowrap z-20">
+                                                Active references in Application Ledger
+                                            </div>
+</button>
+</div>
+</td>
+</tr>
+<tr class="interactive-row group transition-colors">
+<td class="px-md py-3 font-semibold text-primary">Salesforce, Inc.</td>
+<td class="px-md py-3 text-on-surface-variant italic">Customer relationship management solutions.</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-2">
+<span class="font-data-mono text-data-mono">14 Applications</span>
+<div class="w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[35%]"></div>
+</div>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded-full border border-outline text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Tactical</span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-1 text-on-surface-variant hover:text-secondary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1 text-outline cursor-not-allowed opacity-50 relative group" title="Data is Referenced - Locked">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="interactive-row group transition-colors">
+<td class="px-md py-3 font-semibold text-primary">Local Dev Shop (Beta)</td>
+<td class="px-md py-3 text-on-surface-variant italic">Local boutique consultancy for pilot projects.</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-2">
+<span class="font-data-mono text-data-mono">0 Applications</span>
+<div class="w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-0"></div>
+</div>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded-full border border-error text-[10px] font-bold uppercase tracking-tighter text-error">Deprecated</span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-1 text-on-surface-variant hover:text-secondary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1 text-error hover:bg-error-container rounded transition-colors" title="Delete">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="interactive-row group transition-colors">
+<td class="px-md py-3 font-semibold text-primary">Amazon Web Services</td>
+<td class="px-md py-3 text-on-surface-variant italic">Infrastructure and platform as a service.</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-2">
+<span class="font-data-mono text-data-mono">92 Applications</span>
+<div class="w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[95%]"></div>
+</div>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded-full border border-secondary text-[10px] font-bold uppercase tracking-tighter text-secondary">Strategic</span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-1 text-on-surface-variant hover:text-secondary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1 text-outline cursor-not-allowed opacity-50 relative group" title="Data is Referenced - Locked">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="interactive-row group transition-colors">
+<td class="px-md py-3 font-semibold text-primary">Atlassian Pty Ltd</td>
+<td class="px-md py-3 text-on-surface-variant italic">Software development and collaboration tools.</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-2">
+<span class="font-data-mono text-data-mono">22 Applications</span>
+<div class="w-16 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[45%]"></div>
+</div>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded-full border border-outline text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">Tactical</span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex items-center justify-end space-x-2">
+<button class="p-1 text-on-surface-variant hover:text-secondary transition-colors" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1 text-outline cursor-not-allowed opacity-50 relative group" title="Data is Referenced - Locked">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-md py-3 bg-surface-container border-t border-outline-variant flex items-center justify-between">
+<span class="text-body-sm text-on-surface-variant">Showing 1-5 of 142 records</span>
+<div class="flex space-x-2">
+<button class="p-1 rounded hover:bg-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-secondary text-on-secondary rounded text-xs font-bold">1</button>
+<button class="px-3 py-1 hover:bg-surface-variant rounded text-xs font-bold text-on-surface-variant">2</button>
+<button class="px-3 py-1 hover:bg-surface-variant rounded text-xs font-bold text-on-surface-variant">3</button>
+<button class="p-1 rounded hover:bg-surface-variant">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Reference Policy Hint -->
+<div class="mt-lg p-md bg-surface-container rounded-lg flex items-start space-x-3 border-l-4 border-secondary">
+<span class="material-symbols-outlined text-secondary">info</span>
+<div>
+<h4 class="font-title-sm text-title-sm text-primary mb-1">Referenced Master Data Rule</h4>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">Master Data records currently linked to one or more active applications cannot be deleted to ensure referential integrity. To remove a record, first reassign its dependencies in the Application Catalog.</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Floating Action Background Elements (Micro-interactions) -->
+<div class="fixed inset-0 pointer-events-none z-[-1] opacity-20 overflow-hidden">
+
+</div>
+<script>
+        // Simple micro-interaction for table rows
+        document.querySelectorAll('.interactive-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Only trigger if not clicking buttons
+                if (!e.target.closest('button')) {
+                    this.classList.toggle('bg-secondary-container/10');
+                }
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[placeholder="Search Master Data..."]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+        });
+    </script>
+</body></html>

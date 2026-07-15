@@ -48,6 +48,17 @@
     parent.appendChild(makeElement(document, tagName, { className, text }));
   }
 
+  function makeBadge(document, group, value) {
+    const slug = String(value)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    return makeElement(document, "span", {
+      className: `badge badge--${group} badge--${group}-${slug}`,
+      text: value,
+    });
+  }
+
   function findById(records, id) {
     return records.find((record) => record.id === id);
   }
@@ -66,8 +77,11 @@
   function appendApplicationField(document, form, labelText, name, value, options) {
     const settings = options || {};
     const fieldId = `${settings.prefix}-${name}`;
+    const field = makeElement(document, "div", {
+      className: settings.full ? "form-field form-field--full" : "form-field",
+    });
     const label = makeElement(document, "label", {
-      className: "edit-form__label",
+      className: "form-field__label",
       text: labelText,
       attributes: { for: fieldId },
     });
@@ -78,14 +92,16 @@
       value: value || "",
       attributes: settings.required ? { required: "required" } : undefined,
     });
-    form.append(label, input);
+    field.append(label, input);
+    form.appendChild(field);
     return input;
   }
 
   function appendApplicationSelect(document, form, labelText, name, records, selectedId, prefix) {
     const fieldId = `${prefix}-${name}`;
+    const field = makeElement(document, "div", { className: "form-field" });
     const label = makeElement(document, "label", {
-      className: "edit-form__label",
+      className: "form-field__label",
       text: labelText,
       attributes: { for: fieldId },
     });
@@ -106,7 +122,8 @@
       }
       select.appendChild(option);
     }
-    form.append(label, select);
+    field.append(label, select);
+    form.appendChild(field);
     return select;
   }
 
@@ -282,36 +299,23 @@
     };
   }
 
-  function appendApplicationFormFields(document, form, catalog, application, prefix) {
-    appendApplicationField(document, form, "Application name", "name", application.name, { prefix, required: true });
-    appendApplicationField(document, form, "Description", "description", application.description, {
-      prefix,
-      required: true,
-      multiline: true,
-    });
-    appendApplicationField(document, form, "Aliases", "aliases", formatAliases(application.aliases), { prefix });
-    appendApplicationField(document, form, "Application URL", "applicationUrl", application.applicationUrl, { prefix });
-    appendApplicationField(document, form, "Diagnostic URL", "diagnosticUrl", application.diagnosticUrl, { prefix });
-    appendApplicationField(document, form, "Business Owner Name", "businessOwnerName", application.businessOwnerName, {
-      prefix,
-      required: true,
-    });
-    appendApplicationField(document, form, "Business Owner Email", "businessOwnerEmail", application.businessOwnerEmail, {
-      prefix,
-      type: "email",
-    });
-    appendApplicationField(document, form, "Tech Owner Name", "techOwnerName", application.techOwnerName, {
-      prefix,
-      required: true,
-    });
-    appendApplicationField(document, form, "Tech Owner Email", "techOwnerEmail", application.techOwnerEmail, {
-      prefix,
-      type: "email",
-    });
-    appendApplicationSelect(document, form, "Vendor", "vendorId", catalog.vendors, application.vendorId, prefix);
+  function appendFormSection(document, form, title) {
+    const section = makeElement(document, "div", { className: "form-section" });
+    appendTextBlock(document, section, "h4", "form-section__title", title);
+    const grid = makeElement(document, "div", { className: "form-grid" });
+    section.appendChild(grid);
+    form.appendChild(section);
+    return grid;
+  }
+
+  function appendApplicationFormFields(document, form, catalog, application, prefix, catalogApi) {
+    const general = appendFormSection(document, form, "General Information");
+    appendApplicationField(document, general, "Application Name", "name", application.name, { prefix, required: true });
+    appendApplicationField(document, general, "Alias", "aliases", formatAliases(application.aliases), { prefix });
+    appendApplicationSelect(document, general, "Vendor", "vendorId", catalog.vendors, application.vendorId, prefix);
     appendApplicationSelect(
       document,
-      form,
+      general,
       "Department",
       "departmentId",
       catalog.departments,
@@ -320,33 +324,98 @@
     );
     appendApplicationSelect(
       document,
-      form,
+      general,
       "Business Area",
       "businessAreaId",
       catalog.businessAreas,
       application.businessAreaId,
       prefix,
     );
-    appendApplicationLifecycleStatus(document, form, application.lifecycleStatus, prefix);
-    appendApplicationField(document, form, "Planned Date", "plannedDate", application.plannedDate, {
+    appendApplicationField(document, general, "Application URL", "applicationUrl", application.applicationUrl, { prefix });
+    appendApplicationField(document, general, "Diagnostic URL", "diagnosticUrl", application.diagnosticUrl, { prefix });
+    appendApplicationField(document, general, "Description", "description", application.description, {
+      prefix,
+      required: true,
+      multiline: true,
+      full: true,
+    });
+
+    const lifecycle = appendFormSection(document, form, "Lifecycle & Status");
+    appendApplicationLifecycleStatus(document, lifecycle, application.lifecycleStatus, prefix);
+    appendApplicationCriticality(document, lifecycle, application.criticality, prefix);
+    appendApplicationInformationStatus(document, lifecycle, application.informationStatus, prefix);
+    appendApplicationField(document, lifecycle, "Planned Date", "plannedDate", application.plannedDate, {
       prefix,
       type: "date",
     });
-    appendApplicationField(document, form, "Retirement Date", "retirementDate", application.retirementDate, {
+    appendApplicationField(document, lifecycle, "Retirement Date", "retirementDate", application.retirementDate, {
       prefix,
       type: "date",
     });
-    appendApplicationBusinessFit(document, form, application.businessFit, prefix);
-    appendApplicationTechFit(document, form, application.techFit, prefix);
-    appendApplicationPace(document, form, application.pace, prefix);
-    appendApplicationCriticality(document, form, application.criticality, prefix);
-    appendApplicationPersonalDataHandling(document, form, application.personalDataHandling, prefix);
-    appendApplicationSensitiveBusinessDataHandling(document, form, application.sensitiveBusinessDataHandling, prefix);
-    appendApplicationInformationStatus(document, form, application.informationStatus, prefix);
-    appendApplicationField(document, form, "Last Verification Date", "lastVerificationDate", application.lastVerificationDate, {
+    appendApplicationField(
+      document,
+      lifecycle,
+      "Last Verification Date",
+      "lastVerificationDate",
+      application.lastVerificationDate,
+      { prefix, type: "date" },
+    );
+
+    const strategic = appendFormSection(document, form, "Strategic Assessment");
+    appendApplicationBusinessFit(document, strategic, application.businessFit, prefix);
+    appendApplicationTechFit(document, strategic, application.techFit, prefix);
+    appendApplicationPace(document, strategic, application.pace, prefix);
+    if (catalogApi && typeof catalogApi.deriveTimeClassification === "function") {
+      const businessFitInput = getApplicationFormInput(strategic, "businessFit");
+      const techFitInput = getApplicationFormInput(strategic, "techFit");
+      const preview = makeElement(document, "div", { className: "time-preview" });
+      appendTextBlock(document, preview, "span", "time-preview__label", "TIME Classification");
+      const value = makeElement(document, "span", { className: "time-preview__value" });
+      preview.appendChild(value);
+      const updatePreview = function updateTimePreview() {
+        const band = catalogApi.deriveBusinessFitBand(Number(businessFitInput.value));
+        const time = catalogApi.deriveTimeClassification(band, techFitInput.value) || "Unclassified";
+        value.textContent = time;
+        value.className = `time-preview__value badge badge--time badge--time-${String(time).toLowerCase()}`;
+      };
+      updatePreview();
+      businessFitInput.addEventListener("change", updatePreview);
+      techFitInput.addEventListener("change", updatePreview);
+      strategic.appendChild(preview);
+    }
+
+    const stakeholders = appendFormSection(document, form, "Stakeholders");
+    appendApplicationField(document, stakeholders, "Business Owner Name", "businessOwnerName", application.businessOwnerName, {
       prefix,
-      type: "date",
+      required: true,
     });
+    appendApplicationField(
+      document,
+      stakeholders,
+      "Business Owner Email",
+      "businessOwnerEmail",
+      application.businessOwnerEmail,
+      { prefix, type: "email" },
+    );
+    appendApplicationField(document, stakeholders, "Tech Owner Name", "techOwnerName", application.techOwnerName, {
+      prefix,
+      required: true,
+    });
+    appendApplicationField(document, stakeholders, "Tech Owner Email", "techOwnerEmail", application.techOwnerEmail, {
+      prefix,
+      type: "email",
+    });
+
+    const compliance = appendFormSection(document, form, "Data & Compliance");
+    appendApplicationPersonalDataHandling(document, compliance, application.personalDataHandling, prefix);
+    appendApplicationSensitiveBusinessDataHandling(document, compliance, application.sensitiveBusinessDataHandling, prefix);
+    appendTextBlock(
+      document,
+      compliance,
+      "p",
+      "form-note",
+      "Set data handling to Yes when the application manages personal or sensitive business data so compliance reviews stay accurate.",
+    );
   }
 
   function renderNavigation(document, catalogApi) {
@@ -365,23 +434,236 @@
     return nav;
   }
 
-  function appendMetric(document, parent, label, value) {
-    const metric = makeElement(document, "div", { className: "metric" });
-    appendTextBlock(document, metric, "strong", "metric__value", String(value));
-    appendTextBlock(document, metric, "span", "metric__label", label);
-    parent.appendChild(metric);
+  function overviewPercent(count, total) {
+    return total > 0 ? Math.round((count / total) * 100) : 0;
   }
 
-  function appendIndicatorGroup(document, parent, title, values) {
-    const group = makeElement(document, "section", { className: "indicator-group" });
-    appendTextBlock(document, group, "h2", "indicator-group__title", title);
-    const list = makeElement(document, "dl", { className: "indicator-list" });
-    for (const [label, value] of values) {
-      appendTextBlock(document, list, "dt", "indicator-list__label", label);
-      appendTextBlock(document, list, "dd", "indicator-list__value", String(value));
+  const OVERVIEW_CARD = "bg-white p-lg border border-solid border-outline-variant rounded shadow-card";
+
+  const OVERVIEW_TIME_META = {
+    Invest: { textClass: "text-emerald-600", fill: "time-invest" },
+    Tolerate: { textClass: "text-amber-600", fill: "time-tolerate" },
+    Migrate: { textClass: "text-blue-600", fill: "time-migrate" },
+    Eliminate: { textClass: "text-rose-600", fill: "time-eliminate" },
+  };
+
+  const OVERVIEW_TIER_META = {
+    high: { label: "TIER 1", className: "bg-rose-100 text-rose-800" },
+    medium: { label: "TIER 2", className: "bg-amber-100 text-amber-800" },
+    low: { label: "TIER 3", className: "bg-sky-100 text-sky-800" },
+  };
+
+  function appendProgressBar(document, parent, fillClass, pct, trackClass) {
+    const track = makeElement(document, "div", {
+      className: `w-full bg-surface-container rounded-full overflow-hidden ${trackClass || "h-1.5"}`,
+    });
+    track.appendChild(
+      makeElement(document, "div", {
+        className: `h-full ${fillClass}`,
+        attributes: { style: `width: ${pct}%` },
+      }),
+    );
+    parent.appendChild(track);
+    return track;
+  }
+
+  function appendOverviewTotalCard(document, parent, total, verifiedPct) {
+    const card = makeElement(document, "div", {
+      className: `${OVERVIEW_CARD} lg:col-span-1 flex flex-col justify-between`,
+    });
+    appendTextBlock(document, card, "span", "text-label-caps uppercase text-outline", "Total Applications");
+    const body = makeElement(document, "div", { className: "mt-md" });
+    const value = makeElement(document, "div", { className: "flex items-baseline gap-xs" });
+    appendTextBlock(document, value, "span", "text-display-lg text-primary", String(total));
+    appendTextBlock(document, value, "span", "sr-only", "Applications");
+    body.appendChild(value);
+    appendTextBlock(document, body, "span", "text-data-mono text-emerald-600", `${verifiedPct}% verified`);
+    card.appendChild(body);
+    parent.appendChild(card);
+  }
+
+  function appendOverviewTimeCard(document, parent, entries, total) {
+    const card = makeElement(document, "div", {
+      className: `${OVERVIEW_CARD} lg:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-md`,
+    });
+    entries.forEach(function buildTimeCell(entry, index) {
+      const name = entry[0];
+      const count = entry[1];
+      const meta = OVERVIEW_TIME_META[name] || { textClass: "text-on-surface-variant", fill: "time-tolerate" };
+      const pct = overviewPercent(count, total);
+      const cell = makeElement(document, "div", {
+        className: "pr-md",
+        attributes: index < entries.length - 1 ? { style: "border-right: 1px solid #c5c6ce" } : undefined,
+      });
+      appendTextBlock(document, cell, "span", `text-label-caps uppercase ${meta.textClass}`, name);
+      const value = makeElement(document, "div", { className: "flex items-baseline gap-xs mt-sm" });
+      appendTextBlock(document, value, "span", "text-display-lg text-primary", String(count));
+      appendTextBlock(document, value, "span", "text-body-sm text-on-surface-variant", `${pct}%`);
+      cell.appendChild(value);
+      appendProgressBar(document, cell, meta.fill, pct, "h-1.5 mt-md");
+      card.appendChild(cell);
+    });
+    parent.appendChild(card);
+  }
+
+  function appendOverviewQuality(document, parent, summary) {
+    const card = makeElement(document, "div", { className: `${OVERVIEW_CARD} lg:col-span-1` });
+    const head = makeElement(document, "div", { className: "flex justify-between items-start mb-lg" });
+    appendTextBlock(document, head, "h3", "text-title-sm text-primary", "Catalog Quality Measure");
+    card.appendChild(head);
+
+    const verified = summary.catalogQuality.verified;
+    const pct = overviewPercent(verified.count, verified.total);
+    const donutWrap = makeElement(document, "div", { className: "flex flex-col items-center justify-center py-md" });
+    const donut = makeElement(document, "div", {
+      className: "flex items-center justify-center rounded-full",
+      attributes: {
+        style: `width:150px;height:150px;background:conic-gradient(#041632 ${pct}%, #efedf0 ${pct}% 100%)`,
+      },
+    });
+    const hole = makeElement(document, "div", {
+      className: "flex flex-col items-center justify-center rounded-full bg-white",
+      attributes: { style: "width:112px;height:112px" },
+    });
+    appendTextBlock(document, hole, "span", "text-display-lg text-primary", `${pct}%`);
+    appendTextBlock(document, hole, "span", "text-label-caps uppercase text-on-surface-variant", "Verified");
+    donut.appendChild(hole);
+    donutWrap.appendChild(donut);
+    card.appendChild(donutWrap);
+
+    const list = makeElement(document, "div", { className: "space-y-sm mt-sm" });
+    Object.values(summary.catalogQuality).forEach(function buildQualityRow(measure) {
+      const measurePct = overviewPercent(measure.count, measure.total);
+      const block = makeElement(document, "div", { className: "space-y-xs" });
+      const line = makeElement(document, "div", { className: "flex justify-between items-center text-body-sm" });
+      appendTextBlock(document, line, "span", "sr-only", measure.label);
+      appendTextBlock(document, line, "span", "text-on-surface-variant", measure.text);
+      block.appendChild(line);
+      appendProgressBar(document, block, "bg-primary", measurePct, "h-1");
+      list.appendChild(block);
+    });
+    card.appendChild(list);
+    parent.appendChild(card);
+  }
+
+  function appendOverviewDistribution(document, parent, businessAreaCounts) {
+    const card = makeElement(document, "div", { className: `${OVERVIEW_CARD} lg:col-span-2 flex flex-col` });
+    const head = makeElement(document, "div", { className: "flex justify-between items-center mb-lg" });
+    appendTextBlock(document, head, "h3", "text-title-sm text-primary", "Portfolio Distribution by Business Area");
+    card.appendChild(head);
+
+    const entries = Object.entries(businessAreaCounts);
+    const max = entries.reduce((acc, entry) => Math.max(acc, entry[1]), 0) || 1;
+    const list = makeElement(document, "div", { className: "space-y-lg flex-1" });
+    entries.forEach(function buildBar(entry) {
+      const name = entry[0];
+      const count = entry[1];
+      const block = makeElement(document, "div", { className: "space-y-xs" });
+      const line = makeElement(document, "div", { className: "flex justify-between text-body-sm" });
+      appendTextBlock(document, line, "span", "text-on-surface", name);
+      appendTextBlock(document, line, "span", "text-on-surface-variant", `${count} Apps`);
+      block.appendChild(line);
+      const track = makeElement(document, "div", {
+        className: "h-8 w-full bg-surface-container-low rounded overflow-hidden",
+      });
+      const fill = makeElement(document, "div", {
+        className: "h-full bg-primary flex items-center px-md text-white text-label-caps",
+        attributes: { style: `width: ${overviewPercent(count, max)}%` },
+      });
+      appendTextBlock(document, fill, "span", "", String(count));
+      track.appendChild(fill);
+      block.appendChild(track);
+      list.appendChild(block);
+    });
+    if (entries.length === 0) {
+      appendTextBlock(document, list, "p", "text-body-sm text-on-surface-variant", "No business areas registered yet.");
     }
-    group.appendChild(list);
-    parent.appendChild(group);
+    card.appendChild(list);
+    parent.appendChild(card);
+  }
+
+  function overviewGapDimension(application) {
+    if (application.pace === "Unclassified") {
+      return "Unclassified PACE";
+    }
+    if (application.personalDataHandling === "Unknown" || application.sensitiveBusinessDataHandling === "Unknown") {
+      return "Data Handling";
+    }
+    if (application.informationStatus === "Needs Review") {
+      return "Needs Review";
+    }
+    return "";
+  }
+
+  function appendOverviewGaps(document, parent, applications, businessAreas) {
+    const areaNames = {};
+    for (const area of businessAreas) {
+      areaNames[area.id] = area.name;
+    }
+    const gaps = applications.filter((application) => overviewGapDimension(application) !== "");
+
+    const card = makeElement(document, "div", {
+      className: "bg-white border border-solid border-outline-variant rounded overflow-hidden",
+    });
+    const head = makeElement(document, "div", {
+      className: "p-lg bg-surface-container-low",
+      attributes: { style: "border-bottom: 1px solid #c5c6ce" },
+    });
+    appendTextBlock(document, head, "h3", "text-title-sm text-primary", "Strategic Quality Gaps");
+    appendTextBlock(
+      document,
+      head,
+      "p",
+      "text-body-sm text-on-surface-variant",
+      "Applications requiring PACE classification or data-handling review.",
+    );
+    card.appendChild(head);
+
+    if (gaps.length === 0) {
+      appendTextBlock(document, card, "p", "p-lg text-body-sm text-on-surface-variant", "No outstanding quality gaps.");
+      parent.appendChild(card);
+      return;
+    }
+
+    const table = makeElement(document, "table", { className: "w-full text-left" });
+    const thead = makeElement(document, "thead", { className: "bg-surface-container-highest" });
+    const headRow = makeElement(document, "tr", {});
+    for (const label of ["Application Name", "Area", "Criticality", "Missing Dimension", "Owner"]) {
+      appendTextBlock(document, headRow, "th", "p-md text-label-caps uppercase text-on-surface-variant", label);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = makeElement(document, "tbody", {});
+    gaps.forEach(function buildGapRow(application, index) {
+      const tier = OVERVIEW_TIER_META[application.criticality] || OVERVIEW_TIER_META.medium;
+      const row = makeElement(document, "tr", {
+        className: index % 2 === 1 ? "bg-surface-container-low" : "",
+      });
+      appendTextBlock(document, row, "td", "p-md text-body-md text-primary", application.name);
+      appendTextBlock(
+        document,
+        row,
+        "td",
+        "p-md text-body-sm text-on-surface-variant",
+        areaNames[application.businessAreaId] || "\u2014",
+      );
+      const tierCell = makeElement(document, "td", { className: "p-md" });
+      appendTextBlock(document, tierCell, "span", `px-sm py-xs text-[11px] rounded ${tier.className}`, tier.label);
+      row.appendChild(tierCell);
+      appendTextBlock(document, row, "td", "p-md text-body-sm text-error", overviewGapDimension(application));
+      appendTextBlock(
+        document,
+        row,
+        "td",
+        "p-md text-body-sm text-on-surface-variant",
+        application.businessOwnerName || "\u2014",
+      );
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    card.appendChild(table);
+    parent.appendChild(card);
   }
 
   function appendOverviewFilter(document, form, labelText, name, options, selectedValue) {
@@ -414,148 +696,208 @@
 
   function renderOverview(document, catalog, catalogApi, filters, setFilters) {
     const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
+    const filteredCount = summary.filteredApplications.length;
+    const verified = summary.catalogQuality.verified;
+    const verifiedPct = overviewPercent(verified.count, verified.total);
+
     const section = makeElement(document, "section", {
-      className: "overview-band",
+      className: "space-y-lg",
       attributes: { id: "overview" },
     });
-    const copy = makeElement(document, "div", { className: "overview-band__copy" });
-    appendTextBlock(document, copy, "p", "eyebrow", "Application Portfolio");
-    appendTextBlock(document, copy, "h1", "page-title", "Strategic catalog, local-first");
-    appendTextBlock(
-      document,
-      copy,
-      "p",
-      "lede",
-      "A browser-only MVP for reviewing Applications, Vendors, Departments, and Business Areas with local persistence.",
-    );
-    section.appendChild(copy);
 
-    const metrics = makeElement(document, "div", { className: "metric-strip" });
-    appendMetric(document, metrics, "Applications", summary.totalApplications);
-    appendMetric(document, metrics, "Vendors", catalog.vendors.length);
-    appendMetric(document, metrics, "Departments", catalog.departments.length);
-    appendMetric(document, metrics, "Business Areas", catalog.businessAreas.length);
-    section.appendChild(metrics);
-
-    const filterForm = makeElement(document, "form", {
-      className: "overview-filters",
-      attributes: { "aria-label": "Executive overview filters" },
+    const kpiRow = makeElement(document, "div", {
+      className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-md",
     });
-    appendOverviewFilter(document, filterForm, "Department", "departmentId", catalog.departments, filters.departmentId);
-    appendOverviewFilter(document, filterForm, "Vendor", "vendorId", catalog.vendors, filters.vendorId);
-    appendOverviewFilter(
-      document,
-      filterForm,
-      "Business Area",
-      "businessAreaId",
-      catalog.businessAreas,
-      filters.businessAreaId,
-    );
-    appendOverviewFilter(
-      document,
-      filterForm,
-      "Lifecycle Status",
-      "lifecycleStatus",
-      [
-        { id: "planned", name: "planned" },
-        { id: "active", name: "active" },
-        { id: "retiring", name: "retiring" },
-        { id: "retired", name: "retired" },
-      ],
-      filters.lifecycleStatus,
-    );
-    appendOverviewFilter(
-      document,
-      filterForm,
-      "TIME Classification",
-      "timeClassification",
-      [
-        { id: "Invest", name: "Invest" },
-        { id: "Tolerate", name: "Tolerate" },
-        { id: "Migrate", name: "Migrate" },
-        { id: "Eliminate", name: "Eliminate" },
-      ],
-      filters.timeClassification,
-    );
-    appendOverviewFilter(
-      document,
-      filterForm,
-      "PACE Classification",
-      "pace",
-      [
-        { id: "System of Record", name: "System of Record" },
-        { id: "System of Differentiation", name: "System of Differentiation" },
-        { id: "System of Innovation", name: "System of Innovation" },
-        { id: "Unclassified", name: "Unclassified" },
-      ],
-      filters.pace,
-    );
-    appendOverviewFilter(
-      document,
-      filterForm,
-      "Criticality",
-      "criticality",
-      [
-        { id: "low", name: "low" },
-        { id: "medium", name: "medium" },
-        { id: "high", name: "high" },
-      ],
-      filters.criticality,
-    );
-    filterForm.addEventListener("change", function onFilterChange(event) {
-      const field = event && event.target;
-      if (!field || !field.name) {
-        return;
-      }
-      setFilters({ ...filters, [field.name]: field.value });
-    });
-    section.appendChild(filterForm);
+    appendOverviewTotalCard(document, kpiRow, summary.totalApplications, verifiedPct);
+    appendOverviewTimeCard(document, kpiRow, Object.entries(summary.counts.timeClassification), filteredCount);
+    section.appendChild(kpiRow);
 
-    const indicators = makeElement(document, "div", { className: "indicator-grid" });
-    appendIndicatorGroup(document, indicators, "TIME", Object.entries(summary.counts.timeClassification));
-    appendIndicatorGroup(document, indicators, "PACE", Object.entries(summary.counts.pace));
-    appendIndicatorGroup(document, indicators, "Business Area", Object.entries(summary.counts.businessArea));
-    appendIndicatorGroup(document, indicators, "Lifecycle Status", Object.entries(summary.counts.lifecycleStatus));
-    appendIndicatorGroup(document, indicators, "Criticality", Object.entries(summary.counts.criticality));
-    appendIndicatorGroup(document, indicators, "Personal Data Handling", Object.entries(summary.counts.personalDataHandling));
-    appendIndicatorGroup(
-      document,
-      indicators,
-      "Sensitive Business Data Handling",
-      Object.entries(summary.counts.sensitiveBusinessDataHandling),
-    );
-    appendIndicatorGroup(
-      document,
-      indicators,
-      "Catalog Quality",
-      Object.values(summary.catalogQuality).map((measure) => [measure.label, measure.text]),
-    );
-    section.appendChild(indicators);
+    const insightRow = makeElement(document, "div", {
+      className: "grid grid-cols-1 lg:grid-cols-3 gap-lg",
+    });
+    appendOverviewQuality(document, insightRow, summary);
+    appendOverviewDistribution(document, insightRow, summary.counts.businessArea);
+    section.appendChild(insightRow);
+
+    appendOverviewGaps(document, section, summary.filteredApplications, catalog.businessAreas || []);
+
     return section;
   }
 
-  function renderApplications(document, catalog, catalogApi, storage, rerender, applications) {
-    const visibleApplications = applications || catalog.applications;
+  function renderApplications(document, catalog, catalogApi, storage, rerender, applications, filters, setFilters) {
+    const activeFilters = filters || {};
+    const applyFilters = typeof setFilters === "function" ? setFilters : function noop() {};
+    const baseList = applications || catalog.applications;
+    const infoFilter = activeFilters.informationStatus || "";
+    const searchTerm = String(activeFilters.search || "").trim().toLowerCase();
+    const filteredList = baseList.filter(function matchFilters(application) {
+      if (infoFilter && application.informationStatus !== infoFilter) {
+        return false;
+      }
+      if (searchTerm) {
+        const haystack = `${application.name} ${formatAliases(application.aliases)}`.toLowerCase();
+        if (!haystack.includes(searchTerm)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    const total = catalog.applications.length;
+    const needsReview = catalog.applications.filter((item) => item.informationStatus === "Needs Review").length;
+    const verified = catalog.applications.filter((item) => item.informationStatus === "Verified").length;
+    const investCount = catalog.applications.filter((item) => item.timeClassification === "Invest").length;
+    const retiring = catalog.applications.filter(
+      (item) => item.lifecycleStatus === "retiring" || item.lifecycleStatus === "retired",
+    ).length;
+    const verifiedPct = total > 0 ? Math.round((verified / total) * 100) : 0;
+    const retiringPct = total > 0 ? Math.round((retiring / total) * 100) : 0;
+
     const section = makeElement(document, "section", {
-      className: "content-section",
+      className: "content-section catalog",
       attributes: { id: "applications" },
     });
-    appendTextBlock(document, section, "h2", "section-title", "Applications");
+
+    const header = makeElement(document, "div", { className: "catalog-header" });
+    const headerCopy = makeElement(document, "div", { className: "catalog-header__copy" });
+    appendTextBlock(document, headerCopy, "h2", "section-title", "Application Catalog");
+    appendTextBlock(
+      document,
+      headerCopy,
+      "p",
+      "lede",
+      "Monitor and manage the enterprise application portfolio alignment and strategic value.",
+    );
+    header.appendChild(headerCopy);
+    const headerStats = makeElement(document, "div", { className: "catalog-header__stats" });
+    const statTotal = makeElement(document, "div", { className: "stat-card" });
+    appendTextBlock(document, statTotal, "p", "stat-card__label", "Total Apps");
+    appendTextBlock(document, statTotal, "p", "stat-card__value", String(total));
+    const statReview = makeElement(document, "div", { className: "stat-card" });
+    appendTextBlock(document, statReview, "p", "stat-card__label", "Need Review");
+    appendTextBlock(document, statReview, "p", "stat-card__value stat-card__value--alert", String(needsReview));
+    headerStats.append(statTotal, statReview);
+    header.appendChild(headerStats);
+    section.appendChild(header);
 
     const status = makeElement(document, "p", {
       className: "master-data-status application-status",
       attributes: { role: "status" },
     });
     section.appendChild(status);
+
+    const toolbar = makeElement(document, "div", { className: "catalog-toolbar" });
+    const filterGroup = makeElement(document, "div", { className: "catalog-toolbar__filters" });
+    appendTextBlock(document, filterGroup, "span", "catalog-toolbar__label", "Quick Filters:");
+    const businessAreaSelect = makeElement(document, "select", {
+      name: "filterBusinessArea",
+      className: "catalog-select",
+    });
+    businessAreaSelect.appendChild(
+      makeElement(document, "option", { text: "All Business Areas", value: "", attributes: { value: "" } }),
+    );
+    for (const area of catalog.businessAreas) {
+      const option = makeElement(document, "option", {
+        text: area.name,
+        value: area.id,
+        attributes: { value: area.id },
+      });
+      if (area.id === activeFilters.businessAreaId) {
+        option.selected = true;
+      }
+      businessAreaSelect.appendChild(option);
+    }
+    const infoSelect = makeElement(document, "select", {
+      name: "filterInformationStatus",
+      className: "catalog-select",
+    });
+    infoSelect.appendChild(
+      makeElement(document, "option", { text: "All Information Status", value: "", attributes: { value: "" } }),
+    );
+    for (const statusName of ["Draft", "Verified", "Needs Review"]) {
+      const option = makeElement(document, "option", {
+        text: statusName,
+        value: statusName,
+        attributes: { value: statusName },
+      });
+      if (statusName === activeFilters.informationStatus) {
+        option.selected = true;
+      }
+      infoSelect.appendChild(option);
+    }
+    const searchInput = makeElement(document, "input", {
+      name: "filterSearch",
+      type: "search",
+      value: activeFilters.search || "",
+      className: "catalog-search",
+      attributes: { placeholder: "Search applications...", "aria-label": "Search applications" },
+    });
+    filterGroup.append(businessAreaSelect, infoSelect, searchInput);
+    const applyButton = makeElement(document, "button", {
+      className: "catalog-apply",
+      type: "button",
+      text: "Apply Filters",
+    });
+    applyButton.addEventListener("click", function onApply() {
+      applyFilters({
+        ...activeFilters,
+        businessAreaId: businessAreaSelect.value || "",
+        informationStatus: infoSelect.value || "",
+        search: searchInput.value || "",
+      });
+    });
+    const clearButton = makeElement(document, "button", {
+      className: "catalog-clear",
+      type: "button",
+      text: "Clear",
+    });
+    clearButton.addEventListener("click", function onClear() {
+      applyFilters({});
+    });
+    filterGroup.append(applyButton, clearButton);
+    toolbar.appendChild(filterGroup);
+    const toolbarActions = makeElement(document, "div", { className: "catalog-toolbar__actions" });
+    const addButton = makeElement(document, "button", {
+      className: "catalog-add",
+      type: "button",
+      text: "Add Application",
+    });
+    const exportButton = makeElement(document, "button", {
+      className: "catalog-export",
+      type: "button",
+      text: "Export CSV",
+    });
+    toolbarActions.append(addButton, exportButton);
+    toolbar.appendChild(toolbarActions);
+    section.appendChild(toolbar);
+
     appendTextBlock(
       document,
       section,
       "p",
       "application-count",
-      `Showing ${visibleApplications.length} of ${catalog.applications.length} Applications`,
+      `Showing ${filteredList.length} of ${total} Applications`,
     );
 
-    const createForm = makeElement(document, "form", { className: "edit-form application-form application-form--create" });
+    const createModal = makeElement(document, "div", { className: "modal" });
+    createModal.hidden = true;
+    const createModalCard = makeElement(document, "div", { className: "modal__card modal__card--app" });
+    const createModalHead = makeElement(document, "div", { className: "modal__head" });
+    appendTextBlock(document, createModalHead, "h3", "modal__title", "Add Application");
+    const createModalClose = makeElement(document, "button", {
+      className: "modal__close",
+      type: "button",
+      text: "\u00d7",
+      attributes: { "aria-label": "Close" },
+    });
+    createModalClose.addEventListener("click", function onCloseCreate() {
+      createModal.hidden = true;
+      createModal.className = "modal";
+    });
+    createModalHead.appendChild(createModalClose);
+    const createForm = makeElement(document, "form", {
+      className: "edit-form application-form application-form--create",
+    });
     appendApplicationFormFields(
       document,
       createForm,
@@ -586,6 +928,7 @@
         lastVerificationDate: "",
       },
       "application-create",
+      catalogApi,
     );
     const createButton = makeElement(document, "button", { type: "submit", text: "Add Application" });
     createForm.appendChild(createButton);
@@ -601,50 +944,75 @@
         status.textContent = error.message;
       }
     });
-    section.appendChild(createForm);
+    createModalCard.append(createModalHead, createForm);
+    createModal.appendChild(createModalCard);
+    addButton.addEventListener("click", function onOpenCreate() {
+      createModal.hidden = false;
+      createModal.className = "modal modal--open";
+    });
+    section.appendChild(createModal);
 
-    const list = makeElement(document, "div", { className: "application-grid" });
-    for (const application of visibleApplications) {
+    const tableWrap = makeElement(document, "div", { className: "catalog-table" });
+    const tableHead = makeElement(document, "div", { className: "catalog-row catalog-row--head" });
+    for (const label of ["Application", "Vendor", "TIME", "PACE", "Lifecycle", "Criticality", "Status", ""]) {
+      appendTextBlock(document, tableHead, "span", "catalog-cell catalog-cell--head", label);
+    }
+    tableWrap.appendChild(tableHead);
+    const listBody = makeElement(document, "div", { className: "catalog-body" });
+    tableWrap.appendChild(listBody);
+    const pager = makeElement(document, "div", { className: "catalog-pager" });
+    tableWrap.appendChild(pager);
+    section.appendChild(tableWrap);
+
+    function buildRow(application) {
       const vendor = findById(catalog.vendors, application.vendorId);
-      const department = findById(catalog.departments, application.departmentId);
-      const businessArea = findById(catalog.businessAreas, application.businessAreaId);
       const card = makeElement(document, "article", { className: "application-card" });
-      appendTextBlock(document, card, "h3", "application-card__title", application.name);
-      appendTextBlock(document, card, "p", "application-card__description", application.description);
 
-      const meta = makeElement(document, "dl", { className: "meta-list" });
-      for (const [term, description] of [
-        ["Aliases", formatAliases(application.aliases) || "None"],
-        ["Application URL", application.applicationUrl || "Not set"],
-        ["Diagnostic URL", application.diagnosticUrl || "Not set"],
-        ["Business Owner", application.businessOwnerEmail ? `${application.businessOwnerName} <${application.businessOwnerEmail}>` : application.businessOwnerName],
-        ["Tech Owner", application.techOwnerEmail ? `${application.techOwnerName} <${application.techOwnerEmail}>` : application.techOwnerName],
-        ["Vendor", vendor ? vendor.name : "Unknown"],
-        ["Department", department ? department.name : "Unknown"],
-        ["Business Area", businessArea ? businessArea.name : "Unknown"],
-        ["Lifecycle", application.lifecycleStatus],
-        ["Planned Date", application.plannedDate || "Not set"],
-        ["Retirement Date", application.retirementDate || "Not set"],
-        ["Business Fit", String(application.businessFit)],
-        ["Business Fit Band", application.businessFitBand],
-        ["Tech Fit", application.techFit],
-        ["TIME Classification", application.timeClassification],
-        ["PACE Classification", application.pace],
-        ["Criticality", application.criticality],
-        ["Personal Data Handling", application.personalDataHandling],
-        ["Sensitive Business Data Handling", application.sensitiveBusinessDataHandling],
-        ["Information Status", application.informationStatus],
-        ["Last Verification Date", application.lastVerificationDate || "Not set"],
-      ]) {
-        appendTextBlock(document, meta, "dt", "meta-list__term", term);
-        appendTextBlock(document, meta, "dd", "meta-list__value", description);
-      }
-      card.appendChild(meta);
+      const nameCell = makeElement(document, "div", { className: "catalog-cell catalog-cell--name" });
+      appendTextBlock(document, nameCell, "span", "catalog-cell__name", application.name);
+      appendTextBlock(document, nameCell, "span", "catalog-cell__alias", formatAliases(application.aliases) || "No alias");
+      const vendorCell = makeElement(document, "div", { className: "catalog-cell" });
+      appendTextBlock(document, vendorCell, "span", "catalog-cell__text", vendor ? vendor.name : "Unknown");
+      const timeCell = makeElement(document, "div", { className: "catalog-cell" });
+      timeCell.appendChild(makeBadge(document, "time", application.timeClassification));
+      const paceCell = makeElement(document, "div", { className: "catalog-cell" });
+      appendTextBlock(document, paceCell, "span", "catalog-cell__pace", application.pace);
+      const lifecycleCell = makeElement(document, "div", { className: "catalog-cell" });
+      lifecycleCell.appendChild(makeBadge(document, "lifecycle", application.lifecycleStatus));
+      const criticalityCell = makeElement(document, "div", { className: "catalog-cell" });
+      const critWrap = makeElement(document, "span", { className: "crit" });
+      const critSlug = String(application.criticality)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-");
+      critWrap.appendChild(makeElement(document, "span", { className: `crit__dot crit__dot--${critSlug}` }));
+      appendTextBlock(document, critWrap, "span", "crit__label", application.criticality);
+      criticalityCell.appendChild(critWrap);
+      const statusCell = makeElement(document, "div", { className: "catalog-cell" });
+      statusCell.appendChild(makeBadge(document, "info", application.informationStatus));
+
+      const actionsCell = makeElement(document, "div", { className: "catalog-cell catalog-cell--actions" });
+      const detailsModal = makeElement(document, "div", { className: "modal" });
+      detailsModal.hidden = true;
+      const detailsCard = makeElement(document, "div", { className: "modal__card modal__card--app" });
+      const detailsHead = makeElement(document, "div", { className: "modal__head" });
+      appendTextBlock(document, detailsHead, "h3", "modal__title", application.name);
+      const detailsClose = makeElement(document, "button", {
+        className: "modal__close",
+        type: "button",
+        text: "\u00d7",
+        attributes: { "aria-label": "Close" },
+      });
+      detailsClose.addEventListener("click", function onCloseDetails() {
+        detailsModal.hidden = true;
+        detailsModal.className = "modal";
+      });
+      detailsHead.appendChild(detailsClose);
+      detailsCard.appendChild(detailsHead);
 
       const form = makeElement(document, "form", { className: "edit-form application-form" });
-      appendApplicationFormFields(document, form, catalog, application, `application-${application.id}`);
-      const button = makeElement(document, "button", { type: "submit", text: "Save" });
-      form.appendChild(button);
+      appendApplicationFormFields(document, form, catalog, application, `application-${application.id}`, catalogApi);
+      const saveButton = makeElement(document, "button", { type: "submit", text: "Save" });
+      form.appendChild(saveButton);
       form.addEventListener("submit", function onSubmit(event) {
         if (event && typeof event.preventDefault === "function") {
           event.preventDefault();
@@ -667,11 +1035,166 @@
         catalogApi.saveCatalog(storage, catalog);
         rerender(catalog);
       });
-      card.append(form, deleteButton);
+      detailsCard.append(form, deleteButton);
+      detailsModal.appendChild(detailsCard);
+      detailsModal.addEventListener("click", function onBackdrop(event) {
+        if (event && event.target === detailsModal) {
+          detailsModal.hidden = true;
+          detailsModal.className = "modal";
+        }
+      });
 
-      list.appendChild(card);
+      const editButton = makeElement(document, "button", {
+        className: "catalog-row__edit",
+        type: "button",
+        text: "Edit",
+        attributes: { "aria-label": `Edit ${application.name}` },
+      });
+      editButton.addEventListener("click", function onOpenDetails() {
+        detailsModal.hidden = false;
+        detailsModal.className = "modal modal--open";
+      });
+      actionsCell.append(editButton, detailsModal);
+
+      card.append(nameCell, vendorCell, timeCell, paceCell, lifecycleCell, criticalityCell, statusCell, actionsCell);
+      return card;
     }
-    section.appendChild(list);
+
+    let pageSize = 10;
+    let currentPage = 1;
+
+    function renderRows() {
+      const pageCount = Math.max(1, Math.ceil(filteredList.length / pageSize));
+      if (currentPage > pageCount) {
+        currentPage = pageCount;
+      }
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = filteredList.slice(start, start + pageSize);
+      if (pageItems.length === 0) {
+        const empty = makeElement(document, "p", { className: "catalog-empty", text: "No applications match the current filters." });
+        listBody.replaceChildren(empty);
+      } else {
+        listBody.replaceChildren(...pageItems.map(buildRow));
+      }
+
+      const info = makeElement(document, "span", {
+        className: "catalog-pager__info",
+        text:
+          filteredList.length === 0
+            ? "No applications"
+            : `Showing ${start + 1}\u2013${Math.min(start + pageSize, filteredList.length)} of ${filteredList.length}`,
+      });
+      const controls = makeElement(document, "div", { className: "catalog-pager__controls" });
+      const sizeSelect = makeElement(document, "select", { className: "catalog-pager__size", attributes: { "aria-label": "Rows per page" } });
+      for (const size of [10, 20, 50, 100]) {
+        const option = makeElement(document, "option", {
+          text: `${size} / page`,
+          value: String(size),
+          attributes: { value: String(size) },
+        });
+        if (size === pageSize) {
+          option.selected = true;
+        }
+        sizeSelect.appendChild(option);
+      }
+      sizeSelect.addEventListener("change", function onSize() {
+        pageSize = Number(sizeSelect.value) || 10;
+        currentPage = 1;
+        renderRows();
+      });
+      const prev = makeElement(document, "button", { className: "catalog-pager__btn", type: "button", text: "Prev" });
+      prev.addEventListener("click", function onPrev() {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderRows();
+        }
+      });
+      const pageLabel = makeElement(document, "span", { className: "catalog-pager__page", text: `Page ${currentPage} of ${pageCount}` });
+      const next = makeElement(document, "button", { className: "catalog-pager__btn", type: "button", text: "Next" });
+      next.addEventListener("click", function onNext() {
+        if (currentPage < pageCount) {
+          currentPage += 1;
+          renderRows();
+        }
+      });
+      controls.append(sizeSelect, prev, pageLabel, next);
+      pager.replaceChildren(info, controls);
+    }
+
+    exportButton.addEventListener("click", function onExport() {
+      try {
+        const headerRow = [
+          "Name",
+          "Aliases",
+          "Vendor",
+          "Business Area",
+          "Lifecycle",
+          "TIME",
+          "PACE",
+          "Criticality",
+          "Information Status",
+        ];
+        const rows = [headerRow];
+        for (const application of filteredList) {
+          const vendor = findById(catalog.vendors, application.vendorId);
+          const area = findById(catalog.businessAreas, application.businessAreaId);
+          rows.push([
+            application.name,
+            formatAliases(application.aliases),
+            vendor ? vendor.name : "",
+            area ? area.name : "",
+            application.lifecycleStatus,
+            application.timeClassification,
+            application.pace,
+            application.criticality,
+            application.informationStatus,
+          ]);
+        }
+        const csv = rows
+          .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+          .join("\r\n");
+        const view = document.defaultView;
+        if (!view || typeof view.Blob === "undefined" || !view.URL) {
+          return;
+        }
+        const blob = new view.Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = view.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "application-catalog.csv");
+        link.click();
+        view.URL.revokeObjectURL(url);
+      } catch (error) {
+        status.textContent = "Export failed.";
+      }
+    });
+
+    renderRows();
+
+    const kpis = makeElement(document, "div", { className: "catalog-kpis" });
+    const focusCard = makeElement(document, "div", { className: "kpi-card kpi-card--focus" });
+    appendTextBlock(document, focusCard, "p", "kpi-card__label", "Strategic Focus");
+    appendTextBlock(document, focusCard, "p", "kpi-card__headline", "Invest & Modernize");
+    appendTextBlock(document, focusCard, "p", "kpi-card__metric", `${investCount} of ${total}`);
+    appendTextBlock(document, focusCard, "p", "kpi-card__note", "Applications flagged to invest and modernize.");
+    const riskCard = makeElement(document, "div", { className: "kpi-card kpi-card--risk" });
+    appendTextBlock(document, riskCard, "p", "kpi-card__label", "Lifecycle Risk");
+    appendTextBlock(document, riskCard, "p", "kpi-card__headline", "Retiring Portfolio");
+    const riskBar = makeElement(document, "div", { className: "kpi-bar" });
+    const riskFill = makeElement(document, "div", { className: "kpi-bar__fill" });
+    riskFill.setAttribute("style", `width: ${retiringPct}%`);
+    riskBar.appendChild(riskFill);
+    riskCard.appendChild(riskBar);
+    appendTextBlock(document, riskCard, "p", "kpi-card__metric", `${retiring} of ${total}`);
+    appendTextBlock(document, riskCard, "p", "kpi-card__note", "Applications retiring or already retired.");
+    const qualityCard = makeElement(document, "div", { className: "kpi-card kpi-card--quality" });
+    appendTextBlock(document, qualityCard, "p", "kpi-card__label", "Data Quality");
+    appendTextBlock(document, qualityCard, "p", "kpi-card__headline", `${verifiedPct}% Verified`);
+    appendTextBlock(document, qualityCard, "p", "kpi-card__metric", `${verified} of ${total}`);
+    appendTextBlock(document, qualityCard, "p", "kpi-card__note", "Records verified in the catalog.");
+    kpis.append(focusCard, riskCard, qualityCard);
+    section.appendChild(kpis);
+
     return section;
   }
 
@@ -680,7 +1203,20 @@
       className: "content-section content-section--compact",
       attributes: { id: config.id },
     });
-    appendTextBlock(document, section, "h2", "section-title", config.title);
+
+    const head = makeElement(document, "div", { className: "master-head" });
+    const searchInput = makeElement(document, "input", {
+      className: "md-search",
+      type: "search",
+      attributes: { placeholder: `Search ${config.title}...`, "aria-label": `Search ${config.title}` },
+    });
+    const addButton = makeElement(document, "button", {
+      className: "catalog-add",
+      type: "button",
+      text: `Add ${config.singular}`,
+    });
+    head.append(searchInput, addButton);
+    section.appendChild(head);
 
     const status = makeElement(document, "p", {
       className: "master-data-status",
@@ -688,32 +1224,99 @@
     });
     section.appendChild(status);
 
-    const createForm = makeElement(document, "form", { className: "master-data-form" });
-    const createNameId = `${config.id}-create-name`;
-    const createLabel = makeElement(document, "label", {
-      className: "master-data-form__label",
-      text: `${config.singular} name`,
-      attributes: { for: createNameId },
+    function countUsage(record) {
+      if (!config.usageField) {
+        return 0;
+      }
+      return catalog.applications.filter((application) => application[config.usageField] === record.id).length;
+    }
+
+    function buildGeneralCard() {
+      const card = makeElement(document, "div", { className: "form-section" });
+      appendTextBlock(document, card, "h4", "form-section__title", "General Information");
+      const grid = makeElement(document, "div", { className: "form-grid" });
+      card.appendChild(grid);
+      return { card, grid };
+    }
+
+    function appendNameField(grid, fieldId, value) {
+      const field = makeElement(document, "div", { className: "form-field form-field--full" });
+      const label = makeElement(document, "label", {
+        className: "form-field__label",
+        text: `${config.singular} Name`,
+        attributes: fieldId ? { for: fieldId } : undefined,
+      });
+      const input = makeElement(document, "input", {
+        id: fieldId,
+        name: "name",
+        type: "text",
+        value: value || "",
+        attributes: { autocomplete: "off", "aria-label": `${config.singular} name` },
+      });
+      field.append(label, input);
+      grid.appendChild(field);
+      return input;
+    }
+
+    function appendInternalToggle(grid, checked) {
+      const field = makeElement(document, "div", { className: "form-field form-field--full" });
+      const label = makeElement(document, "label", { className: "master-data-check" });
+      const input = makeElement(document, "input", { name: "isInternal", type: "checkbox", checked });
+      label.append(input, document.createTextNode("Internal Vendor"));
+      field.appendChild(label);
+      grid.appendChild(field);
+      return input;
+    }
+
+    function buildUsageCard(usageCount) {
+      const card = makeElement(document, "div", { className: "usage-card" });
+      appendTextBlock(document, card, "h4", "form-section__title", "Usage & Impact");
+      const box = makeElement(document, "div", { className: "usage-card__box" });
+      appendTextBlock(document, box, "p", "usage-card__label", "Applications Linked");
+      appendTextBlock(document, box, "p", "usage-card__value", String(usageCount));
+      card.appendChild(box);
+      appendTextBlock(
+        document,
+        card,
+        "p",
+        "usage-card__note",
+        usageCount > 0
+          ? `${config.singular} is referenced by ${usageCount} application${usageCount === 1 ? "" : "s"} and cannot be deleted while in use.`
+          : `${config.singular} is not linked to any application and can be safely deleted.`,
+      );
+      return card;
+    }
+
+    const createModal = makeElement(document, "div", { className: "modal" });
+    createModal.hidden = true;
+    const createModalCard = makeElement(document, "div", { className: "modal__card modal__card--md" });
+    const createModalHead = makeElement(document, "div", { className: "modal__head" });
+    appendTextBlock(document, createModalHead, "h3", "modal__title", `Add ${config.singular}`);
+    const createModalClose = makeElement(document, "button", {
+      className: "modal__close",
+      type: "button",
+      text: "\u00d7",
+      attributes: { "aria-label": "Close" },
     });
-    const createName = makeElement(document, "input", {
-      id: createNameId,
-      name: "name",
-      type: "text",
-      attributes: { autocomplete: "off" },
+    createModalClose.addEventListener("click", function onCloseCreate() {
+      createModal.hidden = true;
+      createModal.className = "modal";
     });
-    createForm.append(createLabel, createName);
+    createModalHead.appendChild(createModalClose);
+
+    const createForm = makeElement(document, "form", { className: "md-form" });
+    const createGeneral = buildGeneralCard();
+    const createName = appendNameField(createGeneral.grid, `${config.id}-create-name`, "");
     let createInternal = null;
     if (config.kind === "vendor") {
-      const checkboxLabel = makeElement(document, "label", { className: "master-data-check" });
-      createInternal = makeElement(document, "input", {
-        name: "isInternal",
-        type: "checkbox",
-        checked: false,
-      });
-      checkboxLabel.append(createInternal, document.createTextNode("Internal Vendor"));
-      createForm.appendChild(checkboxLabel);
+      createInternal = appendInternalToggle(createGeneral.grid, false);
     }
-    const createButton = makeElement(document, "button", { type: "submit", text: `Add ${config.singular}` });
+    createForm.appendChild(createGeneral.card);
+    const createButton = makeElement(document, "button", {
+      className: "md-form__save",
+      type: "submit",
+      text: `Add ${config.singular}`,
+    });
     createForm.appendChild(createButton);
     createForm.addEventListener("submit", function onSubmit(event) {
       if (event && typeof event.preventDefault === "function") {
@@ -730,35 +1333,107 @@
         status.textContent = error.message;
       }
     });
-    section.appendChild(createForm);
-
-    const list = makeElement(document, "ul", { className: "master-list master-list--editable" });
-    for (const record of config.records(catalog)) {
-      const item = makeElement(document, "li", { className: "master-list__item master-list__item--editable" });
-      appendTextBlock(document, item, "span", "master-list__name", record.name);
-      if (config.describe) {
-        appendTextBlock(document, item, "small", "master-list__note", config.describe(record));
+    createModalCard.append(createModalHead, createForm);
+    createModal.appendChild(createModalCard);
+    createModal.addEventListener("click", function onCreateBackdrop(event) {
+      if (event && event.target === createModal) {
+        createModal.hidden = true;
+        createModal.className = "modal";
       }
-      const editForm = makeElement(document, "form", { className: "master-data-row-form" });
-      const editName = makeElement(document, "input", {
-        name: "name",
-        type: "text",
-        value: record.name,
-        attributes: { "aria-label": `${config.singular} name` },
-      });
-      editForm.appendChild(editName);
+    });
+    addButton.addEventListener("click", function onOpenCreate() {
+      createModal.hidden = false;
+      createModal.className = "modal modal--open";
+    });
+    section.appendChild(createModal);
+
+    const records = config.records(catalog);
+    const usageValues = records.map((record) => countUsage(record));
+    const maxUsage = Math.max(1, ...usageValues);
+    const total = records.length;
+    const referenced = usageValues.filter((count) => count > 0).length;
+    const unreferenced = total - referenced;
+    const totalLinks = usageValues.reduce((sum, count) => sum + count, 0);
+    const avgApps = total > 0 ? (totalLinks / total).toFixed(1) : "0.0";
+
+    const stats = makeElement(document, "div", { className: "md-stats" });
+    function appendStat(label, value) {
+      const card = makeElement(document, "div", { className: "md-stat" });
+      appendTextBlock(document, card, "p", "md-stat__label", label);
+      appendTextBlock(document, card, "p", "md-stat__value", String(value));
+      stats.appendChild(card);
+    }
+    appendStat(`Total ${config.title}`, total);
+    appendStat("In Use", referenced);
+    appendStat(`Avg Apps / ${config.singular}`, avgApps);
+    appendStat("Free To Delete", unreferenced);
+    section.appendChild(stats);
+
+    const tableWrap = makeElement(document, "div", {
+      className: config.kind === "vendor" ? "md-table md-table--vendor" : "md-table",
+    });
+    const headRow = makeElement(document, "div", { className: "md-row md-row--head" });
+    const columns =
+      config.kind === "vendor"
+        ? [`${config.singular} Name`, "Type", "Apps Linked", ""]
+        : [`${config.singular} Name`, "Apps Linked", ""];
+    for (const label of columns) {
+      appendTextBlock(document, headRow, "span", "md-cell md-cell--head", label);
+    }
+    tableWrap.appendChild(headRow);
+    const listBody = makeElement(document, "ul", { className: "master-list master-list--editable md-body" });
+    tableWrap.appendChild(listBody);
+    const pager = makeElement(document, "div", { className: "md-pager" });
+    tableWrap.appendChild(pager);
+    section.appendChild(tableWrap);
+
+    function buildRow(record) {
+      const usageCount = countUsage(record);
+      const item = makeElement(document, "li", { className: "master-list__item md-row" });
+
+      const nameCell = makeElement(document, "div", { className: "md-cell md-cell--name" });
+      appendTextBlock(document, nameCell, "span", "master-list__name", record.name);
+      item.appendChild(nameCell);
+
+      if (config.kind === "vendor") {
+        const typeCell = makeElement(document, "div", { className: "md-cell" });
+        typeCell.appendChild(
+          makeElement(document, "span", {
+            className: record.isInternal ? "md-type md-type--internal" : "md-type md-type--external",
+            text: config.describe ? config.describe(record) : "",
+          }),
+        );
+        item.appendChild(typeCell);
+      }
+
+      const usageCell = makeElement(document, "div", { className: "md-cell md-cell--usage" });
+      appendTextBlock(
+        document,
+        usageCell,
+        "span",
+        "md-usage__count",
+        `${usageCount} application${usageCount === 1 ? "" : "s"}`,
+      );
+      const bar = makeElement(document, "div", { className: "md-usage__bar" });
+      const fill = makeElement(document, "div", { className: "md-usage__fill" });
+      fill.setAttribute("style", `width: ${Math.round((usageCount / maxUsage) * 100)}%`);
+      bar.appendChild(fill);
+      usageCell.appendChild(bar);
+      item.appendChild(usageCell);
+
+      const editForm = makeElement(document, "form", { className: "md-form" });
+      const editGeneral = buildGeneralCard();
+      const editName = appendNameField(editGeneral.grid, "", record.name);
       let editInternal = null;
       if (config.kind === "vendor") {
-        const editCheckLabel = makeElement(document, "label", { className: "master-data-check" });
-        editInternal = makeElement(document, "input", {
-          name: "isInternal",
-          type: "checkbox",
-          checked: record.isInternal === true,
-        });
-        editCheckLabel.append(editInternal, document.createTextNode("Internal Vendor"));
-        editForm.appendChild(editCheckLabel);
+        editInternal = appendInternalToggle(editGeneral.grid, record.isInternal === true);
       }
-      const saveButton = makeElement(document, "button", { type: "submit", text: "Save" });
+      editForm.appendChild(editGeneral.card);
+      const saveButton = makeElement(document, "button", {
+        className: "md-form__save",
+        type: "submit",
+        text: "Save Changes",
+      });
       editForm.appendChild(saveButton);
       editForm.addEventListener("submit", function onEdit(event) {
         if (event && typeof event.preventDefault === "function") {
@@ -775,10 +1450,15 @@
           status.textContent = error.message;
         }
       });
+
       const deleteButton = makeElement(document, "button", {
-        className: "master-data-delete",
+        className: "md-icon-btn md-icon-btn--danger",
         type: "button",
         text: "Delete",
+        attributes: {
+          "aria-label": `Delete ${config.singular}`,
+          title: usageCount > 0 ? "Referenced by applications" : "Delete",
+        },
       });
       deleteButton.addEventListener("click", function onDelete() {
         try {
@@ -789,14 +1469,175 @@
           status.textContent = error.message;
         }
       });
-      const actions = makeElement(document, "div", { className: "master-data-actions" });
-      actions.append(editForm, deleteButton);
-      item.appendChild(actions);
-      list.appendChild(item);
+
+      const editButton = makeElement(document, "button", {
+        className: "md-icon-btn md-icon-btn--edit",
+        type: "button",
+        text: "Edit",
+        attributes: { "aria-label": `Edit ${config.singular}`, title: "Edit" },
+      });
+
+      const modal = makeElement(document, "div", { className: "modal" });
+      modal.hidden = true;
+      const modalCard = makeElement(document, "div", { className: "modal__card modal__card--md" });
+      const modalHead = makeElement(document, "div", { className: "modal__head" });
+      appendTextBlock(document, modalHead, "h3", "modal__title", `Edit ${config.singular}: ${record.name}`);
+      const modalClose = makeElement(document, "button", {
+        className: "modal__close",
+        type: "button",
+        text: "\u00d7",
+        attributes: { "aria-label": "Close" },
+      });
+      function closeModal() {
+        modal.hidden = true;
+        modal.className = "modal";
+      }
+      function openModal() {
+        modal.hidden = false;
+        modal.className = "modal modal--open";
+      }
+      modalClose.addEventListener("click", closeModal);
+      modalHead.appendChild(modalClose);
+      const modalBody = makeElement(document, "div", { className: "md-modal__body" });
+      const modalMain = makeElement(document, "div", { className: "md-modal__main" });
+      modalMain.appendChild(editForm);
+      const modalSide = makeElement(document, "div", { className: "md-modal__side" });
+      modalSide.appendChild(buildUsageCard(usageCount));
+      modalBody.append(modalMain, modalSide);
+      modalCard.append(modalHead, modalBody);
+      modal.appendChild(modalCard);
+      modal.addEventListener("click", function onBackdrop(event) {
+        if (event && event.target === modal) {
+          closeModal();
+        }
+      });
+      editButton.addEventListener("click", openModal);
+
+      const actionsCell = makeElement(document, "div", { className: "md-cell md-cell--actions" });
+      actionsCell.append(editButton, deleteButton, modal);
+      item.appendChild(actionsCell);
+      return item;
     }
-    section.appendChild(list);
+
+    let pageSize = 10;
+    let currentPage = 1;
+    let searchTerm = "";
+
+    function renderRows() {
+      const term = searchTerm.trim().toLowerCase();
+      const filtered = term
+        ? records.filter((record) => record.name.toLowerCase().includes(term))
+        : records;
+      const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+      if (currentPage > pageCount) {
+        currentPage = pageCount;
+      }
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = filtered.slice(start, start + pageSize);
+      if (pageItems.length === 0) {
+        listBody.replaceChildren(
+          makeElement(document, "li", {
+            className: "md-empty",
+            text: `No ${config.title.toLowerCase()} match your search.`,
+          }),
+        );
+      } else {
+        listBody.replaceChildren(...pageItems.map(buildRow));
+      }
+
+      const info = makeElement(document, "span", {
+        className: "md-pager__info",
+        text:
+          filtered.length === 0
+            ? "No records"
+            : `Showing ${start + 1}\u2013${Math.min(start + pageSize, filtered.length)} of ${filtered.length} records`,
+      });
+      const controls = makeElement(document, "div", { className: "md-pager__controls" });
+      const prev = makeElement(document, "button", { className: "catalog-pager__btn", type: "button", text: "Prev" });
+      prev.addEventListener("click", function onPrev() {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderRows();
+        }
+      });
+      const pageLabel = makeElement(document, "span", { className: "catalog-pager__page", text: `Page ${currentPage} of ${pageCount}` });
+      const next = makeElement(document, "button", { className: "catalog-pager__btn", type: "button", text: "Next" });
+      next.addEventListener("click", function onNext() {
+        if (currentPage < pageCount) {
+          currentPage += 1;
+          renderRows();
+        }
+      });
+      controls.append(prev, pageLabel, next);
+      pager.replaceChildren(info, controls);
+    }
+
+    searchInput.addEventListener("input", function onSearch() {
+      searchTerm = searchInput.value || "";
+      currentPage = 1;
+      renderRows();
+    });
+
+    renderRows();
+
+    const banner = makeElement(document, "div", { className: "md-banner" });
+    appendTextBlock(document, banner, "span", "md-banner__icon", "\u24D8");
+    const bannerBody = makeElement(document, "div", { className: "md-banner__body" });
+    appendTextBlock(document, bannerBody, "h4", "md-banner__title", "Referenced Master Data Rule");
+    appendTextBlock(
+      document,
+      bannerBody,
+      "p",
+      "md-banner__text",
+      "Master Data records linked to one or more applications cannot be deleted, to preserve referential integrity. To remove a record, first reassign its dependencies in the Application Catalog.",
+    );
+    banner.appendChild(bannerBody);
+    section.appendChild(banner);
+
     return section;
   }
+
+  function renderAnalyticsMatrix(document, catalog) {
+    const section = makeElement(document, "section", {
+      className: "analytics",
+      attributes: { id: "analytics" },
+    });
+    appendTextBlock(document, section, "h2", "section-title", "Analytics \u2014 TIME Matrix");
+    appendTextBlock(
+      document,
+      section,
+      "p",
+      "lede",
+      "Applications plotted by Business Fit and Technical Fit into the four TIME quadrants.",
+    );
+    const grid = makeElement(document, "div", { className: "time-matrix" });
+    const quadrants = [
+      { name: "Tolerate", slug: "tolerate" },
+      { name: "Invest", slug: "invest" },
+      { name: "Eliminate", slug: "eliminate" },
+      { name: "Migrate", slug: "migrate" },
+    ];
+    for (const quadrant of quadrants) {
+      const cell = makeElement(document, "div", { className: `quadrant quadrant--${quadrant.slug}` });
+      const head = makeElement(document, "div", { className: "quadrant__head" });
+      appendTextBlock(document, head, "span", "quadrant__name", quadrant.name);
+      const matches = catalog.applications.filter(
+        (application) => application.timeClassification === quadrant.name,
+      );
+      appendTextBlock(document, head, "span", "quadrant__count", String(matches.length));
+      cell.appendChild(head);
+      const chips = makeElement(document, "div", { className: "quadrant__chips" });
+      for (const application of matches) {
+        appendTextBlock(document, chips, "span", "chip", application.name);
+      }
+      cell.appendChild(chips);
+      grid.appendChild(cell);
+    }
+    section.appendChild(grid);
+    return section;
+  }
+
+  let activeView = "dashboard";
 
   function renderApp(options) {
     const document = options.document;
@@ -815,40 +1656,200 @@
       renderApp({ document, storage, catalogApi, root, catalog, filters: nextFilters });
     }
 
-    root.replaceChildren(
-      renderNavigation(document, catalogApi),
-      renderOverview(document, catalog, catalogApi, filters, setFilters),
-      renderApplications(document, catalog, catalogApi, storage, rerender, summary.filteredApplications),
-      renderMasterData(document, catalog, catalogApi, storage, rerender, {
-        id: "vendors",
-        title: "Vendors",
-        singular: "Vendor",
-        kind: "vendor",
-        records: (currentCatalog) => currentCatalog.vendors,
-        create: catalogApi.createVendor,
-        update: catalogApi.updateVendor,
-        delete: catalogApi.deleteVendor,
-        describe: catalogApi.getVendorDisplayType,
-      }),
-      renderMasterData(document, catalog, catalogApi, storage, rerender, {
-        id: "departments",
-        title: "Departments",
-        singular: "Department",
-        records: (currentCatalog) => currentCatalog.departments,
-        create: catalogApi.createDepartment,
-        update: catalogApi.updateDepartment,
-        delete: catalogApi.deleteDepartment,
-      }),
-      renderMasterData(document, catalog, catalogApi, storage, rerender, {
-        id: "business-areas",
-        title: "Business Areas",
-        singular: "Business Area",
-        records: (currentCatalog) => currentCatalog.businessAreas,
-        create: catalogApi.createBusinessArea,
-        update: catalogApi.updateBusinessArea,
-        delete: catalogApi.deleteBusinessArea,
-      }),
+    const overviewSection = renderOverview(document, catalog, catalogApi, filters, setFilters);
+    const applicationsSection = renderApplications(
+      document,
+      catalog,
+      catalogApi,
+      storage,
+      rerender,
+      summary.filteredApplications,
+      filters,
+      setFilters,
     );
+    const vendorsSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+      id: "vendors",
+      title: "Vendors",
+      singular: "Vendor",
+      kind: "vendor",
+      usageField: "vendorId",
+      records: (currentCatalog) => currentCatalog.vendors,
+      create: catalogApi.createVendor,
+      update: catalogApi.updateVendor,
+      delete: catalogApi.deleteVendor,
+      describe: catalogApi.getVendorDisplayType,
+    });
+    const departmentsSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+      id: "departments",
+      title: "Departments",
+      singular: "Department",
+      usageField: "departmentId",
+      records: (currentCatalog) => currentCatalog.departments,
+      create: catalogApi.createDepartment,
+      update: catalogApi.updateDepartment,
+      delete: catalogApi.deleteDepartment,
+    });
+    const businessAreasSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+      id: "business-areas",
+      title: "Business Areas",
+      singular: "Business Area",
+      usageField: "businessAreaId",
+      records: (currentCatalog) => currentCatalog.businessAreas,
+      create: catalogApi.createBusinessArea,
+      update: catalogApi.updateBusinessArea,
+      delete: catalogApi.deleteBusinessArea,
+    });
+    const analyticsSection = renderAnalyticsMatrix(document, catalog);
+
+    const views = [];
+    const navItems = [];
+    function activate(viewKey) {
+      activeView = viewKey;
+      for (const view of views) {
+        const on = view.dataset && view.dataset.view === viewKey;
+        view.className = on ? "view view--active" : "view view--hidden";
+        view.hidden = !on;
+      }
+      for (const navItem of navItems) {
+        const on = navItem.dataset && navItem.dataset.view === viewKey;
+        navItem.className = on
+          ? "portfolio-nav__item portfolio-nav__item--active"
+          : "portfolio-nav__item";
+      }
+    }
+    function makeView(viewKey, children) {
+      const on = activeView === viewKey;
+      const view = makeElement(document, "section", {
+        className: on ? "view view--active" : "view view--hidden",
+        attributes: { "data-view": viewKey },
+      });
+      view.dataset.view = viewKey;
+      if (!on) {
+        view.hidden = true;
+      }
+      view.append(...children);
+      views.push(view);
+      return view;
+    }
+
+    const NAV_VIEWS = [
+      { key: "dashboard", label: "Dashboard" },
+      { key: "catalog", label: "Application Catalog" },
+      { key: "matrix", label: "Analytics Matrix" },
+      { key: "master", label: "Master Data" },
+    ];
+    const nav = makeElement(document, "nav", {
+      className: "portfolio-nav",
+      attributes: { "aria-label": "Primary navigation" },
+    });
+    for (const navView of NAV_VIEWS) {
+      const on = activeView === navView.key;
+      const item = makeElement(document, "a", {
+        className: on ? "portfolio-nav__item portfolio-nav__item--active" : "portfolio-nav__item",
+        text: navView.label,
+        attributes: { href: "#", role: "button", "data-view": navView.key },
+      });
+      item.dataset.view = navView.key;
+      item.addEventListener("click", function onNav(event) {
+        if (event && typeof event.preventDefault === "function") {
+          event.preventDefault();
+        }
+        activate(navView.key);
+      });
+      navItems.push(item);
+      nav.appendChild(item);
+    }
+
+    const masterTabs = makeElement(document, "div", {
+      className: "tabbar",
+      attributes: { role: "tablist" },
+    });
+    const masterPanels = [
+      { label: "Vendors", panel: vendorsSection },
+      { label: "Departments", panel: departmentsSection },
+      { label: "Business Areas", panel: businessAreasSection },
+    ];
+    const masterTabButtons = [];
+    function activateMasterTab(index) {
+      for (let i = 0; i < masterPanels.length; i += 1) {
+        const on = i === index;
+        masterPanels[i].panel.hidden = !on;
+        masterPanels[i].panel.className = on
+          ? "content-section content-section--compact master-panel master-panel--active"
+          : "content-section content-section--compact master-panel master-panel--hidden";
+        masterTabButtons[i].className = on ? "tab tab--active" : "tab";
+      }
+    }
+    masterPanels.forEach(function buildTab(entry, index) {
+      const on = index === 0;
+      const tab = makeElement(document, "button", {
+        className: on ? "tab tab--active" : "tab",
+        type: "button",
+        text: entry.label,
+      });
+      tab.addEventListener("click", function onTab() {
+        activateMasterTab(index);
+      });
+      masterTabButtons.push(tab);
+      masterTabs.appendChild(tab);
+      entry.panel.className = on
+        ? "content-section content-section--compact master-panel master-panel--active"
+        : "content-section content-section--compact master-panel master-panel--hidden";
+      if (!on) {
+        entry.panel.hidden = true;
+      }
+    });
+    const masterHeader = makeElement(document, "div", { className: "view__header" });
+    appendTextBlock(document, masterHeader, "h2", "section-title", "Master Data Management");
+    appendTextBlock(
+      document,
+      masterHeader,
+      "p",
+      "lede",
+      "Centralized ledger for architectural metadata and global taxonomies.",
+    );
+
+    const dashboardHeader = makeElement(document, "div", {
+      className: "view__header flex flex-wrap justify-between items-end gap-md",
+    });
+    const dashboardHeading = makeElement(document, "div", {});
+    appendTextBlock(document, dashboardHeading, "h2", "section-title", "Executive Overview");
+    appendTextBlock(
+      document,
+      dashboardHeading,
+      "p",
+      "lede",
+      "Real-time strategic indicators for the application portfolio.",
+    );
+    dashboardHeader.appendChild(dashboardHeading);
+    const dashboardChip = makeElement(document, "div", {
+      className:
+        "hidden md:flex items-center gap-xs bg-white px-sm py-xs border border-solid border-outline-variant rounded text-label-caps uppercase text-on-surface-variant",
+    });
+    appendTextBlock(document, dashboardChip, "span", "", "Local-first catalog");
+    dashboardHeader.appendChild(dashboardChip);
+
+    const dashboardView = makeView("dashboard", [dashboardHeader, overviewSection]);
+    const catalogView = makeView("catalog", [applicationsSection]);
+    const matrixView = makeView("matrix", [analyticsSection]);
+    const masterView = makeView("master", [
+      masterHeader,
+      masterTabs,
+      vendorsSection,
+      departmentsSection,
+      businessAreasSection,
+    ]);
+
+    const sidebar = makeElement(document, "aside", { className: "app-sidebar" });
+    const brand = makeElement(document, "div", { className: "app-brand" });
+    appendTextBlock(document, brand, "span", "app-brand__mark", "AP");
+    appendTextBlock(document, brand, "span", "app-brand__name", "Application Portfolio");
+    sidebar.append(brand, nav);
+
+    const content = makeElement(document, "div", { className: "app-content" });
+    content.append(dashboardView, catalogView, matrixView, masterView);
+
+    root.replaceChildren(sidebar, content);
     return { root, catalog };
   }
 

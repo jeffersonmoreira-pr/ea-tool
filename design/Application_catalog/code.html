@@ -1,0 +1,562 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>APM Insight Explorer - Application Catalog</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Shared Components Logic & Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#e3c28a",
+                    "surface-dim": "#dbd9dc",
+                    "inverse-primary": "#b7c7eb",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#374765",
+                    "secondary-fixed": "#c9e6ff",
+                    "surface-container-high": "#eae7ea",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f5f3f6",
+                    "primary-fixed-dim": "#b7c7eb",
+                    "on-primary-fixed": "#091b37",
+                    "tertiary": "#211500",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#fbf8fb",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffdea7",
+                    "background": "#fbf8fb",
+                    "tertiary-container": "#3b2800",
+                    "primary-fixed": "#d7e2ff",
+                    "secondary-container": "#39b8fd",
+                    "on-secondary-fixed-variant": "#004c6e",
+                    "surface": "#fbf8fb",
+                    "on-secondary-fixed": "#001e2f",
+                    "secondary": "#006591",
+                    "primary": "#041632",
+                    "on-background": "#1b1b1e",
+                    "primary-container": "#1b2b48",
+                    "surface-container": "#efedf0",
+                    "on-tertiary-container": "#ac8e5b",
+                    "on-secondary-container": "#004666",
+                    "secondary-fixed-dim": "#89ceff",
+                    "surface-variant": "#e4e2e5",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#271900",
+                    "on-primary-container": "#8393b5",
+                    "inverse-surface": "#303033",
+                    "outline": "#75777e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#594317",
+                    "surface-tint": "#4f5e7e",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-surface": "#1b1b1e",
+                    "on-surface-variant": "#44474d",
+                    "outline-variant": "#c5c6ce"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "container-max": "1440px",
+                    "base": "4px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "title-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .time-invest { background-color: #10b981; color: white; }
+        .time-tolerate { background-color: #f59e0b; color: white; }
+        .time-migrate { background-color: #3b82f6; color: white; }
+        .time-eliminate { background-color: #ef4444; color: white; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6ce; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-secondary-container selection:text-on-secondary-container">
+<div class="flex min-h-screen">
+<!-- SideNavBar (Desktop) -->
+<aside class="hidden lg:flex flex-col h-screen sticky top-0 p-md space-y-md w-64 bg-surface-container-low border-r border-outline-variant">
+<div class="px-sm py-md">
+<h1 class="font-title-sm text-title-sm font-bold text-primary">APM Portfolio</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Enterprise Architecture</p>
+</div>
+<nav class="flex-grow space-y-1">
+<a class="flex items-center px-sm py-2.5 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">dashboard</span>
+<span class="font-label-caps text-label-caps">EXECUTIVE DASHBOARD</span>
+</a>
+<!-- Active Item -->
+<a class="flex items-center px-sm py-2.5 bg-secondary-container text-on-secondary-container font-bold rounded-lg active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">list_alt</span>
+<span class="font-label-caps text-label-caps">APPLICATION CATALOG</span>
+</a>
+<a class="flex items-center px-sm py-2.5 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">grid_view</span>
+<span class="font-label-caps text-label-caps">ANALYTICS MATRIX</span>
+</a>
+<a class="flex items-center px-sm py-2.5 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px]">database</span>
+<span class="font-label-caps text-label-caps">MASTER DATA</span>
+</a>
+</nav>
+<div class="pt-md border-t border-outline-variant space-y-1">
+<a class="flex items-center px-sm py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-caps text-label-caps transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span> SUPPORT
+                </a>
+<a class="flex items-center px-sm py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg font-label-caps text-label-caps transition-all" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">description</span> DOCUMENTATION
+                </a>
+<div class="mt-lg p-sm bg-surface-container-highest rounded-xl flex items-center space-x-3">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-[10px] font-bold">JD</div>
+<div class="overflow-hidden">
+<p class="text-[12px] font-bold truncate">Executive User</p>
+<p class="text-[10px] text-on-surface-variant truncate">EA Lead</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-grow flex flex-col min-w-0">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-10 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center w-full px-gutter h-16 max-w-container-max mx-auto">
+<div class="flex items-center">
+<button class="lg:hidden mr-md text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary">APM Insight Explorer</span>
+</div>
+<div class="hidden md:flex items-center space-x-md">
+<nav class="flex items-center space-x-lg mr-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors pb-2" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-2" href="#">Catalog</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors pb-2" href="#">Analytics</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors pb-2" href="#">Settings</a>
+</nav>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-lg text-body-sm w-64 focus:outline-none focus:ring-1 focus:ring-secondary" placeholder="Search applications..." type="text">
+</div>
+<div class="flex items-center space-x-sm ml-lg">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-gutter max-w-container-max mx-auto w-full space-y-lg">
+<!-- Page Header & Stats -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary">Application Catalog</h2>
+<p class="text-on-surface-variant">Manage and monitor the enterprise application portfolio alignment and strategic value.</p>
+</div>
+<div class="flex space-x-md">
+<div class="px-lg py-sm bg-surface-container-low border border-outline-variant rounded-lg shadow-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant">TOTAL APPS</p>
+<p class="font-display-lg text-display-lg text-primary">428</p>
+</div>
+<div class="px-lg py-sm bg-surface-container-low border border-outline-variant rounded-lg shadow-sm">
+<p class="font-label-caps text-label-caps text-on-surface-variant">NEED REVIEW</p>
+<p class="font-display-lg text-display-lg text-error">12</p>
+</div>
+</div>
+</div>
+<!-- Filters & Search Toolbar -->
+<div class="bg-surface-container-lowest p-md border border-outline-variant rounded-xl shadow-sm flex flex-wrap items-center gap-md">
+<div class="flex flex-wrap items-center gap-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant">QUICK FILTERS:</span>
+<select class="bg-surface border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm focus:ring-1 focus:ring-secondary">
+<option>All Business Areas</option>
+<option>Finance &amp; Accounting</option>
+<option>Supply Chain</option>
+<option>Customer Relations (CRM)</option>
+<option>Human Resources</option>
+</select>
+<select class="bg-surface border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm focus:ring-1 focus:ring-secondary">
+<option>All Information Status</option>
+<option>Verified</option>
+<option>Draft</option>
+<option>Needs Review</option>
+</select>
+<div class="h-6 w-px bg-outline-variant mx-2 hidden md:block"></div>
+<div class="flex items-center space-x-1">
+<button class="bg-secondary text-white px-4 py-1.5 rounded-lg text-body-sm font-bold flex items-center active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px] mr-1">filter_list</span> Apply Filters
+                            </button>
+<button class="text-on-surface-variant px-4 py-1.5 rounded-lg text-body-sm hover:bg-surface-variant transition-colors">
+                                Clear
+                            </button>
+</div>
+</div>
+<div class="ml-auto flex items-center space-x-md">
+<button class="flex items-center space-x-1 text-on-surface-variant font-label-caps text-label-caps hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span>EXPORT CSV</span>
+</button>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse min-w-[1000px]">
+<thead class="bg-surface-container-low border-b border-outline-variant sticky top-0 z-10">
+<tr>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant cursor-pointer hover:text-primary transition-colors">
+                                        APPLICATION NAME <span class="material-symbols-outlined text-[14px] align-middle ml-1">swap_vert</span>
+</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant">VENDOR</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant">LIFECYCLE</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant">TIME CLASS</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant text-center">PACE</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant">CRITICALITY</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant">STATUS</th>
+<th class="px-md py-3 text-label-caps font-label-caps text-on-surface-variant text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3">
+<div class="font-body-md font-bold text-primary">SAP S/4HANA</div>
+<div class="text-[11px] text-on-surface-variant">ERP_PRD_001</div>
+</td>
+<td class="px-md py-3 text-body-sm">SAP SE</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-secondary text-secondary bg-secondary/5">ACTIVE</span>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold time-invest uppercase tracking-wider">Invest</span>
+</td>
+<td class="px-md py-3 text-center">
+<div class="inline-flex flex-col items-center">
+<span class="text-[10px] font-bold text-on-surface-variant">SYSTEM OF RECORD</span>
+</div>
+</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-error"></div>
+<span class="text-body-sm font-medium">Critical</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="flex items-center text-[11px] text-emerald-600 font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">check_circle</span> Verified
+                                        </span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex justify-end space-x-2">
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-on-surface-variant" title="View Details">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-secondary" title="Verify Data">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3">
+<div class="font-body-md font-bold text-primary">Salesforce CRM</div>
+<div class="text-[11px] text-on-surface-variant">CRM_GLOBAL</div>
+</td>
+<td class="px-md py-3 text-body-sm">Salesforce Inc.</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-secondary text-secondary bg-secondary/5">ACTIVE</span>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold time-tolerate uppercase tracking-wider">Tolerate</span>
+</td>
+<td class="px-md py-3 text-center">
+<span class="text-[10px] font-bold text-on-surface-variant">SYSTEM OF DIFFERENTIATION</span>
+</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-body-sm font-medium">High</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="flex items-center text-[11px] text-emerald-600 font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">check_circle</span> Verified
+                                        </span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex justify-end space-x-2">
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-on-surface-variant" title="View Details">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-secondary" title="Verify Data">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3">
+<div class="font-body-md font-bold text-primary">Legacy Warehouse Pro</div>
+<div class="text-[11px] text-on-surface-variant">WMS_LEG_04</div>
+</td>
+<td class="px-md py-3 text-body-sm">Logistics Systems Ltd</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-outline text-on-surface-variant bg-surface-variant">RETIRING</span>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold time-eliminate uppercase tracking-wider">Eliminate</span>
+</td>
+<td class="px-md py-3 text-center">
+<span class="text-[10px] font-bold text-on-surface-variant">SYSTEM OF RECORD</span>
+</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+<span class="text-body-sm font-medium">Medium</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="flex items-center text-[11px] text-amber-600 font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1">report</span> Needs Review
+                                        </span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex justify-end space-x-2">
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-on-surface-variant" title="View Details">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-secondary" title="Verify Data">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3">
+<div class="font-body-md font-bold text-primary">Microsoft 365</div>
+<div class="text-[11px] text-on-surface-variant">OFFICE_SUITE</div>
+</td>
+<td class="px-md py-3 text-body-sm">Microsoft</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-secondary text-secondary bg-secondary/5">ACTIVE</span>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold time-migrate uppercase tracking-wider">Migrate</span>
+</td>
+<td class="px-md py-3 text-center">
+<span class="text-[10px] font-bold text-on-surface-variant">SYSTEM OF INNOVATION</span>
+</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+<span class="text-body-sm font-medium">High</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="flex items-center text-[11px] text-emerald-600 font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1" style="font-variation-settings: 'FILL' 1;">check_circle</span> Verified
+                                        </span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex justify-end space-x-2">
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-on-surface-variant" title="View Details">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-secondary" title="Verify Data">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-md py-3">
+<div class="font-body-md font-bold text-primary">Atlassian Jira</div>
+<div class="text-[11px] text-on-surface-variant">PMO_TOOL</div>
+</td>
+<td class="px-md py-3 text-body-sm">Atlassian</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold border border-secondary text-secondary bg-secondary/5">ACTIVE</span>
+</td>
+<td class="px-md py-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold time-invest uppercase tracking-wider">Invest</span>
+</td>
+<td class="px-md py-3 text-center">
+<span class="text-[10px] font-bold text-on-surface-variant">SYSTEM OF DIFFERENTIATION</span>
+</td>
+<td class="px-md py-3">
+<div class="flex items-center space-x-1">
+<div class="w-1.5 h-1.5 rounded-full bg-outline-variant"></div>
+<span class="text-body-sm font-medium">Medium</span>
+</div>
+</td>
+<td class="px-md py-3">
+<span class="flex items-center text-[11px] text-on-surface-variant font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1">history_edu</span> Draft
+                                        </span>
+</td>
+<td class="px-md py-3 text-right">
+<div class="flex justify-end space-x-2">
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-on-surface-variant" title="View Details">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="p-1.5 hover:bg-surface-variant rounded-lg text-secondary" title="Verify Data">
+<span class="material-symbols-outlined text-[20px]">fact_check</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Pagination -->
+<div class="px-md py-3 bg-surface-container-low flex items-center justify-between border-t border-outline-variant">
+<div class="text-body-sm text-on-surface-variant">
+                            Showing <span class="font-bold text-primary">1 - 5</span> of <span class="font-bold text-primary">428</span> applications
+                        </div>
+<div class="flex items-center space-x-2">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant opacity-50 cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-secondary text-white font-bold text-body-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant hover:bg-surface-variant transition-colors text-body-sm">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant hover:bg-surface-variant transition-colors text-body-sm">3</button>
+<span class="text-on-surface-variant px-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant hover:bg-surface-variant transition-colors text-body-sm">86</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant bg-surface text-on-surface-variant hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Strategic Summary (Bento-style detail) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="bg-primary text-white p-lg rounded-xl flex flex-col justify-between h-48 overflow-hidden relative group">
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] opacity-10 group-hover:scale-110 transition-transform duration-500">trending_up</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-primary-container">STRATEGIC FOCUS</p>
+<h3 class="font-headline-md text-headline-md mt-1">Invest &amp; Modernize</h3>
+</div>
+<p class="text-body-sm opacity-80 max-w-[80%]">64% of applications are marked for 'Invest' to support the current 2024 Digital Transformation initiative.</p>
+</div>
+<div class="bg-surface-container-high p-lg rounded-xl flex flex-col justify-between h-48 border border-outline-variant shadow-sm">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant">LIFECYCLE RISK</p>
+<h3 class="font-headline-md text-headline-md text-primary mt-1">Retiring Tech Debt</h3>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-error h-full" style="width: 28%"></div>
+</div>
+<p class="text-body-sm text-on-surface-variant">28% of the portfolio is currently in 'Retiring' or 'Sunset' phase, requiring immediate decommissioning plans.</p>
+</div>
+<div class="bg-secondary-container text-on-secondary-container p-lg rounded-xl flex flex-col justify-between h-48 shadow-sm">
+<div>
+<p class="font-label-caps text-label-caps text-on-secondary-fixed-variant">DATA QUALITY</p>
+<h3 class="font-headline-md text-headline-md mt-1">94% Verified</h3>
+</div>
+<div class="flex items-center -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-secondary-container bg-white flex items-center justify-center text-[10px] font-bold text-primary">AK</div>
+<div class="w-8 h-8 rounded-full border-2 border-secondary-container bg-primary text-white flex items-center justify-center text-[10px] font-bold">ML</div>
+<div class="w-8 h-8 rounded-full border-2 border-secondary-container bg-on-secondary-container text-white flex items-center justify-center text-[10px] font-bold">JW</div>
+<div class="w-8 h-8 rounded-full border-2 border-secondary-container bg-surface-variant flex items-center justify-center text-[10px] font-bold">+4</div>
+</div>
+<p class="text-body-sm opacity-90">Verification lead by IT Governance Team. Last sync: 2 hours ago.</p>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-auto px-gutter py-md bg-surface-container-low border-t border-outline-variant">
+<div class="max-w-container-max mx-auto flex justify-between items-center text-body-sm text-on-surface-variant">
+<div>© 2024 APM Insight Explorer. All rights reserved.</div>
+<div class="flex space-x-lg">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">System Status</a>
+</div>
+</div>
+</footer>
+</main>
+</div>
+<!-- Mobile Navigation (Bottom Bar) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface border-t border-outline-variant flex justify-around items-center h-16 z-50">
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-bold">HOME</span>
+</button>
+<button class="flex flex-col items-center text-secondary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">list_alt</span>
+<span class="text-[10px] font-bold">CATALOG</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[10px] font-bold">METRICS</span>
+</button>
+<button class="flex flex-col items-center text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="text-[10px] font-bold">PROFILE</span>
+</button>
+</nav>
+<script>
+        // Simple sorting micro-interaction demo
+        document.querySelectorAll('th.cursor-pointer').forEach(header => {
+            header.addEventListener('click', () => {
+                const icon = header.querySelector('.material-symbols-outlined');
+                if (icon.innerText === 'swap_vert' || icon.innerText === 'expand_more') {
+                    icon.innerText = 'expand_less';
+                } else {
+                    icon.innerText = 'expand_more';
+                }
+            });
+        });
+    </script>
+</body></html>

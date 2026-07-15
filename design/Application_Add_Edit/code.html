@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edit Application | APM Insight Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-variant": "#e4e2e5",
+                    "on-surface": "#1b1b1e",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-container": "#ac8e5b",
+                    "primary": "#041632",
+                    "outline-variant": "#c5c6ce",
+                    "surface-container-low": "#f5f3f6",
+                    "surface": "#fbf8fb",
+                    "surface-dim": "#dbd9dc",
+                    "on-primary": "#ffffff",
+                    "surface-container-high": "#eae7ea",
+                    "on-background": "#1b1b1e",
+                    "surface-bright": "#fbf8fb",
+                    "tertiary-fixed": "#ffdea7",
+                    "on-tertiary-fixed-variant": "#594317",
+                    "secondary": "#006591",
+                    "primary-fixed": "#d7e2ff",
+                    "on-primary-fixed": "#091b37",
+                    "surface-tint": "#4f5e7e",
+                    "surface-container": "#efedf0",
+                    "secondary-fixed-dim": "#89ceff",
+                    "on-primary-fixed-variant": "#374765",
+                    "on-error-container": "#93000a",
+                    "outline": "#75777e",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#e3c28a",
+                    "on-secondary-fixed-variant": "#004c6e",
+                    "inverse-primary": "#b7c7eb",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#c9e6ff",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#44474d",
+                    "on-primary-container": "#8393b5",
+                    "inverse-surface": "#303033",
+                    "primary-container": "#1b2b48",
+                    "on-secondary-container": "#004666",
+                    "primary-fixed-dim": "#b7c7eb",
+                    "tertiary-container": "#3b2800",
+                    "surface-container-highest": "#e4e2e5",
+                    "secondary-container": "#39b8fd",
+                    "error-container": "#ffdad6",
+                    "background": "#fbf8fb",
+                    "tertiary": "#211500",
+                    "on-secondary-fixed": "#001e2f",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#271900"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Inter"],
+                    "display": ["Inter"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .tnum { font-variant-numeric: tabular-nums; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-inverse-surface border-b border-outline-variant dark:border-outline sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-4 h-16 max-w-[1440px] mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-headline-md text-2xl font-bold text-primary dark:text-primary-fixed-dim tracking-tight">APM Insight Explorer</span>
+<nav class="hidden md:flex gap-6 items-center h-16">
+<a class="text-on-surface-variant dark:text-on-surface-variant pb-2 font-medium hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Dashboard</a>
+<a class="text-secondary dark:text-secondary-fixed-dim border-b-2 border-secondary dark:border-secondary-fixed-dim pb-2 font-medium transition-colors cursor-pointer active:opacity-70" href="#">Catalog</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant pb-2 font-medium hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Analytics</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant pb-2 font-medium hover:text-secondary dark:hover:text-secondary-fixed-dim transition-colors cursor-pointer active:opacity-70" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container rounded-lg border-none text-sm w-64 focus:ring-2 focus:ring-primary" placeholder="Search portfolio..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">account_circle</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 max-w-[1440px] mx-auto w-full">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-64px)] sticky top-16 p-4 space-y-4 w-64 bg-surface-container-low dark:bg-surface-container-high border-r border-outline-variant dark:border-outline overflow-y-auto">
+<div class="px-2 py-4">
+<h2 class="text-primary dark:text-primary-fixed-dim font-bold text-lg tracking-tight">APM Portfolio</h2>
+<p class="text-xs text-on-surface-variant uppercase tracking-widest font-bold">Enterprise Architecture</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150 group" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-[11px] font-bold uppercase tracking-wider">Executive Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-bold rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">list_alt</span>
+<span class="text-[11px] font-bold uppercase tracking-wider">Application Catalog</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="text-[11px] font-bold uppercase tracking-wider">Analytics Matrix</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant dark:hover:bg-inverse-surface rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">database</span>
+<span class="text-[11px] font-bold uppercase tracking-wider">Master Data</span>
+</a>
+</nav>
+<button class="w-full py-2 bg-primary text-on-primary rounded font-bold text-xs uppercase tracking-widest shadow-sm hover:brightness-110 active:scale-[0.98] transition-all">
+                Generate Report
+            </button>
+<div class="pt-4 border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg text-[11px] font-bold uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                    Support
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg text-[11px] font-bold uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+                    Documentation
+                </a>
+</div>
+<div class="flex items-center gap-3 p-2 bg-surface-container rounded-lg mt-auto">
+<div class="w-8 h-8 rounded-full bg-primary-fixed-dim flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate executive in a dark navy suit against a clean, light gray studio background. The style is sharp, corporate, and minimalist." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjBdPtMFZDYAIGMBPSrNGokWRYiJ_sB9Lx0oo5fr3jiPU-AWvjJxCSV_M8EBkgzhhbQABuiKUBSED7N_oixjTTPBtmLRZCSBewetcBcLzABwFjiJxiGz8egHAnXYl-IgFY2R_zYMu5MShz_e7gXaDMDv00l15mMkls3KnGYjjBQdKoFH1euyNVpgZGMLcnitTGgihzhnTxuzkFNzKX2vpHpXR0O_jRjox2cSGAYXzzqSPaAh2Yuk5s"/>
+</div>
+<div class="flex flex-col overflow-hidden">
+<span class="text-[11px] font-bold truncate">Alex Stratos</span>
+<span class="text-[10px] text-on-surface-variant truncate">Lead Architect</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 bg-background p-6 lg:p-8 overflow-y-auto">
+<div class="max-w-4xl mx-auto">
+<!-- Header -->
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h1 class="text-2xl font-bold tracking-tight text-primary">Edit Application</h1>
+<p class="text-sm text-on-surface-variant">Update the strategic attributes for SAP S/4HANA Finance</p>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 border border-outline text-on-surface rounded font-semibold text-sm hover:bg-surface-container transition-all">Cancel</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded font-semibold text-sm shadow-md hover:bg-primary-container transition-all">Save Application</button>
+</div>
+</div>
+<div class="space-y-6">
+<!-- Section: General Information -->
+<section class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary text-lg">info</span>
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">General Information</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Application Name <span class="text-error">*</span></label>
+<input class="w-full p-2.5 border border-outline-variant rounded bg-surface focus:ring-1 focus:ring-primary focus:border-primary text-sm" type="text" value="SAP S/4HANA Finance"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Alias</label>
+<input class="w-full p-2.5 border border-outline-variant rounded bg-surface focus:ring-1 focus:ring-primary focus:border-primary text-sm" type="text" value="S4-FIN-01"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Vendor</label>
+<select class="w-full p-2.5 border border-outline-variant rounded bg-surface focus:ring-1 focus:ring-primary focus:border-primary text-sm appearance-none">
+<option>SAP SE</option>
+<option>Oracle</option>
+<option>Microsoft</option>
+<option>ServiceNow</option>
+</select>
+</div>
+<div class="md:col-span-2 space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Description</label>
+<textarea class="w-full p-2.5 border border-outline-variant rounded bg-surface focus:ring-1 focus:ring-primary focus:border-primary text-sm" rows="3">Core enterprise resource planning system for financial operations, accounting, and treasury management across global regions.</textarea>
+</div>
+</div>
+</section>
+<!-- Section: Lifecycle & Status -->
+<section class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary text-lg">update</span>
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Lifecycle &amp; Status</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Lifecycle Status</label>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 p-2 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container transition-colors">
+<input checked="" class="text-primary focus:ring-primary" name="lifecycle" type="radio"/>
+<span class="text-sm font-medium">Active</span>
+</label>
+<label class="flex items-center gap-3 p-2 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container transition-colors">
+<input class="text-primary focus:ring-primary" name="lifecycle" type="radio"/>
+<span class="text-sm font-medium">Retiring</span>
+</label>
+<label class="flex items-center gap-3 p-2 bg-surface rounded border border-outline-variant cursor-pointer hover:bg-surface-container transition-colors">
+<input class="text-primary focus:ring-primary" name="lifecycle" type="radio"/>
+<span class="text-sm font-medium">Decommissioned</span>
+</label>
+</div>
+</div>
+<div class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Criticality</label>
+<select class="w-full p-2.5 border border-outline-variant rounded bg-surface text-sm">
+<option>Low</option>
+<option>Medium</option>
+<option selected="">High</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Information Status</label>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-highest text-primary text-[10px] font-bold rounded flex items-center gap-1 border border-primary">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED
+                                        </span>
+</div>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Last Review</label>
+<div class="p-3 bg-surface-container rounded border border-outline-variant">
+<div class="flex items-center justify-between mb-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Date</span>
+<span class="text-[10px] font-bold text-primary tnum">2023-10-15</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">By</span>
+<span class="text-[10px] font-bold text-primary">J. Doe</span>
+</div>
+</div>
+<button class="w-full mt-2 py-1.5 text-xs font-bold border border-secondary text-secondary rounded hover:bg-secondary-container/10 transition-colors">Request New Review</button>
+</div>
+</div>
+</section>
+<!-- Section: Strategic Assessment -->
+<section class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-5">
+<span class="material-symbols-outlined text-9xl">analytics</span>
+</div>
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary text-lg">insights</span>
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Strategic Assessment</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-6">
+<div class="space-y-3">
+<label class="text-xs font-bold text-on-surface-variant flex justify-between">
+<span>Business Fit Rating</span>
+<span class="text-primary font-bold">4.0 / 5.0</span>
+</label>
+<div class="flex gap-1.5">
+<div class="h-2 flex-1 bg-secondary rounded-sm transition-all duration-500"></div>
+<div class="h-2 flex-1 bg-secondary rounded-sm transition-all duration-500"></div>
+<div class="h-2 flex-1 bg-secondary rounded-sm transition-all duration-500"></div>
+<div class="h-2 flex-1 bg-secondary rounded-sm transition-all duration-500"></div>
+<div class="h-2 flex-1 bg-outline-variant rounded-sm transition-all duration-500"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant italic leading-relaxed">Derived from user surveys and business process alignment metrics.</p>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-bold text-on-surface-variant">Technical Fit</label>
+<select class="w-full p-2.5 border border-outline-variant rounded bg-surface text-sm">
+<option value="low">Low (Modernize Needed)</option>
+<option value="medium">Medium (Stable)</option>
+<option selected="" value="high">High (Optimal Architecture)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-emerald-50 border border-emerald-100 rounded-lg flex flex-col items-center justify-center text-center">
+<span class="text-[10px] font-bold text-emerald-800 uppercase tracking-widest mb-1">TIME Classification</span>
+<span class="px-4 py-1 bg-emerald-600 text-white font-bold text-sm rounded shadow-sm">INVEST</span>
+<p class="mt-2 text-[9px] text-emerald-700 leading-tight">High fit &amp; high technical score suggests expansion.</p>
+</div>
+<div class="p-4 bg-surface-container rounded-lg flex flex-col items-center justify-center text-center">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">PACE Layer</span>
+<div class="flex flex-col w-full gap-1">
+<button class="w-full py-1 bg-primary text-on-primary text-[10px] font-bold rounded">RECORD</button>
+<button class="w-full py-1 border border-outline-variant text-on-surface-variant text-[10px] font-bold rounded hover:bg-surface-variant">DIFFERENTIATION</button>
+<button class="w-full py-1 border border-outline-variant text-on-surface-variant text-[10px] font-bold rounded hover:bg-surface-variant">INNOVATION</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Section: Stakeholders -->
+<section class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary text-lg">groups</span>
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Stakeholders</h3>
+</div>
+<div class="space-y-4">
+<div class="p-4 bg-surface border border-outline-variant rounded-lg space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant pb-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Business Owner</span>
+<span class="material-symbols-outlined text-sm text-outline">edit</span>
+</div>
+<div class="space-y-1">
+<input class="w-full bg-transparent border-none p-0 text-sm font-semibold focus:ring-0" placeholder="Name" type="text" value="Marcus Aurelius"/>
+<input class="w-full bg-transparent border-none p-0 text-xs text-on-surface-variant focus:ring-0" placeholder="Email" type="email" value="m.aurelius@enterprise.com"/>
+</div>
+</div>
+<div class="p-4 bg-surface border border-outline-variant rounded-lg space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant pb-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Tech Owner</span>
+<span class="material-symbols-outlined text-sm text-outline">edit</span>
+</div>
+<div class="space-y-1">
+<input class="w-full bg-transparent border-none p-0 text-sm font-semibold focus:ring-0" placeholder="Name" type="text" value="Sarah Jenkins"/>
+<input class="w-full bg-transparent border-none p-0 text-xs text-on-surface-variant focus:ring-0" placeholder="Email" type="email" value="s.jenkins@enterprise.com"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Data Handling & Compliance -->
+<section class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm">
+<div class="flex items-center gap-2 mb-6 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-primary text-lg">gavel</span>
+<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Data &amp; Compliance</h3>
+</div>
+<div class="space-y-6">
+<div class="space-y-3">
+<label class="text-xs font-bold text-on-surface-variant">Personal Data Handling (PII/GDPR)</label>
+<div class="flex bg-surface-container p-1 rounded">
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all bg-white text-primary shadow-sm">Yes</button>
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all text-on-surface-variant hover:text-on-surface">No</button>
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all text-on-surface-variant hover:text-on-surface">Unknown</button>
+</div>
+</div>
+<div class="space-y-3">
+<label class="text-xs font-bold text-on-surface-variant">Sensitive Business Data Handling</label>
+<div class="flex bg-surface-container p-1 rounded">
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all bg-white text-primary shadow-sm">Yes</button>
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all text-on-surface-variant hover:text-on-surface">No</button>
+<button class="flex-1 py-1.5 text-[10px] font-bold uppercase rounded transition-all text-on-surface-variant hover:text-on-surface">Unknown</button>
+</div>
+</div>
+<div class="mt-4 p-3 bg-error-container/20 border border-error-container rounded flex gap-3">
+<span class="material-symbols-outlined text-error">warning</span>
+<p class="text-[10px] text-on-error-container font-medium leading-relaxed">
+                                        Manual data disclosure required. PII handling triggers a mandatory Privacy Impact Assessment (PIA) every 12 months.
+                                    </p>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Footer Actions -->
+<div class="mt-12 flex items-center justify-between p-6 bg-surface-container-high rounded-lg border border-outline-variant">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-outline">history</span>
+<span class="text-xs text-on-surface-variant">Last autosaved: 2 minutes ago</span>
+</div>
+<div class="flex gap-4">
+<button class="px-8 py-2.5 border border-outline text-on-surface rounded font-bold text-sm hover:bg-surface-container transition-all">Cancel Changes</button>
+<button class="px-10 py-2.5 bg-primary text-on-primary rounded font-bold text-sm shadow-lg hover:brightness-110 active:scale-95 transition-all">Save &amp; Finalize Application</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction script -->
+<script>
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('focus', () => {
+                el.parentElement.querySelector('label')?.classList.add('text-primary');
+            });
+            el.addEventListener('blur', () => {
+                el.parentElement.querySelector('label')?.classList.remove('text-primary');
+            });
+        });
+
+        // Simple toggle logic for data handling
+        document.querySelectorAll('.flex.bg-surface-container button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const parent = this.parentElement;
+                parent.querySelectorAll('button').forEach(b => {
+                    b.classList.remove('bg-white', 'text-primary', 'shadow-sm');
+                    b.classList.add('text-on-surface-variant');
+                });
+                this.classList.add('bg-white', 'text-primary', 'shadow-sm');
+                this.classList.remove('text-on-surface-variant');
+            });
+        });
+    </script>
+</body></html>

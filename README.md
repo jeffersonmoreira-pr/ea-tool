@@ -6,7 +6,17 @@ Browser-only strategic mockup for an Application Portfolio catalog. It supports 
 
 Open src/index.html directly in a browser.
 
-No package install, backend, or service startup is required for the MVP. The page loads `src/catalog.js`, `src/app.js`, and `src/styles.css` from the working tree.
+No package install, backend, or service startup is required for the MVP. The page loads `src/catalog.js`, `src/app.js`, `src/styles.css`, and the generated `src/tailwind.css` from the working tree.
+
+## Styling (Tailwind, local build)
+
+Styling combines the hand-written `src/styles.css` with a locally built Tailwind stylesheet. Tailwind runs as a build-time tool only — there is no CDN and no runtime network dependency, so the app stays offline/local-first.
+
+- Install tooling once: `npm install`
+- Rebuild the CSS after changing markup or `tailwind.config.js`: `npm run build:css`
+- Rebuild automatically while editing: `npm run watch:css`
+
+The build reads `src/tailwind.input.css`, scans `src/**/*.{html,js}` for used classes, and writes the purged `src/tailwind.css`, which is committed so the app opens without a build step.
 
 ## Use the MVP
 

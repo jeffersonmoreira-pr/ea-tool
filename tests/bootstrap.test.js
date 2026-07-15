@@ -976,39 +976,40 @@ test("browser adapter filters applications and refreshes executive indicators af
     return document.getElementById("applications");
   }
 
-  function setOverviewFilter(name, value) {
-    const overview = getOverview();
-    const form = findAll(overview, (node) => node.tagName === "FORM")[0];
-    const field = findField(form, name);
-    field.value = value;
-    form.onchange({ target: field });
+  function applyCatalogFilters(values) {
+    const section = getApplicationsSection();
+    if (Object.prototype.hasOwnProperty.call(values, "filterBusinessArea")) {
+      findField(section, "filterBusinessArea").value = values.filterBusinessArea;
+    }
+    if (Object.prototype.hasOwnProperty.call(values, "filterInformationStatus")) {
+      findField(section, "filterInformationStatus").value = values.filterInformationStatus;
+    }
+    findAll(section, (node) => node.tagName === "BUTTON")
+      .find((button) => button.textContent === "Apply Filters")
+      .onclick();
   }
 
-  for (const [name, value] of [
-    ["departmentId", "dept-finance"],
-    ["vendorId", "vendor-orbit"],
-    ["businessAreaId", "area-revenue"],
-    ["lifecycleStatus", "planned"],
-    ["timeClassification", "Migrate"],
-    ["pace", "System of Innovation"],
-    ["criticality", "medium"],
-  ]) {
-    setOverviewFilter(name, value);
-  }
-
+  applyCatalogFilters({ filterBusinessArea: "area-field" });
   let applicationsSection = getApplicationsSection();
   let cards = findAll(applicationsSection, (node) => node.tagName === "ARTICLE" && node.className === "application-card");
   assert.equal(cards.length, 1);
-  assert.match(collectText(cards[0]), /Analytics Workbench/);
+  assert.match(collectText(cards[0]), /Field Ops Portal/);
   assert.match(collectText(applicationsSection), /Showing 1 of 4 Applications/);
   const filteredOverviewText = collectText(getOverview());
-  assert.match(filteredOverviewText, /Migrate\s+1/);
-  assert.match(filteredOverviewText, /System of Innovation\s+1/);
-  assert.match(filteredOverviewText, /Revenue Management\s+1/);
-  assert.match(filteredOverviewText, /planned\s+1/);
-  assert.match(filteredOverviewText, /medium\s+1/);
-  assert.match(filteredOverviewText, /Personal Data Unknown\s+Personal Data Unknown 1 of 1/);
-  assert.match(filteredOverviewText, /Sensitive Business Data Unknown\s+Sensitive Business Data Unknown 1 of 1/);
+  assert.match(filteredOverviewText, /Field Operations\s+1/);
+  assert.match(filteredOverviewText, /Tolerate\s+1/);
+
+  applyCatalogFilters({ filterBusinessArea: "", filterInformationStatus: "Needs Review" });
+  applicationsSection = getApplicationsSection();
+  cards = findAll(applicationsSection, (node) => node.tagName === "ARTICLE" && node.className === "application-card");
+  assert.equal(cards.length, 1);
+  assert.match(collectText(cards[0]), /Employee Directory/);
+  assert.match(collectText(applicationsSection), /Showing 1 of 4 Applications/);
+
+  findAll(getApplicationsSection(), (node) => node.tagName === "BUTTON")
+    .find((button) => button.textContent === "Clear")
+    .onclick();
+  assert.match(collectText(getApplicationsSection()), /Showing 4 of 4 Applications/);
 
   appApi.renderApp({ document, storage, catalogApi, root: rendered.root, catalog: rendered.catalog, filters: {} });
   applicationsSection = getApplicationsSection();
@@ -1106,10 +1107,8 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(rendered.root), /Dispatch Console/);
   assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
   assert.match(collectText(rendered.root), /planned/);
-  assert.match(collectText(rendered.root), /2026-08-01/);
   assert.match(collectText(rendered.root), /Business Fit/);
   assert.match(collectText(rendered.root), /Tech Fit/);
-  assert.match(collectText(rendered.root), /TIME Classification/);
   assert.match(collectText(rendered.root), /Invest/);
   assert.match(collectText(rendered.root), /PACE Classification/);
   assert.match(collectText(rendered.root), /Criticality/);
@@ -1118,7 +1117,13 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(collectText(rendered.root), /Information Status/);
   assert.match(collectText(rendered.root), /Verified/);
   assert.match(collectText(rendered.root), /Last Verification Date/);
-  assert.match(collectText(rendered.root), /2026-07-14/);
+
+  const createdCard = findAll(document.getElementById("applications"), (node) => node.tagName === "ARTICLE").find((card) =>
+    collectText(card).includes("Dispatch Console"),
+  );
+  const createdForm = findAll(createdCard, (node) => node.tagName === "FORM")[0];
+  assert.equal(findField(createdForm, "plannedDate").value, "2026-08-01");
+  assert.equal(findField(createdForm, "lastVerificationDate").value, "2026-07-14");
 
   applicationsSection = document.getElementById("applications");
   createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -1172,10 +1177,8 @@ test("browser adapter manages application create edit delete with persistence", 
     collectText(card).includes("Dispatch Console"),
   );
   const reloadedDispatchText = collectText(reloadedDispatchCard);
-  assert.match(reloadedDispatchText, /Ana Silva/);
   assert.match(reloadedDispatchText, /Dispatch Desk/);
   assert.match(reloadedDispatchText, /retired/);
-  assert.match(reloadedDispatchText, /2025-12-31/);
   assert.match(reloadedDispatchText, /Migrate/);
   assert.match(reloadedDispatchText, /PACE Classification/);
   assert.match(reloadedDispatchText, /Criticality/);
@@ -1184,11 +1187,14 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.match(reloadedDispatchText, /Information Status/);
   assert.match(reloadedDispatchText, /Verified/);
   assert.match(reloadedDispatchText, /Last Verification Date/);
-  assert.match(reloadedDispatchText, /2026-07-14/);
   assert.match(reloadedDispatchText, /System of Innovation/);
   assert.match(reloadedDispatchText, /high/);
   assert.match(reloadedDispatchText, /Yes/);
   assert.match(reloadedDispatchText, /Unknown/);
+  const reloadedDispatchForm = findAll(reloadedDispatchCard, (node) => node.tagName === "FORM")[0];
+  assert.equal(findField(reloadedDispatchForm, "businessOwnerName").value, "Ana Silva");
+  assert.equal(findField(reloadedDispatchForm, "retirementDate").value, "2025-12-31");
+  assert.equal(findField(reloadedDispatchForm, "lastVerificationDate").value, "2026-07-14");
   findAll(reloadedDispatchCard, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();

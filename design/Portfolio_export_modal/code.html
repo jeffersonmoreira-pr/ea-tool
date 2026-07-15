@@ -1,0 +1,437 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#e3c28a",
+                    "surface-dim": "#dbd9dc",
+                    "inverse-primary": "#b7c7eb",
+                    "error": "#ba1a1a",
+                    "on-secondary": "#ffffff",
+                    "on-primary-fixed-variant": "#374765",
+                    "secondary-fixed": "#c9e6ff",
+                    "surface-container-high": "#eae7ea",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f5f3f6",
+                    "primary-fixed-dim": "#b7c7eb",
+                    "on-primary-fixed": "#091b37",
+                    "tertiary": "#211500",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-tertiary": "#ffffff",
+                    "surface-bright": "#fbf8fb",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffdea7",
+                    "background": "#fbf8fb",
+                    "tertiary-container": "#3b2800",
+                    "primary-fixed": "#d7e2ff",
+                    "secondary-container": "#39b8fd",
+                    "on-secondary-fixed-variant": "#004c6e",
+                    "surface": "#fbf8fb",
+                    "on-secondary-fixed": "#001e2f",
+                    "secondary": "#006591",
+                    "primary": "#041632",
+                    "on-background": "#1b1b1e",
+                    "primary-container": "#1b2b48",
+                    "surface-container": "#efedf0",
+                    "on-tertiary-container": "#ac8e5b",
+                    "on-secondary-container": "#004666",
+                    "secondary-fixed-dim": "#89ceff",
+                    "surface-variant": "#e4e2e5",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#271900",
+                    "on-primary-container": "#8393b5",
+                    "inverse-surface": "#303033",
+                    "outline": "#75777e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed-variant": "#594317",
+                    "surface-tint": "#4f5e7e",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-surface": "#1b1b1e",
+                    "on-surface-variant": "#44474d",
+                    "outline-variant": "#c5c6ce"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "container-max": "1440px",
+                    "base": "4px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "xl": "32px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "title-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "data-mono": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    }catch(_e){}</script></head><body class="bg-surface text-on-surface flex flex-col min-h-screen overflow-hidden"><div class="fixed inset-0 z-[100] flex items-center justify-center bg-on-surface/40 backdrop-blur-sm" id="export-modal">
+<div class="bg-surface w-full max-w-md rounded-xl shadow-xl overflow-hidden border border-outline-variant">
+<div class="p-lg border-b border-outline-variant flex justify-between items-center">
+<h2 class="font-title-sm text-primary">Export Strategic Portfolio Report</h2>
+<button class="text-on-surface-variant hover:text-primary" onclick="document.getElementById('export-modal').remove()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-lg space-y-lg">
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">Report Scope</label>
+<div class="flex gap-md">
+<label class="flex items-center gap-sm cursor-pointer">
+<input checked="" class="w-4 h-4 text-secondary focus:ring-secondary border-outline" name="scope" type="radio">
+<span class="text-body-md">Current View (Filtered)</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="w-4 h-4 text-secondary focus:ring-secondary border-outline" name="scope" type="radio">
+<span class="text-body-md">Full Portfolio</span>
+</label>
+</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">Include Sections</label>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center gap-sm cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm">Executive Summary</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm">TIME Matrix Analysis</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm">Catalog Inventory</span>
+</label>
+<label class="flex items-center gap-sm cursor-pointer">
+<input class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm">Master Data Summary</span>
+</label>
+</div>
+</div>
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">File Format</label>
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg py-2 px-3 text-body-md focus:ring-2 focus:ring-secondary">
+<option>PDF Document (.pdf)</option>
+<option>Excel Spreadsheet (.xlsx)</option>
+<option>PowerPoint Presentation (.pptx)</option>
+</select>
+</div>
+</div>
+<div class="p-lg bg-surface-container-low flex gap-md justify-end">
+<button class="px-lg py-2 text-on-surface-variant font-label-caps hover:bg-surface-variant rounded-lg transition-colors" onclick="document.getElementById('export-modal').remove()">Cancel</button>
+<button class="px-lg py-2 bg-primary text-on-primary font-label-caps rounded-lg hover:opacity-90 transition-opacity">Generate &amp; Export</button>
+</div>
+</div>
+</div>
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-gutter h-16 max-w-container-max mx-auto z-50">
+<div class="flex items-center gap-xl">
+<span class="font-headline-md text-headline-md font-bold text-primary">APM Insight Explorer</span>
+<nav class="hidden md:flex gap-lg items-center">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors cursor-pointer active:opacity-70" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors cursor-pointer active:opacity-70" href="#">Catalog</a>
+<a class="font-body-md text-body-md text-secondary border-b-2 border-secondary pb-2" href="#">Analytics</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-secondary transition-colors cursor-pointer active:opacity-70" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="bg-surface-container-low border-none rounded-lg py-2 pl-10 pr-4 text-body-sm focus:ring-2 focus:ring-secondary w-64 transition-all" placeholder="Search portfolio..." type="text">
+</div>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</button>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-full w-64 bg-surface-container-low border-r border-outline-variant sticky top-0 p-md space-y-md">
+<div class="flex flex-col gap-xs mb-lg">
+<span class="font-title-sm text-title-sm font-bold text-primary">APM Portfolio</span>
+<span class="text-[12px] text-on-surface-variant uppercase tracking-wider font-semibold">Enterprise Architecture</span>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps uppercase">Executive Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">list_alt</span>
+<span class="font-label-caps text-label-caps uppercase">Application Catalog</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 bg-secondary-container text-on-secondary-container font-bold rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">grid_view</span>
+<span class="font-label-caps text-label-caps uppercase">Analytics Matrix</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined">database</span>
+<span class="font-label-caps text-label-caps uppercase">Master Data</span>
+</a>
+</nav>
+<button class="w-full bg-primary text-on-primary py-3 rounded-lg font-label-caps uppercase tracking-widest hover:opacity-90 transition-opacity flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Generate Report
+            </button>
+<div class="pt-md border-t border-outline-variant space-y-1">
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg text-body-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                    Support
+                </a>
+<a class="flex items-center gap-md px-md py-2 text-on-surface-variant hover:bg-surface-variant rounded-lg text-body-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+                    Documentation
+                </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col bg-background overflow-hidden">
+<!-- Analytics Header -->
+<div class="px-xl py-lg flex justify-between items-end bg-surface/50 backdrop-blur-sm border-b border-outline-variant">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary">Portfolio TIME Matrix</h1>
+<p class="text-on-surface-variant font-body-md mt-1">Strategic allocation based on Business Value vs. Technical Fit</p>
+</div>
+<div class="flex gap-md">
+<div class="flex items-center gap-sm bg-white p-1 rounded-lg border border-outline-variant">
+<button class="px-4 py-1.5 bg-secondary-container text-on-secondary-container rounded font-label-caps uppercase text-[10px]">TIME View</button>
+<button class="px-4 py-1.5 text-on-surface-variant hover:bg-surface-variant rounded font-label-caps uppercase text-[10px]">PACE Layer</button>
+</div>
+<button class="flex items-center gap-sm bg-surface-container-high px-md py-2 rounded-lg text-on-surface border border-outline-variant hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+<span class="font-label-caps">Export PDF</span>
+</button>
+</div>
+</div>
+<div class="flex flex-1 overflow-hidden p-xl gap-xl">
+<!-- -->
+<div class="flex-1 relative bg-white border border-outline-variant rounded-xl shadow-sm flex flex-col p-lg"><div class="absolute top-4 right-4 flex gap-md bg-white/90 backdrop-blur-sm p-2 rounded-lg border border-outline-variant z-20 shadow-sm"><div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px] font-bold uppercase text-on-surface-variant">Invest</span></div><div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-slate-400"></div><span class="text-[10px] font-bold uppercase text-on-surface-variant">Tolerate</span></div><div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-amber-500"></div><span class="text-[10px] font-bold uppercase text-on-surface-variant">Migrate</span></div><div class="flex items-center gap-xs"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] font-bold uppercase text-on-surface-variant">Eliminate</span></div></div>
+<!-- Y Axis Label -->
+<div class="absolute -left-12 top-1/2 -translate-y-1/2 -rotate-90 font-label-caps text-on-surface-variant flex items-center gap-md"><span class="material-symbols-outlined">trending_up</span>TECHNICAL FIT (HEALTH &amp; AGILITY)</div>
+<!-- X Axis Label -->
+<div class="absolute -bottom-8 left-1/2 -translate-x-1/2 font-label-caps text-on-surface-variant flex items-center gap-md">BUSINESS FIT (VALUE &amp; DIFFERENTIATION)<span class="material-symbols-outlined">trending_flat</span></div>
+<!-- Matrix Canvas -->
+<div class="flex-1 grid grid-cols-2 grid-rows-2 border-2 border-outline relative matrix-grid overflow-hidden">
+<!-- Tolerate (Top Left) -->
+<div class="border-r border-b border-outline-variant bg-surface-container-low/20 p-md flex items-start justify-between"><div class="flex flex-col gap-1"><span class="font-display-lg text-[24px] text-on-surface-variant/20 tracking-widest select-none">TOLERATE</span><span class="text-[10px] font-bold text-on-surface-variant bg-surface-container-high/80 backdrop-blur-sm px-2 py-0.5 rounded-full w-fit">High Tech / Low Business</span></div></div>
+<!-- Invest (Top Right) -->
+<div class="border-b border-outline-variant bg-emerald-50/20 p-md flex items-start justify-between"><div class="flex flex-col gap-1"><span class="font-display-lg text-[24px] text-emerald-700/20 tracking-widest select-none">INVEST</span><span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 backdrop-blur-sm px-2 py-0.5 rounded-full w-fit">High Tech / High Business</span></div></div>
+<!-- Eliminate (Bottom Left) -->
+<div class="border-r border-outline-variant bg-red-50/20 p-md flex items-start justify-between"><div class="flex flex-col gap-1"><span class="font-display-lg text-[24px] text-red-700/20 tracking-widest select-none">ELIMINATE</span><span class="text-[10px] font-bold text-red-700 bg-red-100/80 backdrop-blur-sm px-2 py-0.5 rounded-full w-fit">Low Tech / Low Business</span></div></div>
+<!-- Migrate (Bottom Right) -->
+<div class="bg-amber-50/20 p-md flex items-start justify-between"><div class="flex flex-col gap-1"><span class="font-display-lg text-[24px] text-amber-700/20 tracking-widest select-none">MIGRATE</span><span class="text-[10px] font-bold text-amber-700 bg-amber-100/80 backdrop-blur-sm px-2 py-0.5 rounded-full w-fit">Low Tech / High Business</span></div></div>
+<!-- Plotted Points Layer -->
+<div class="absolute inset-0 z-10 pointer-events-none" id="matrix-canvas"><!-- Invest (Top Right) -->
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 15%; left: 82%;">
+<div class="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+<div class="hidden group-hover:block absolute top-6 left-1/2 -translate-x-1/2 bg-primary text-on-primary p-2 rounded shadow-xl min-w-[120px] z-20">
+<div class="text-[11px] font-bold">SAP S/4HANA</div>
+<div class="text-[9px] opacity-80">Bus: 8.2 | Tech: 8.5</div>
+</div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 25%; left: 75%;">
+<div class="w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 10%; left: 90%;">
+<div class="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 35%; left: 88%;">
+<div class="w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<!-- Tolerate (Top Left) -->
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 20%; left: 15%;">
+<div class="w-4 h-4 bg-slate-400 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 12%; left: 35%;">
+<div class="w-3.5 h-3.5 bg-slate-400 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 38%; left: 22%;">
+<div class="w-4 h-4 bg-slate-400 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<!-- Migrate (Bottom Right) -->
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 75%; left: 70%;">
+<div class="w-4 h-4 bg-amber-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 65%; left: 85%;">
+<div class="w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 85%; left: 62%;">
+<div class="w-4 h-4 bg-amber-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 70%; left: 92%;">
+<div class="w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<!-- Eliminate (Bottom Left) -->
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 80%; left: 15%;">
+<div class="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 90%; left: 30%;">
+<div class="w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div>
+<div class="absolute pointer-events-auto cursor-pointer group" style="top: 72%; left: 10%;">
+<div class="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-md hover:scale-150 transition-transform duration-200"></div>
+</div></div>
+</div>
+</div>
+<!-- Right Side Filter Panel -->
+<aside class="w-80 flex flex-col gap-lg overflow-y-auto pr-2 custom-scrollbar">
+<!-- Summary Stats Card -->
+<div class="bg-surface-container-highest/30 p-md border border-outline-variant rounded-xl">
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-md uppercase">Current Snapshot</span>
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-white p-sm rounded border border-outline-variant">
+<div class="text-display-lg text-emerald-600">12</div>
+<div class="text-[10px] font-bold text-on-surface-variant uppercase">Invest</div>
+</div>
+<div class="bg-white p-sm rounded border border-outline-variant">
+<div class="text-display-lg text-amber-600">24</div>
+<div class="text-[10px] font-bold text-on-surface-variant uppercase">Migrate</div>
+</div>
+<div class="bg-white p-sm rounded border border-outline-variant">
+<div class="text-display-lg text-on-surface-variant">42</div>
+<div class="text-[10px] font-bold text-on-surface-variant uppercase">Tolerate</div>
+</div>
+<div class="bg-white p-sm rounded border border-outline-variant">
+<div class="text-display-lg text-red-600">08</div>
+<div class="text-[10px] font-bold text-on-surface-variant uppercase">Eliminate</div>
+</div>
+</div>
+</div>
+<!-- Filters -->
+<div class="space-y-lg">
+<div class="flex items-center justify-between">
+<h3 class="font-title-sm text-on-surface">Filters</h3>
+<button class="text-secondary text-[11px] font-bold uppercase hover:underline">Reset All</button>
+</div>
+<!-- Business Area -->
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">Business Area</label>
+<div class="space-y-2">
+<label class="flex items-center gap-md cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm text-on-surface group-hover:text-secondary">Finance &amp; Legal</span>
+<span class="ml-auto text-on-surface-variant text-[11px] font-mono">14</span>
+</label>
+<label class="flex items-center gap-md cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm text-on-surface group-hover:text-secondary">Supply Chain</span>
+<span class="ml-auto text-on-surface-variant text-[11px] font-mono">22</span>
+</label>
+<label class="flex items-center gap-md cursor-pointer group">
+<input class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm text-on-surface group-hover:text-secondary">Sales &amp; Marketing</span>
+<span class="ml-auto text-on-surface-variant text-[11px] font-mono">31</span>
+</label>
+<label class="flex items-center gap-md cursor-pointer group">
+<input class="w-4 h-4 rounded text-secondary focus:ring-secondary border-outline" type="checkbox">
+<span class="text-body-sm text-on-surface group-hover:text-secondary">R&amp;D / Engineering</span>
+<span class="ml-auto text-on-surface-variant text-[11px] font-mono">19</span>
+</label>
+</div>
+</div>
+<!-- Criticality -->
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">Criticality</label>
+<div class="flex gap-2 flex-wrap">
+<button class="px-3 py-1 bg-primary text-on-primary rounded text-[11px] font-bold">Mission Critical</button>
+<button class="px-3 py-1 border border-outline text-on-surface-variant rounded text-[11px] font-bold hover:bg-surface-variant">Business Operational</button>
+<button class="px-3 py-1 border border-outline text-on-surface-variant rounded text-[11px] font-bold hover:bg-surface-variant">Administrative</button>
+</div>
+</div>
+<!-- Cost Range -->
+<div class="space-y-sm">
+<label class="font-label-caps text-[10px] text-on-surface-variant uppercase">Annual Run Cost ($)</label>
+<div class="px-2">
+<input class="w-full h-1 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-secondary" type="range">
+<div class="flex justify-between text-[10px] text-on-surface-variant mt-2 font-mono">
+<span class="">$0</span>
+<span class="">$500k+</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Highlighted Actions -->
+<div class="mt-auto pt-lg">
+<div class="bg-primary-container p-md rounded-xl border border-on-primary-container/20 border-l-4 border-l-red-500">
+<div class="flex items-center gap-sm text-on-primary-container mb-2">
+<span class="material-symbols-outlined text-[20px]">lightbulb</span>
+<span class="font-bold text-body-sm">AI Recommendation</span>
+</div>
+<p class="text-[12px] text-on-primary-container leading-relaxed">
+                                4 legacy ERP modules in the <strong class="text-on-primary">Eliminate</strong> quadrant have overlapping capabilities with <strong class="text-on-primary">Workday</strong>. Estimated annual savings: <strong>$1.2M</strong>.
+                            </p>
+<button class="mt-md w-full bg-on-primary-container text-primary-container py-2 rounded font-label-caps text-[10px] hover:opacity-90">Review Consolidations</button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        const appData = [
+            { name: "Oracle DB Instance", bus: 3.5, tech: 8.2, type: "Tolerate", color: "bg-slate-500" },
+            { name: "Global Payroll v2", bus: 9.5, tech: 7.9, type: "Invest", color: "bg-emerald-500" },
+            { name: "Internal Wiki", bus: 2.1, tech: 3.2, type: "Eliminate", color: "bg-red-500" },
+            { name: "Customer Portal", bus: 8.8, tech: 2.5, type: "Migrate", color: "bg-amber-500" },
+            { name: "BI Reporter", bus: 6.2, tech: 6.8, type: "Tolerate", color: "bg-slate-500" },
+            { name: "Claims Management", bus: 9.1, tech: 1.8, type: "Migrate", color: "bg-amber-500" },
+            { name: "Active Directory", bus: 4.8, tech: 9.5, type: "Tolerate", color: "bg-slate-500" },
+            { name: "Legacy Mainframe", bus: 1.5, tech: 1.2, type: "Eliminate", color: "bg-red-500" },
+            { name: "Slack Enterprise", bus: 7.5, tech: 9.2, type: "Invest", color: "bg-emerald-500" }
+        ];
+
+        const container = document.getElementById('matrix-canvas');
+
+        appData.forEach(app => {
+            const point = document.createElement('div');
+            point.className = 'absolute pointer-events-auto cursor-pointer group';
+            
+            // Map 0-10 scale to percentage
+            const left = (app.bus * 10) + '%';
+            const bottom = (app.tech * 10) + '%';
+            const top = (100 - (app.tech * 10)) + '%';
+            
+            point.style.top = top;
+            point.style.left = left;
+            
+            point.innerHTML = `
+                <div class="w-3.5 h-3.5 ${app.color} rounded-full border-2 border-white shadow-sm hover:scale-150 hover:shadow-lg transition-all duration-200"></div>
+                <div class="hidden group-hover:block absolute bottom-6 left-1/2 -translate-x-1/2 bg-primary text-on-primary p-2.5 rounded shadow-2xl min-w-[150px] z-50 border border-outline-variant/30">
+                    <div class="text-[12px] font-bold leading-tight">${app.name}</div>
+                    <div class="flex justify-between mt-1 pt-1 border-t border-on-primary/10">
+                        <div class="text-[10px] opacity-70">Business Value</div>
+                        <div class="text-[10px] font-mono">${app.bus}</div>
+                    </div>
+                    <div class="flex justify-between">
+                        <div class="text-[10px] opacity-70">Tech Health</div>
+                        <div class="text-[10px] font-mono">${</script></body></html>

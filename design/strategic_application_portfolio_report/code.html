@@ -1,0 +1,357 @@
+<!DOCTYPE html><html lang="en" class="light"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=block" rel="stylesheet"><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">try{
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-lowest": "#ffffff",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#c9e6ff",
+            "surface-container-low": "#f5f3f6",
+            "surface-bright": "#fbf8fb",
+            "primary-fixed-dim": "#b7c7eb",
+            "surface-container": "#efedf0",
+            "on-primary-fixed": "#091b37",
+            "secondary": "#006591",
+            "on-primary-container": "#8393b5",
+            "outline": "#75777e",
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#d7e2ff",
+            "primary-container": "#1b2b48",
+            "outline-variant": "#c5c6ce",
+            "on-tertiary-fixed-variant": "#594317",
+            "inverse-primary": "#b7c7eb",
+            "surface-variant": "#e4e2e5",
+            "on-secondary-fixed": "#001e2f",
+            "surface-dim": "#dbd9dc",
+            "inverse-on-surface": "#f2f0f3",
+            "surface-tint": "#4f5e7e",
+            "tertiary-fixed": "#ffdea7",
+            "surface-container-high": "#eae7ea",
+            "tertiary-fixed-dim": "#e3c28a",
+            "secondary-fixed-dim": "#89ceff",
+            "surface-container-highest": "#e4e2e5",
+            "on-tertiary": "#ffffff",
+            "on-surface": "#1b1b1e",
+            "on-tertiary-container": "#ac8e5b",
+            "error": "#ba1a1a",
+            "on-background": "#1b1b1e",
+            "on-primary-fixed-variant": "#374765",
+            "on-error": "#ffffff",
+            "on-secondary-fixed-variant": "#004c6e",
+            "error-container": "#ffdad6",
+            "tertiary-container": "#3b2800",
+            "secondary-container": "#39b8fd",
+            "on-tertiary-fixed": "#271900",
+            "surface": "#fbf8fb",
+            "on-secondary-container": "#004666",
+            "on-primary": "#ffffff",
+            "inverse-surface": "#303033",
+            "background": "#fbf8fb",
+            "tertiary": "#211500",
+            "on-surface-variant": "#44474d",
+            "primary": "#041632",
+            "time-invest": "#10b981",
+            "time-tolerate": "#f59e0b",
+            "time-migrate": "#3b82f6",
+            "time-eliminate": "#ef4444"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "md": "16px",
+            "base": "4px",
+            "xs": "4px",
+            "sm": "8px",
+            "container-max": "1440px",
+            "xl": "32px",
+            "gutter": "16px",
+            "lg": "24px"
+          },
+          "fontFamily": {
+            "headline-md": ["Inter"],
+            "display-lg": ["Inter"],
+            "body-sm": ["Inter"],
+            "label-caps": ["Inter"],
+            "body-md": ["Inter"],
+            "title-sm": ["Inter"],
+            "data-mono": ["Inter"]
+          },
+          "fontSize": {
+            "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "display-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+            "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+            "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "title-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+            "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}]
+          }
+        },
+      },
+    }
+  }catch(_e){}</script></head><body class="bg-surface-container-low text-on-surface font-body-md py-xl print:py-0">
+
+  <!-- Document Container -->
+  <div class="pdf-container max-w-[1024px] mx-auto bg-white shadow-xl min-h-[1447px] p-[60px] flex flex-col relative border border-outline-variant print:border-0">
+    
+    <!-- Top Nav Bar (Identity Anchor) -->
+    <header class="flex justify-between items-end border-b border-primary pb-sm mb-xl">
+      <div class="flex flex-col">
+        <span class="font-label-caps text-label-caps text-secondary tracking-widest uppercase">Strategic Report</span>
+        <h1 class="font-headline-md text-headline-md text-primary mt-xs">Strategic Application Portfolio Report</h1>
+      </div>
+      <div class="text-right">
+        <div class="font-headline-md text-headline-md font-bold text-primary tracking-tight">APM Insight Explorer</div>
+        <div class="font-body-sm text-body-sm text-on-surface-variant italic">Data Export: October 24, 2023</div>
+      </div>
+    </header>
+
+    <!-- Section 1: Executive Summary -->
+    <section class="mb-xl">
+      <div class="flex items-center gap-sm mb-md">
+        <span class="material-symbols-outlined text-primary">analytics</span>
+        <h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider">Executive Summary</h2>
+      </div>
+      
+      <div class="grid grid-cols-4 gap-md">
+        <div class="p-md border border-outline-variant bg-surface-bright flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-xs">TOTAL APPLICATIONS</span>
+          <span class="font-display-lg text-display-lg text-primary">248</span>
+          <span class="text-[10px] text-green-600 font-bold mt-xs flex items-center">
+            <span class="material-symbols-outlined text-[14px]">arrow_downward</span> -4.2% YoY Consolidation
+          </span>
+        </div>
+        <div class="p-md border border-outline-variant bg-surface-bright flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-xs">AVG QUALITY SCORE</span>
+          <span class="font-display-lg text-display-lg text-primary">72<span class="text-title-sm">/100</span></span>
+          <div class="w-full bg-outline-variant h-[4px] mt-md">
+            <div class="bg-primary h-full w-[72%]"></div>
+          </div>
+        </div>
+        <div class="p-md border border-outline-variant bg-surface-bright flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-xs">ANNUAL OPEX</span>
+          <span class="font-display-lg text-display-lg text-primary">$18.4M</span>
+          <span class="text-[10px] text-on-surface-variant font-bold mt-xs">Cloud vs On-Prem: 60/40</span>
+        </div>
+        <div class="p-md border border-outline-variant bg-surface-bright flex flex-col">
+          <span class="font-label-caps text-label-caps text-on-surface-variant mb-xs">CRITICALITY RATIO</span>
+          <span class="font-display-lg text-display-lg text-primary">14%</span>
+          <span class="text-[10px] text-error font-bold mt-xs">34 Apps High Risk</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: TIME Matrix Visualization -->
+    <section class="mb-xl">
+      <div class="flex items-center gap-sm mb-md">
+        <span class="material-symbols-outlined text-primary">grid_view</span>
+        <h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider">TIME Matrix Visualization</h2>
+      </div>
+
+      <div class="grid grid-cols-2 gap-0 border-2 border-primary relative overflow-hidden">
+        <!-- Vertical Axis Label -->
+        <div class="absolute -left-12 top-1/2 -translate-y-1/2 -rotate-90 font-label-caps text-label-caps text-on-surface-variant">BUSINESS FIT (SCORE 1-10)</div>
+        <!-- Horizontal Axis Label -->
+        <div class="absolute bottom-1 left-1/2 -translate-x-1/2 font-label-caps text-label-caps text-on-surface-variant">TECHNICAL QUALITY (SCORE 1-10)</div>
+
+        <!-- Tolerate (Top Left) -->
+        <div class="time-quadrant p-md border-r border-b border-outline-variant bg-amber-50/30">
+          <div class="flex justify-between items-start">
+            <span class="px-md py-xs bg-time-tolerate text-white font-label-caps rounded-full">TOLERATE</span>
+            <span class="font-display-lg text-on-surface opacity-20">42</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-sm leading-relaxed">High business value, low technical health. Keep in place but do not expand investment. Targeted maintenance focus.</p>
+        </div>
+
+        <!-- Invest (Top Right) -->
+        <div class="time-quadrant p-md border-b border-outline-variant bg-emerald-50/30">
+          <div class="flex justify-between items-start">
+            <span class="px-md py-xs bg-time-invest text-white font-label-caps rounded-full">INVEST</span>
+            <span class="font-display-lg text-on-surface opacity-20">114</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-sm leading-relaxed">High business value, high technical health. Modernize, expand use, and leverage as strategic platforms for transformation.</p>
+        </div>
+
+        <!-- Eliminate (Bottom Left) -->
+        <div class="time-quadrant p-md border-r border-outline-variant bg-red-50/30">
+          <div class="flex justify-between items-start">
+            <span class="px-md py-xs bg-time-eliminate text-white font-label-caps rounded-full">ELIMINATE</span>
+            <span class="font-display-lg text-on-surface opacity-20">58</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-sm leading-relaxed">Low business value, low technical health. Decommission, archive data, and consolidate with existing strategic platforms.</p>
+        </div>
+
+        <!-- Migrate (-->
+        <div class="time-quadrant p-md bg-blue-50/30">
+          <div class="flex justify-between items-start">
+            <span class="px-md py-xs bg-time-migrate text-white font-label-caps rounded-full">MIGRATE</span>
+            <span class="font-display-lg text-on-surface opacity-20">34</span>
+          </div>
+          <p class="text-[11px] text-on-surface-variant mt-sm leading-relaxed">Low business value, high technical health. Consider cloud migration or functional consolidation into higher-value apps.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Strategic Recommendations -->
+    <section class="mb-xl">
+      <div class="flex items-center gap-sm mb-md">
+        <span class="material-symbols-outlined text-primary">assignment_turned_in</span>
+        <h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider">Strategic Recommendations</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+        <div class="space-y-sm">
+          <div class="flex gap-md p-sm border-l-4 border-time-eliminate bg-surface-container-low"><span class="material-symbols-outlined text-time-eliminate font-bold">cancel</span><div><h4 class="font-bold text-primary">Decommission 8 Low-Value Legacy Systems</h4><p class="text-body-sm text-on-surface-variant">Targeting apps with Business Fit &lt; 2 and Low Tech Health. Estimated annual OPEX savings: $450k.</p></div></div>
+          <div class="flex gap-md p-sm border-l-4 border-time-migrate bg-surface-container-low"><span class="material-symbols-outlined text-time-migrate font-bold">move_up</span><div><h4 class="font-bold text-primary">Modernize 12 High-Value Legacy Apps</h4><p class="text-body-sm text-on-surface-variant">Prioritize cloud-native migration for 'Migrate' systems to resolve critical technical debt while preserving high business value.</p></div></div>
+        </div>
+        <div class="space-y-sm">
+          <div class="flex gap-md p-sm border-l-4 border-time-invest bg-surface-container-low"><span class="material-symbols-outlined text-time-invest font-bold">check_circle</span><div><h4 class="font-bold text-primary">Scale 5 High-Value Strategic Platforms</h4><p class="text-body-sm text-on-surface-variant">Accelerate funding for verified 'Invest' systems with Business Fit &gt; 4 and High Tech Health to drive digital differentiation.</p></div></div>
+          <div class="flex gap-md p-sm border-l-4 border-time-tolerate bg-surface-container-low"><span class="material-symbols-outlined text-time-tolerate font-bold">pause_circle</span><div><h4 class="font-bold text-primary">Optimize 15 Stable Utility Apps</h4><p class="text-body-sm text-on-surface-variant">Minimize investment in 'Tolerate' systems. Maintain operational stability with zero-growth budget allocation.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Portfolio Inventory -->
+    <section class="flex-grow">
+      <div class="flex items-center gap-sm mb-md">
+        <span class="material-symbols-outlined text-primary">inventory</span>
+        <h2 class="font-title-sm text-title-sm text-primary uppercase tracking-wider">Top Critical Portfolio Inventory</h2>
+      </div>
+
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-primary text-white font-label-caps text-left">
+            <th class="p-sm text-[10px] uppercase tracking-tighter">TIME Class</th>
+            <th class="p-sm text-[10px] uppercase tracking-tighter">Application Name</th>
+            <th class="p-sm text-[10px] uppercase tracking-tighter text-center">Business Fit</th>
+            <th class="p-sm text-[10px] uppercase tracking-tighter text-center">Tech Health</th>
+            <th class="p-sm text-[10px] uppercase tracking-tighter text-right">Opex (K)</th>
+          </tr>
+        </thead>
+        <tbody class="text-body-sm">
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-invest text-white text-[9px] font-bold">INVEST</span></td>
+            <td class="p-sm font-bold">Customer One CRM</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">9.8</td>
+            <td class="p-sm text-right font-data-mono">$2,450</td>
+          </tr>
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-invest text-white text-[9px] font-bold">INVEST</span></td>
+            <td class="p-sm font-bold">Global Supply Chain Hub</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">8.2</td>
+            <td class="p-sm text-right font-data-mono">$1,800</td>
+          </tr>
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-tolerate text-white text-[9px] font-bold">TOLERATE</span></td>
+            <td class="p-sm font-bold">Legacy Payroll System v4</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">4.1</td>
+            <td class="p-sm text-right font-data-mono">$450</td>
+          </tr>
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-migrate text-white text-[9px] font-bold">MIGRATE</span></td>
+            <td class="p-sm font-bold">Regional Billing App</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">7.5</td>
+            <td class="p-sm text-right font-data-mono">$120</td>
+          </tr>
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-eliminate text-white text-[9px] font-bold">ELIMINATE</span></td>
+            <td class="p-sm font-bold">Old Intranet Portal</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+                <div class="fit-segment bg-outline-variant"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">2.2</td>
+            <td class="p-sm text-right font-data-mono">$85</td>
+          </tr>
+          <tr class="stripe-bg border-b border-outline-variant">
+            <td class="p-sm"><span class="px-xs py-[2px] bg-time-invest text-white text-[9px] font-bold">INVEST</span></td>
+            <td class="p-sm font-bold">Data Warehouse Pro</td>
+            <td class="p-sm">
+              <div class="flex justify-center">
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+                <div class="fit-segment bg-primary"></div>
+              </div>
+            </td>
+            <td class="p-sm text-center font-data-mono">9.1</td>
+            <td class="p-sm text-right font-data-mono">$3,100</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-xl pt-sm border-t border-outline-variant flex justify-between items-center font-label-caps text-label-caps text-on-surface-variant">
+      <div class="">CONFIDENTIAL - ENTERPRISE ARCHITECTURE GROUP</div>
+      <div class="">PAGE 01 / 01</div>
+      <div class="">APM INSIGHT EXPLORER V4.2</div>
+    </footer>
+
+    <!-- Decorative watermark for print -->
+    <div class="absolute top-[20%] right-[-100px] -rotate-45 opacity-[0.02] pointer-events-none select-none">
+      <span class="text-[120px] font-bold">INTERNAL USE ONLY</span>
+    </div>
+
+  </div>
+
+  <!-- Print Button Tooltip (No print) -->
+  <div class="no-print fixed bottom-8 right-8 flex flex-col items-end gap-2">
+    <button onclick="window.print()" class="bg-primary text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2">
+      <span class="material-symbols-outlined">print</span>
+      <span class="font-bold">Export to PDF</span>
+    </button>
+    <div class="bg-surface-container-highest p-4 rounded-lg shadow border border-outline-variant text-body-sm w-64">
+      <p class="font-bold text-primary mb-1">Print Preview Tip:</p>
+      <ul class="list-disc pl-4 text-[12px] text-on-surface-variant space-y-1">
+        <li class="">Set Destination to <b>Save as PDF</b></li>
+        <li class="">Layout: <b>Portrait</b></li>
+        <li class="">Margins: <b>None</b> or <b>Minimum</b></li>
+        <li class="">Enable <b>Background Graphics</b></li>
+      </ul></div></div></body></html>

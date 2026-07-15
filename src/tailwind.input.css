@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Local-first Tailwind entry point.
+  Fonts are self-hosted from ./fonts so the build stays offline (no CDN).
+  Build with: npm run build:css  ->  generates ./src/tailwind.css
+*/
+
+@layer base {
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("./fonts/inter-400.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("./fonts/inter-500.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("./fonts/inter-600.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "Inter";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("./fonts/inter-700.woff2") format("woff2");
+  }
+
+  body {
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+@layer components {
+  /* Semantic TIME classification fills, mirroring the executive dashboard design. */
+  .time-invest {
+    background-color: #059669;
+  }
+  .time-tolerate {
+    background-color: #d97706;
+  }
+  .time-migrate {
+    background-color: #3b82f6;
+  }
+  .time-eliminate {
+    background-color: #dc2626;
+  }
+}
