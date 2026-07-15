@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Management - Strategic Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#001e2f",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#e3c28a",
+                        "tertiary": "#211500",
+                        "surface-dim": "#dbd9dc",
+                        "surface-container": "#efedf0",
+                        "secondary-fixed-dim": "#89ceff",
+                        "outline-variant": "#c5c6ce",
+                        "background": "#fbf8fb",
+                        "error-container": "#ffdad6",
+                        "outline": "#75777e",
+                        "secondary-fixed": "#c9e6ff",
+                        "primary-fixed-dim": "#b7c7eb",
+                        "on-tertiary-fixed-variant": "#594317",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface": "#1b1b1e",
+                        "secondary": "#006591",
+                        "on-secondary-fixed-variant": "#004c6e",
+                        "surface-tint": "#4f5e7e",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#041632",
+                        "on-tertiary-container": "#ac8e5b",
+                        "on-background": "#1b1b1e",
+                        "primary-fixed": "#d7e2ff",
+                        "on-tertiary-fixed": "#271900",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#004666",
+                        "primary-container": "#1b2b48",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#eae7ea",
+                        "secondary-container": "#39b8fd",
+                        "on-primary-fixed-variant": "#374765",
+                        "surface": "#fbf8fb",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-primary-fixed": "#091b37",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffdea7",
+                        "on-surface-variant": "#44474d",
+                        "on-primary-container": "#8393b5",
+                        "inverse-surface": "#303033",
+                        "surface-bright": "#fbf8fb",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#3b2800",
+                        "inverse-primary": "#b7c7eb",
+                        "surface-container-low": "#f5f3f6",
+                        "surface-variant": "#e4e2e5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "display": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c5c6ce; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- SideNavBar Shell -->
+<nav class="h-screen w-64 flex flex-col fixed left-0 top-0 bg-primary dark:bg-primary-container border-r border-outline-variant dark:border-outline py-6 px-4 z-50">
+<div class="mb-10 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-secondary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+</div>
+<div>
+<h1 class="text-title-sm font-bold tracking-tight text-on-primary dark:text-on-primary-container">Strategic Ledger</h1>
+<p class="text-[10px] text-on-primary-container opacity-80 uppercase tracking-widest font-bold">IT Portfolio Management</p>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container transition-colors duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">account_tree</span>
+<span class="text-body-sm font-normal">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container transition-colors duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">strategy</span>
+<span class="text-body-sm font-normal">Strategy</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container transition-colors duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">category</span>
+<span class="text-body-sm font-normal">Taxonomies</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container transition-colors duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">analytics</span>
+<span class="text-body-sm font-normal">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container transition-colors duration-150 rounded-lg group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">description</span>
+<span class="text-body-sm font-normal">Reports</span>
+</a>
+<!-- Active Navigation -->
+<a class="flex items-center gap-3 px-3 py-2.5 bg-secondary text-on-secondary rounded-lg font-semibold transition-opacity duration-100 opacity-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">manage_accounts</span>
+<span class="text-body-sm">User Management</span>
+</a>
+</div>
+<div class="mt-auto pt-6 border-t border-on-primary/10">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden border border-outline-variant">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a mature enterprise architect with a confident expression, set against a clean, blurred office background with cool lighting. The style is modern corporate photography, using a sophisticated color palette of deep navies and sharp whites, perfectly aligned with a high-end enterprise IT management platform aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbE4ozcFL9PqK9geOekWcyIZPQeovrGNpRaW5JIbUu6z14lYQtuwkdg6bTrg8K0Z6_kgZXcCPj4D9WRb2ii3g2lEdlmCmHu6sfp5l3_zfvfODtZGlBFLOaET0lHbVwMNu1ygSHw_VxHw0j4uLsqNseLIWQxaFpYiAnvSYTmHfWNajE8o5YjgLmtgIuz-ip2SMRplb8DoyE9u2uk0VMdJBA6k7Iez0j-p-oorzZ9Ji6YumXvR7racr3"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-body-sm font-bold text-on-primary truncate">Marcus Chen</p>
+<p class="text-[10px] text-on-primary-container uppercase font-bold tracking-tighter">Chief Architect</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Canvas -->
+<main class="ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar Shell -->
+<header class="h-16 flex items-center sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-6">
+<div class="flex items-center gap-8">
+<h2 class="text-headline-md font-semibold tracking-tight text-primary dark:text-primary-fixed">User Management</h2>
+<div class="relative w-96 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary">search</span>
+<input class="w-full h-10 pl-10 pr-4 bg-surface-container-low border-none rounded-lg text-body-md focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search stakeholders, roles, or departments..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<button class="text-label-caps font-bold text-on-surface-variant hover:text-error transition-colors uppercase tracking-widest">Logout</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-8 flex-1">
+<!-- Stats Dashboard (Header Insights) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-caps font-bold text-on-surface-variant uppercase mb-2">Total Active Users</p>
+<h3 class="text-display-lg font-bold text-primary">1,284</h3>
+<div class="mt-3 flex items-center gap-2">
+<span class="text-[10px] bg-green-100 text-green-800 px-1.5 py-0.5 rounded font-bold">+12%</span>
+<span class="text-[11px] text-on-surface-variant">vs last month</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-caps font-bold text-on-surface-variant uppercase mb-2">Admin Accounts</p>
+<h3 class="text-display-lg font-bold text-primary">24</h3>
+<p class="mt-3 text-[11px] text-on-surface-variant font-medium">Security threshold: <span class="text-error font-bold">HIGH</span></p>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-caps font-bold text-on-surface-variant uppercase mb-2">Pending Invites</p>
+<h3 class="text-display-lg font-bold text-primary">18</h3>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[65%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant shadow-sm">
+<p class="text-label-caps font-bold text-on-surface-variant uppercase mb-2">Last Audit</p>
+<h3 class="text-display-lg font-bold text-primary">04h</h3>
+<p class="mt-3 text-[11px] text-on-surface-variant">Next automated scan in 20h</p>
+</div>
+</div>
+<!-- Main Table Section -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-low/50">
+<div class="flex items-center gap-4">
+<button class="px-4 py-2 bg-primary text-on-primary text-body-sm font-semibold rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity" onclick="toggleModal('invite-modal', true)">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                            Invite User
+                        </button>
+<div class="h-6 w-px bg-outline-variant"></div>
+<div class="flex gap-1 bg-surface-container-high p-1 rounded-lg">
+<button class="px-3 py-1 bg-white text-primary text-[12px] font-bold rounded shadow-sm">All</button>
+<button class="px-3 py-1 text-on-surface-variant text-[12px] font-medium hover:bg-white/50 rounded">Internal</button>
+<button class="px-3 py-1 text-on-surface-variant text-[12px] font-medium hover:bg-white/50 rounded">External</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded transition-colors">
+<span class="material-symbols-outlined">download</span>
+</button>
+</div>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest text-label-caps text-on-surface-variant uppercase tracking-wider border-b border-outline-variant">
+<th class="px-6 py-4 font-bold">User Identity</th>
+<th class="px-6 py-4 font-bold">Role</th>
+<th class="px-6 py-4 font-bold">Status</th>
+<th class="px-6 py-4 font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-body-md divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs">SK</div>
+<div>
+<div class="font-semibold text-on-surface">Sarah Koenig</div>
+<div class="text-[12px] text-on-surface-variant">koenig.s@enterprise.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 border border-outline rounded text-[11px] font-bold text-on-surface-variant uppercase">Administrator</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[12px] font-medium">Active</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-secondary-fixed flex items-center justify-center text-secondary font-bold text-xs">JM</div>
+<div>
+<div class="font-semibold text-on-surface">James Miller</div>
+<div class="text-[12px] text-on-surface-variant">j.miller@contractor.com</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 border border-outline rounded text-[11px] font-bold text-on-surface-variant uppercase">Editor</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-orange-400"></span>
+<span class="text-[12px] font-medium">Pending</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-tertiary-fixed flex items-center justify-center text-tertiary font-bold text-xs">ED</div>
+<div>
+<div class="font-semibold text-on-surface">Elena D'Angelo</div>
+<div class="text-[12px] text-on-surface-variant">elena.d@global.it</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 border border-outline rounded text-[11px] font-bold text-on-surface-variant uppercase">Viewer</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[12px] font-medium">Active</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="px-6 py-4 border-t border-outline-variant flex items-center justify-between text-on-surface-variant">
+<span class="text-[12px] font-medium">Showing 1-10 of 1,284 users</span>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="p-1 rounded hover:bg-surface-container-high transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-sm transition-all duration-300" id="invite-modal">
+<!-- Modal Content -->
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-2xl border border-outline overflow-hidden animate-in fade-in zoom-in duration-200">
+<!-- Modal Header -->
+<div class="p-6 border-b border-outline-variant flex items-start justify-between bg-surface">
+<div>
+<h3 class="text-headline-md font-semibold text-primary">Invite Local Login User</h3>
+<p class="text-body-sm text-on-surface-variant mt-1">Grant access to the Strategic Ledger portfolio ecosystem.</p>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors" onclick="toggleModal('invite-modal', false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Body (Form) -->
+<form class="p-8 space-y-6">
+<!-- Name Field -->
+<div>
+<label class="block text-label-caps font-bold text-on-surface-variant uppercase tracking-wider mb-2" for="invite-name">Full Name</label>
+<div class="relative">
+<input class="w-full h-12 px-4 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" id="invite-name" placeholder="e.g. Alexander Pierce" type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant">badge</span>
+</div>
+</div>
+<!-- Email Field -->
+<div>
+<label class="block text-label-caps font-bold text-on-surface-variant uppercase tracking-wider mb-2" for="invite-email">Email Address</label>
+<div class="relative">
+<input class="w-full h-12 px-4 bg-surface border border-outline-variant rounded-lg text-body-md focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" id="invite-email" placeholder="alex.p@company.com" type="email"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant">mail</span>
+</div>
+</div>
+<!-- Role Selector -->
+<div>
+<label class="block text-label-caps font-bold text-on-surface-variant uppercase tracking-wider mb-2">Initial Role Assignment</label>
+<div class="grid grid-cols-3 gap-3">
+<label class="relative group cursor-pointer">
+<input checked="" class="peer sr-only" name="role" type="radio" value="viewer"/>
+<div class="h-full p-4 border border-outline-variant rounded-lg flex flex-col items-center gap-2 peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all group-hover:bg-surface-container">
+<span class="material-symbols-outlined text-outline peer-checked:text-secondary">visibility</span>
+<span class="text-[11px] font-bold uppercase tracking-tight text-on-surface-variant">Viewer</span>
+</div>
+</label>
+<label class="relative group cursor-pointer">
+<input class="peer sr-only" name="role" type="radio" value="editor"/>
+<div class="h-full p-4 border border-outline-variant rounded-lg flex flex-col items-center gap-2 peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all group-hover:bg-surface-container">
+<span class="material-symbols-outlined text-outline peer-checked:text-secondary">edit</span>
+<span class="text-[11px] font-bold uppercase tracking-tight text-on-surface-variant">Editor</span>
+</div>
+</label>
+<label class="relative group cursor-pointer">
+<input class="peer sr-only" name="role" type="radio" value="admin"/>
+<div class="h-full p-4 border border-outline-variant rounded-lg flex flex-col items-center gap-2 peer-checked:border-secondary peer-checked:bg-secondary-container/10 transition-all group-hover:bg-surface-container">
+<span class="material-symbols-outlined text-outline peer-checked:text-secondary">shield</span>
+<span class="text-[11px] font-bold uppercase tracking-tight text-on-surface-variant">Admin</span>
+</div>
+</label>
+</div>
+<p class="mt-3 text-[12px] text-on-surface-variant italic">
+<span class="material-symbols-outlined text-sm inline-block mr-1">info</span>
+                        Role can be adjusted by higher-level administrators at any time.
+                    </p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-lg border-l-4 border-secondary">
+<p class="text-[12px] text-on-surface-variant leading-relaxed">
+<strong>Security Note:</strong> An invitation link will be sent to the email provided above. The link will expire in 48 hours for security purposes. The user will be required to set their own password upon first login.
+                    </p>
+</div>
+</form>
+<!-- Modal Footer -->
+<div class="p-6 bg-surface border-t border-outline-variant flex items-center justify-end gap-3">
+<button class="px-6 py-2.5 text-body-sm font-semibold text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors" onclick="toggleModal('invite-modal', false)">Cancel</button>
+<button class="px-8 py-2.5 bg-primary text-on-primary text-body-sm font-bold rounded-lg hover:bg-primary-container transition-all flex items-center gap-2 shadow-md active:scale-95" id="invite-btn" onclick="simulateInvite()">
+                    Send invite
+                    <span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        function toggleModal(id, show) {
+            const modal = document.getElementById(id);
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function simulateInvite() {
+            const btn = document.getElementById('invite-btn');
+            const originalContent = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+            `;
+
+            setTimeout(() => {
+                btn.innerHTML = `
+                    Invite Sent
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                `;
+                btn.classList.replace('bg-primary', 'bg-green-600');
+                
+                setTimeout(() => {
+                    toggleModal('invite-modal', false);
+                    // Reset for next time
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                        btn.classList.replace('bg-green-600', 'bg-primary');
+                    }, 500);
+                }, 1000);
+            }, 1500);
+        }
+
+        // Initialize modal as hidden on start (for the demo script, normally controlled by state)
+        // In this implementation, the button "Invite User" opens it.
+        // For immediate visibility on load as requested by prompt "Overlaid on User Management":
+        // toggleModal('invite-modal', true); 
+    </script>
+</body></html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Strategic Ledger - Permissions Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tnum { font-variant-numeric: tabular-nums; }
+        
+        /* Custom scrollbar for high-density tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c5c6ce; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #75777e; }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#001e2f",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#e3c28a",
+                    "tertiary": "#211500",
+                    "surface-dim": "#dbd9dc",
+                    "surface-container": "#efedf0",
+                    "secondary-fixed-dim": "#89ceff",
+                    "outline-variant": "#c5c6ce",
+                    "background": "#fbf8fb",
+                    "error-container": "#ffdad6",
+                    "outline": "#75777e",
+                    "secondary-fixed": "#c9e6ff",
+                    "primary-fixed-dim": "#b7c7eb",
+                    "on-tertiary-fixed-variant": "#594317",
+                    "inverse-on-surface": "#f2f0f3",
+                    "on-surface": "#1b1b1e",
+                    "secondary": "#006591",
+                    "on-secondary-fixed-variant": "#004c6e",
+                    "surface-tint": "#4f5e7e",
+                    "on-tertiary": "#ffffff",
+                    "primary": "#041632",
+                    "on-tertiary-container": "#ac8e5b",
+                    "on-background": "#1b1b1e",
+                    "primary-fixed": "#d7e2ff",
+                    "on-tertiary-fixed": "#271900",
+                    "on-primary": "#ffffff",
+                    "on-secondary-container": "#004666",
+                    "primary-container": "#1b2b48",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#eae7ea",
+                    "secondary-container": "#39b8fd",
+                    "on-primary-fixed-variant": "#374765",
+                    "surface": "#fbf8fb",
+                    "surface-container-highest": "#e4e2e5",
+                    "on-primary-fixed": "#091b37",
+                    "on-secondary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#ffdea7",
+                    "on-surface-variant": "#44474d",
+                    "on-primary-container": "#8393b5",
+                    "inverse-surface": "#303033",
+                    "surface-bright": "#fbf8fb",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-container": "#3b2800",
+                    "inverse-primary": "#b7c7eb",
+                    "surface-container-low": "#f5f3f6",
+                    "surface-variant": "#e4e2e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="h-screen w-64 flex flex-col fixed left-0 top-0 bg-primary dark:bg-primary-container border-r border-outline-variant dark:border-outline py-6 px-4 z-50">
+<div class="mb-10 px-2">
+<h1 class="text-title-sm font-bold tracking-tight text-on-primary dark:text-on-primary-container">Strategic Ledger</h1>
+<p class="text-[10px] text-on-primary-container font-medium uppercase tracking-widest mt-1 opacity-80">IT Portfolio Management</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+<span class="text-[13px] font-medium">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">strategy</span>
+<span class="text-[13px] font-medium">Strategy</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">category</span>
+<span class="text-[13px] font-medium">Taxonomies</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span class="text-[13px] font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-primary-container dark:text-primary-fixed-dim hover:bg-primary-container dark:hover:bg-primary hover:text-on-primary-container rounded-lg transition-colors duration-150" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="text-[13px] font-medium">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-secondary text-on-secondary rounded-lg font-semibold shadow-sm opacity-90 transition-opacity duration-100" href="#">
+<span class="material-symbols-outlined text-[20px]">manage_accounts</span>
+<span class="text-[13px]">User Management</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-primary-container">
+<div class="flex items-center gap-3 px-2">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold text-xs">EA</div>
+<div class="overflow-hidden">
+<p class="text-xs font-semibold text-on-primary truncate">Enterprise Architect</p>
+<p class="text-[10px] text-on-primary-container truncate">Admin Access</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar (Shared Component) -->
+<header class="h-16 flex items-center sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline px-6 justify-between">
+<div class="flex items-center gap-6">
+<div class="text-headline-md font-semibold tracking-tight text-primary dark:text-primary-fixed">Application Portfolio</div>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
+<input class="bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-1.5 text-body-md focus:ring-2 focus:ring-primary w-64 transition-all" placeholder="Search applications..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<button class="text-body-md font-medium text-primary hover:text-secondary transition-colors">Logout</button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-8 max-w-[1440px]">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-label-caps text-on-surface-variant mb-6">
+<a class="hover:text-primary" href="#">PORTFOLIO</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary" href="#">CORE BANKING SERVICES</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-primary font-bold">PERMISSIONS</span>
+</nav>
+<!-- Application Header Summary -->
+<div class="flex items-start justify-between mb-8 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant">
+<div class="flex gap-5">
+<div class="w-16 h-16 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-4xl">account_balance</span>
+</div>
+<div>
+<div class="flex items-center gap-3">
+<h2 class="text-display-lg text-primary">Global Ledger Interface (GLI)</h2>
+<span class="px-2 py-0.5 bg-on-tertiary-container/10 text-on-tertiary-container border border-on-tertiary-container/20 rounded text-[10px] font-bold tracking-widest uppercase">INVEST</span>
+</div>
+<p class="text-body-md text-on-surface-variant mt-1">ID: APP-4092-X • Business Criticality: Level 1 (Critical) • Owner: Finance Systems</p>
+</div>
+</div>
+<div class="text-right">
+<div class="text-label-caps text-on-surface-variant mb-1">RECORD VISIBILITY</div>
+<div class="flex items-center justify-end gap-2 text-primary font-semibold">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span>Restricted Access</span>
+</div>
+</div>
+</div>
+<!-- Permission Grant Panel (THE CORE TASK) -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Info & Context -->
+<div class="lg:col-span-1 space-y-6">
+<div class="bg-surface-container-high p-6 rounded-xl border border-outline-variant">
+<h3 class="text-headline-md font-semibold text-primary mb-4">Edit Permissions</h3>
+<p class="text-body-md text-on-surface-variant mb-4">
+                            Manage individual users who are granted explicit permission to edit this application record. This overrides default regional visibility but adheres to global role security.
+                        </p>
+<!-- Policy Note -->
+<div class="bg-secondary-container/10 border-l-4 border-secondary p-4 rounded-r-lg">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-secondary">info</span>
+<p class="text-body-sm font-medium text-on-secondary-container leading-relaxed">
+<span class="font-bold">Important:</span> Role 'Editor' is still required regardless of this grant. Users without the base Editor role will not see edit actions even if listed here.
+                                </p>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Total Grants</span>
+<span class="text-data-mono font-bold text-primary">14 Editors</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Last Modified</span>
+<span class="text-data-mono text-on-surface-variant">12 Oct 2023, 14:02</span>
+</div>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="bg-surface-container p-6 rounded-xl border border-outline-variant">
+<h4 class="text-label-caps text-on-surface-variant mb-4">ADMIN ACTIONS</h4>
+<div class="space-y-2">
+<button class="w-full flex items-center justify-between p-3 bg-surface-container-lowest border border-outline-variant rounded hover:border-primary transition-colors text-body-sm font-medium">
+<span>Export Audit Log</span>
+<span class="material-symbols-outlined text-sm">download</span>
+</button>
+<button class="w-full flex items-center justify-between p-3 bg-surface-container-lowest border border-outline-variant rounded hover:border-primary transition-colors text-body-sm font-medium">
+<span>Sync with Active Directory</span>
+<span class="material-symbols-outlined text-sm">sync</span>
+</button>
+<button class="w-full flex items-center justify-between p-3 bg-error-container/20 border border-error/20 rounded hover:bg-error-container/30 transition-colors text-body-sm font-bold text-error">
+<span>Revoke All Permissions</span>
+<span class="material-symbols-outlined text-sm">security_update_warning</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right: High-Density Editor List -->
+<div class="lg:col-span-2 space-y-4">
+<!-- Search and Add Controls -->
+<div class="flex items-center gap-4 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px]">person_search</span>
+<input class="w-full border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary text-body-md pl-10 pr-4 py-2" placeholder="Search by name, email or department..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded font-semibold text-body-sm flex items-center gap-2 hover:bg-primary-container transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+<span>Add Editor</span>
+</button>
+</div>
+<!-- Editors Table -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container border-b border-outline-variant">
+<th class="px-4 py-3 text-label-caps text-on-surface-variant w-1/3">USER / EMAIL</th>
+<th class="px-4 py-3 text-label-caps text-on-surface-variant">DEPARTMENT</th>
+<th class="px-4 py-3 text-label-caps text-on-surface-variant">GRANTED ON</th>
+<th class="px-4 py-3 text-label-caps text-on-surface-variant text-right">ACTIONS</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- User Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed-dim flex items-center justify-center text-on-primary-fixed text-[10px] font-bold">JD</div>
+<div>
+<div class="text-body-md font-semibold text-primary">Jane Doe</div>
+<div class="text-body-sm text-on-surface-variant">jane.doe@enterprise.com</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<span class="text-body-sm">Finance IT - EMEA</span>
+</td>
+<td class="px-4 py-3 text-data-mono text-on-surface-variant tnum">
+                                        2023-08-14
+                                    </td>
+<td class="px-4 py-3 text-right">
+<button class="text-outline hover:text-error transition-colors p-1 rounded hover:bg-error-container/20">
+<span class="material-symbols-outlined">person_remove</span>
+</button>
+</td>
+</tr>
+<!-- User Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed text-[10px] font-bold">MK</div>
+<div>
+<div class="text-body-md font-semibold text-primary">Marcus Karlsson</div>
+<div class="text-body-sm text-on-surface-variant">m.karlsson@enterprise.com</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<span class="text-body-sm">Enterprise Arch</span>
+</td>
+<td class="px-4 py-3 text-data-mono text-on-surface-variant tnum">
+                                        2023-09-01
+                                    </td>
+<td class="px-4 py-3 text-right">
+<button class="text-outline hover:text-error transition-colors p-1 rounded hover:bg-error-container/20">
+<span class="material-symbols-outlined">person_remove</span>
+</button>
+</td>
+</tr>
+<!-- User Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed text-[10px] font-bold">SL</div>
+<div>
+<div class="text-body-md font-semibold text-primary">Sarah Liao</div>
+<div class="text-body-sm text-on-surface-variant">sliao@enterprise.com</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<span class="text-body-sm">Compliance &amp; Risk</span>
+</td>
+<td class="px-4 py-3 text-data-mono text-on-surface-variant tnum">
+                                        2023-10-12
+                                    </td>
+<td class="px-4 py-3 text-right">
+<button class="text-outline hover:text-error transition-colors p-1 rounded hover:bg-error-container/20">
+<span class="material-symbols-outlined">person_remove</span>
+</button>
+</td>
+</tr>
+<!-- User Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-4 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-outline-variant flex items-center justify-center text-on-surface text-[10px] font-bold">BW</div>
+<div>
+<div class="text-body-md font-semibold text-primary">Benjamin Wright</div>
+<div class="text-body-sm text-on-surface-variant">b.wright@enterprise.com</div>
+</div>
+</div>
+</td>
+<td class="px-4 py-3">
+<span class="text-body-sm">Core Banking</span>
+</td>
+<td class="px-4 py-3 text-data-mono text-on-surface-variant tnum">
+                                        2023-11-22
+                                    </td>
+<td class="px-4 py-3 text-right">
+<button class="text-outline hover:text-error transition-colors p-1 rounded hover:bg-error-container/20">
+<span class="material-symbols-outlined">person_remove</span>
+</button>
+</td>
+</tr>
+<!-- Repeatable Row Placeholder -->
+<tr class="bg-surface-container-low/50">
+<td class="px-4 py-2 text-center" colspan="4">
+<button class="text-[11px] font-bold text-secondary uppercase tracking-widest hover:underline">Load More (10 remaining)</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Visual Data Insight (Bento-style snippet) -->
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-primary text-on-primary p-4 rounded-xl flex items-center gap-4">
+<div class="bg-on-primary/10 p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<div>
+<div class="text-display-lg leading-none tnum">100%</div>
+<div class="text-label-caps opacity-70 mt-1">Role Validation Pass</div>
+</div>
+</div>
+<div class="bg-surface-container-highest p-4 rounded-xl border border-outline-variant flex items-center gap-4">
+<div class="bg-surface-container p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl text-primary">history</span>
+</div>
+<div>
+<div class="text-display-lg text-primary leading-none tnum">4d</div>
+<div class="text-label-caps text-on-surface-variant mt-1">Avg Grant Duration</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Branding -->
+<footer class="mt-auto py-4 px-8 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
+<div class="text-label-caps text-on-surface-variant tracking-wider">SECURE AUDIT ENABLED • SYSTEM ID: 0xFF-AL-01</div>
+<div class="flex gap-4">
+<a class="text-[11px] font-bold text-on-surface-variant hover:text-primary uppercase tracking-tighter" href="#">Documentation</a>
+<a class="text-[11px] font-bold text-on-surface-variant hover:text-primary uppercase tracking-tighter" href="#">Support</a>
+</div>
+</footer>
+</main>
+<!-- Custom Interaction Script -->
+<script>
+        // Simple search filter interaction
+        const searchInput = document.querySelector('input[placeholder*="Search by name"]');
+        const rows = document.querySelectorAll('tbody tr:not(.bg-surface-container-low)');
+
+        searchInput?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+
+        // "Add Editor" Button ripple effect simulation
+        const addBtn = document.querySelector('button:contains("Add Editor")');
+        addBtn?.addEventListener('click', () => {
+            alert('Opening User Directory Selection Modal...');
+        });
+    </script>
+</body></html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | Strategic Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#001e2f",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#e3c28a",
+                        "tertiary": "#211500",
+                        "surface-dim": "#dbd9dc",
+                        "surface-container": "#efedf0",
+                        "secondary-fixed-dim": "#89ceff",
+                        "outline-variant": "#c5c6ce",
+                        "background": "#fbf8fb",
+                        "error-container": "#ffdad6",
+                        "outline": "#75777e",
+                        "secondary-fixed": "#c9e6ff",
+                        "primary-fixed-dim": "#b7c7eb",
+                        "on-tertiary-fixed-variant": "#594317",
+                        "inverse-on-surface": "#f2f0f3",
+                        "on-surface": "#1b1b1e",
+                        "secondary": "#006591",
+                        "on-secondary-fixed-variant": "#004c6e",
+                        "surface-tint": "#4f5e7e",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#041632",
+                        "on-tertiary-container": "#ac8e5b",
+                        "on-background": "#1b1b1e",
+                        "primary-fixed": "#d7e2ff",
+                        "on-tertiary-fixed": "#271900",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#004666",
+                        "primary-container": "#1b2b48",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#eae7ea",
+                        "secondary-container": "#39b8fd",
+                        "on-primary-fixed-variant": "#374765",
+                        "surface": "#fbf8fb",
+                        "surface-container-highest": "#e4e2e5",
+                        "on-primary-fixed": "#091b37",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed": "#ffdea7",
+                        "on-surface-variant": "#44474d",
+                        "on-primary-container": "#8393b5",
+                        "inverse-surface": "#303033",
+                        "surface-bright": "#fbf8fb",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#3b2800",
+                        "inverse-primary": "#b7c7eb",
+                        "surface-container-low": "#f5f3f6",
+                        "surface-variant": "#e4e2e5"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter", "sans-serif"],
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Design System Neutral Gray override for the main canvas */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .auth-card {
+            border: 1px solid #c5c6ce;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 text-on-surface">
+<!-- Subtle Background Texture -->
+<div class="fixed inset-0 z-0 opacity-10 pointer-events-none">
+<div class="absolute inset-0" style="background-image: radial-gradient(#1b2b48 0.5px, transparent 0.5px); background-size: 24px 24px;"></div>
+</div>
+<!-- Login Container -->
+<main class="relative z-10 w-full max-w-md">
+<!-- Brand Identity Section -->
+<div class="flex flex-col items-center mb-10 text-center">
+<div class="w-16 h-16 bg-primary flex items-center justify-center rounded-xl mb-4 shadow-lg">
+<span class="material-symbols-outlined text-on-primary text-4xl" data-icon="account_tree">account_tree</span>
+</div>
+<h1 class="text-[30px] font-bold leading-[38px] tracking-tight text-primary mb-1">Application Portfolio</h1>
+<p class="text-body-md text-on-surface-variant font-medium tracking-wide opacity-80">Strategic Ledger &amp; Enterprise Architecture</p>
+</div>
+<!-- Authentication Card -->
+<div class="auth-card bg-surface-container-lowest p-10 rounded-xl space-y-8">
+<!-- Context & Messaging -->
+<div class="space-y-2">
+<h2 class="text-headline-md font-semibold text-on-surface">Authentication required</h2>
+<p class="text-body-md text-on-surface-variant">Please use your corporate credentials to access the portfolio catalog and strategic insights.</p>
+</div>
+<!-- Primary Action -->
+<div class="space-y-4">
+<button class="group relative w-full flex items-center justify-center gap-3 bg-primary text-on-primary py-4 px-6 rounded-lg font-semibold transition-all duration-200 hover:bg-primary-container active:scale-[0.98] shadow-md hover:shadow-lg" onclick="handleLogin()">
+<span class="material-symbols-outlined text-xl" data-icon="shield_person">shield_person</span>
+<span>Sign in with SSO</span>
+<span class="absolute right-6 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</span>
+</button>
+<!-- Status/Security Indicator -->
+<div class="flex items-center justify-center gap-2 py-2 text-label-caps text-outline font-bold uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm" data-icon="lock" style="font-variation-settings: 'FILL' 1;">lock</span>
+                    Secure Enterprise Tunnel
+                </div>
+</div>
+<!-- Secondary Action -->
+<div class="pt-4 border-t border-outline-variant text-center">
+<a class="inline-flex items-center gap-1.5 text-body-sm font-medium text-secondary hover:text-on-secondary-container transition-colors group" href="#">
+                    Sign in with local account
+                    <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</div>
+<!-- Footer / Support Link -->
+<footer class="mt-8 text-center space-y-4">
+<p class="text-body-sm text-outline">
+                Need help? Contact the <a class="underline font-medium hover:text-primary" href="#">IT Portfolio Office</a>
+</p>
+<!-- Decorative Visual Elements -->
+<div class="flex justify-center gap-6 opacity-20">
+<span class="material-symbols-outlined" data-icon="monitoring">monitoring</span>
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+</div>
+</footer>
+</main>
+<!-- Visual Polish: Abstract Decoration (Right) -->
+<div class="fixed right-[-10%] top-[20%] w-[40%] h-[60%] blur-[120px] rounded-full bg-primary/5 pointer-events-none -z-10"></div>
+<!-- Visual Polish: Abstract Decoration (Left) -->
+<div class="fixed left-[-5%] bottom-[10%] w-[30%] h-[40%] blur-[100px] rounded-full bg-secondary-container/10 pointer-events-none -z-10"></div>
+<script>
+        function handleLogin() {
+            const btn = document.querySelector('button');
+            const originalContent = btn.innerHTML;
+            
+            // Interaction feedback
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-not-allowed');
+            btn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Connecting...
+            `;
+
+            // Simulation of redirect
+            setTimeout(() => {
+                console.log("Redirecting to SSO Provider...");
+                // In real application: window.location.href = '/auth/sso';
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                btn.classList.remove('opacity-80', 'cursor-not-allowed');
+                alert("This would typically redirect to your enterprise SSO provider (Okta/Azure AD/Ping).");
+            }, 1200);
+        }
+    </script>
+</body></html>
