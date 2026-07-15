@@ -41,7 +41,17 @@ The imported `ea-tool` realm ships with a confidential client `ea-tool-backend` 
 | `admin.demo`  | `admin.demo`  | admin.demo@example.com      |
 | `viewer.demo` | `viewer.demo` | viewer.demo@example.com     |
 
-These accounts have no special catalog Role yet — Role assignment and authorization are handled by later issues (see the issue tracker).
+### Catalog User auto-provisioning and seed admins
+
+On first successful login, the backend automatically provisions a `CatalogUser` record (email, name, Role) for the authenticated identity — no manual account creation step is needed. Logging in again with the same email reuses the existing record instead of creating a duplicate.
+
+By default every new Catalog User gets the `VIEWER` Role. To bootstrap one or more Admins on first login, list their emails in `app.seed-admins` (comma-separated), overridable via the `SEED_ADMIN_EMAILS` environment variable:
+
+```bash
+export SEED_ADMIN_EMAILS=admin.demo@example.com,another.admin@example.com
+```
+
+The default local dev configuration already seeds `admin.demo@example.com` as Admin, so logging in with the `admin.demo` user above provisions an Admin Catalog User on first login, while `viewer.demo` provisions a Viewer.
 
 ## Styling (Tailwind, local build)
 

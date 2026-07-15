@@ -19,3 +19,15 @@ spring:
             token-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/token
             jwk-set-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/certs
             user-info-uri: http://localhost:8081/realms/ea-tool/protocol/openid-connect/userinfo
+  # In-memory H2 instead of the dev PostgreSQL so tests run without Docker.
+  datasource:
+    url: jdbc:h2:mem:ea-tool-test;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+app:
+  seed-admins: seed.admin@example.com

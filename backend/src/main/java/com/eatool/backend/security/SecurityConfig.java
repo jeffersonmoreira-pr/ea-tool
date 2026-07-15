@@ -13,13 +13,17 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
+import com.eatool.backend.catalogusers.CatalogUserProvisioningOidcUserService;
+
 /**
  * Every route requires an authenticated session except the health-check, which
  * must stay reachable for infrastructure monitoring without a login.
  *
  * Login uses the OIDC Authorization Code flow against the Keycloak dev realm
- * (see docker/keycloak/ea-tool-realm.json). Logout also ends the Keycloak
- * session (OIDC RP-Initiated Logout) so a fresh login is required afterwards.
+ * (see docker/keycloak/ea-tool-realm.json). On successful login, a Catalog
+ * User is auto-provisioned (see CatalogUserProvisioningOidcUserService).
+ * Logout also ends the Keycloak session (OIDC RP-Initiated Logout) so a
+ * fresh login is required afterwards.
  */
 @Configuration
 @EnableWebSecurity
@@ -29,13 +33,18 @@ public class SecurityConfig {
     private String frontendBaseUrl;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, ClientRegistrationRepository clientRegistrationRepository)
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            ClientRegistrationRepository clientRegistrationRepository,
+            CatalogUserProvisioningOidcUserService catalogUserProvisioningOidcUserService)
             throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
-                .oauth2Login(oauth2 -> oauth2.defaultSuccessUrl(frontendBaseUrl, true))
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl(frontendBaseUrl, true)
+                        .userInfoEndpoint(userInfo -> userInfo.oidcUserService(catalogUserProvisioningOidcUserService)))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler(clientRegistrationRepository)))
                 // JS reads the XSRF-TOKEN cookie and sends it back as a header
                 // (e.g. on the logout fetch call), following Spring Security's
