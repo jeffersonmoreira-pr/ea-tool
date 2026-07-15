@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ea-tool-backend
+  web:
+    resources:
+      # Serves the existing frontend static files (src/index.html, app.js, ...)
+      # from the same origin as the API, so the browser needs no CORS setup.
+      # ${user.dir} is the JVM working directory; the documented workflow runs
+      # the backend from backend/, so this resolves to the repository's
+      # top-level src/ directory.
+      static-locations: "file:${user.dir}/../src/"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

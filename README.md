@@ -8,6 +8,30 @@ Open src/index.html directly in a browser.
 
 No package install, backend, or service startup is required for the MVP. The page loads `src/catalog.js`, `src/app.js`, `src/styles.css`, and the generated `src/tailwind.css` from the working tree.
 
+## Backend (Spring Boot skeleton)
+
+A Spring Boot backend is being introduced (see [ADR-0003](docs/adr/0003-backend-compartilhado-java-spring-postgres.md)) to support corporate SSO and shared persistence. At this stage it only serves the existing frontend files from the same origin and exposes a health-check endpoint; it does not yet persist data (see the [issue tracker](docs/agents/issue-tracker.md) for planned next steps).
+
+Requirements: JDK 21+ and Maven (or use the Maven Wrapper if added later).
+
+1. Start supporting services (PostgreSQL and Keycloak) with Docker Compose:
+
+   ```bash
+   docker compose up
+   ```
+
+2. In another terminal, run the backend from the `backend/` directory:
+
+   ```bash
+   cd backend
+   mvn spring-boot:run
+   ```
+
+3. Open http://localhost:8080/ — the existing catalog UI loads from the same origin the backend serves.
+4. Check the health endpoint: http://localhost:8080/actuator/health should respond with `{"status":"UP", ...}`.
+
+PostgreSQL becomes available on `localhost:5432` (db/user/password: `ea_tool`) and Keycloak on http://localhost:8081 (admin/admin), ready for the authentication and persistence work that follows this skeleton.
+
 ## Styling (Tailwind, local build)
 
 Styling combines the hand-written `src/styles.css` with a locally built Tailwind stylesheet. Tailwind runs as a build-time tool only — there is no CDN and no runtime network dependency, so the app stays offline/local-first.
