@@ -111,3 +111,23 @@ _Avoid_: privacy assessment, LGPD inventory, data catalog
 **Sensitive Business Data Handling**:
 A yes, no, or unknown indication that an Application handles business-sensitive data; unknown is used to make missing knowledge visible as a portfolio risk.
 _Avoid_: information classification, data loss prevention, data catalog
+
+**Catalog User**:
+A person recorded locally with a Role so the catalog can authorize what they may do, authenticated either through the organization's Single Sign-On identity provider or, when SSO is not available or applicable, through Local Login.
+_Avoid_: account, member, employee record
+
+**Local Login**:
+A password-based sign-in path for Catalog Users who cannot authenticate through the organization's Single Sign-On identity provider, used for break-glass emergency access and for external partner users without a corporate identity; a Local Login account is created and managed by an Admin, never self-registered.
+_Avoid_: fallback auth, backup login, guest account
+
+**Access Scope**:
+The explicit set of Departments and/or Business Areas a Catalog User is allowed to see, regardless of how they authenticate; a Catalog User with no Access Scope configured cannot see any Applications, Departments, or Business Areas until an Admin assigns one. Access Scope does not apply to the Admin Role, which always sees the full catalog, and does not apply to Vendors, which remain visible to everyone. Access Scope governs visibility only, not editing.
+_Avoid_: permission, visibility filter, tenant, data partition
+
+**Edit Permission**:
+An explicit, per-record grant that authorizes a specific Catalog User with the Editor Role to edit one specific Application, Vendor, Department, or Business Area; only an Admin can grant or revoke an Edit Permission. The Editor Role is a prerequisite — Edit Permission only narrows which specific records an Editor may change, it does not grant editing to a Viewer.
+_Avoid_: ACL, ownership, ACL entry, record-level permission
+
+**Role**:
+The local authorization level assigned to a Catalog User: Viewer (read-only), Editor (create, edit, and delete Applications and master data), or Admin (Editor plus managing Catalog Users and Roles).
+_Avoid_: permission, group, access level, claim
