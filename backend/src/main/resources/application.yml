@@ -12,6 +12,20 @@ spring:
       # the backend from backend/, so this resolves to the repository's
       # top-level src/ directory.
       static-locations: "file:${user.dir}/../src/"
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID:ea-tool-backend}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET:ea-tool-backend-secret}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid, profile, email
+        provider:
+          keycloak:
+            # Points at the dev realm imported by docker-compose (docker/keycloak/ea-tool-realm.json).
+            issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/ea-tool}
 
 management:
   endpoints:

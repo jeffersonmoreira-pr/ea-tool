@@ -1,0 +1,53 @@
+{
+  "realm": "ea-tool",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "clients": [
+    {
+      "clientId": "ea-tool-backend",
+      "name": "EA Tool Backend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "ea-tool-backend-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:8080/*"],
+      "webOrigins": ["http://localhost:8080"]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin.demo",
+      "email": "admin.demo@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin.demo",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "viewer.demo",
+      "email": "viewer.demo@example.com",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Viewer",
+      "lastName": "Demo",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewer.demo",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

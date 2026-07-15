@@ -2033,3 +2033,32 @@ body {
     font-size: 2.55rem;
   }
 }
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--navy-deep);
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.auth-bar__identity {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.auth-bar__logout {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.auth-bar__logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
