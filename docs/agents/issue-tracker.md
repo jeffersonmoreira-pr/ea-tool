@@ -1,10 +1,11 @@
 # Issue Tracker
 
-Este repositorio usa uma superficie local de rastreamento de trabalho porque e um repositorio de treinamento:
+Este repositorio usa duas superficies de rastreamento de trabalho:
 
-- `docs/backlog/` para PRDs, itens de trabalho, exercicios locais do workshop, exemplos e prompts de pratica em etapas.
+- **GitHub Issues do repositorio `jeffersonmoreira-pr/ea-tool`** para itens publicos e compartilhaveis de trabalho (fatias verticais geradas por `to-issues`, bugs, features).
+- `docs/backlog/` para PRDs, exercicios locais do workshop, exemplos e prompts de pratica em etapas que devem ficar versionados junto com o material de treinamento.
 
-Use `docs/backlog/` para manter o trabalho versionado junto com o material de treinamento e revisavel sem depender de servicos externos.
+O projeto anteriormente publicava issues publicas em `paulocorcino-recv/workshop_v1`; o trabalho foi migrado para o repositorio proprio `jeffersonmoreira-pr/ea-tool`, que agora e o destino correto.
 
 ## Convencoes Para Backlog
 
@@ -32,8 +33,8 @@ Quais arquivos, conceitos ou restricoes importam.
 
 ## Quando Uma Skill Diz "Publish To The Issue Tracker"
 
-Crie ou atualize um arquivo em `docs/backlog/`.
+Crie uma issue no GitHub Issues de `jeffersonmoreira-pr/ea-tool`, aplicando a label de triagem correta. Use `docs/backlog/` apenas para exercicios locais do workshop.
 
 ## Quando Uma Skill Diz "Fetch The Relevant Ticket"
 
-Leia o arquivo referenciado em `docs/backlog/`.
+Busque a issue referenciada no GitHub Issues de `jeffersonmoreira-pr/ea-tool`, ou leia o arquivo referenciado em `docs/backlog/` se for um exercicio local.
