@@ -1857,3 +1857,98 @@ test("admin grants and revokes an Edit Permission through the User Management sc
   );
   assert.match(collectText(document.getElementById("users")), /Edit permission revoked/);
 });
+
+test("admin sees the Email Delivery screen in the empty (no relay) state", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () => Promise.resolve({ configured: false, passwordSaved: false }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  const result = await appApi.init(root);
+  const nav = findAll(result.root, (node) => collectText(node) === "Email Delivery" && node.tagName === "A");
+  assert.equal(nav.length, 1);
+
+  const section = document.getElementById("email-delivery");
+  assert.ok(section, "email delivery section should be rendered for admins");
+  const text = collectText(section);
+  assert.match(text, /No relay configured/);
+  assert.match(text, /Email Delivery \(SMTP Relay\)/);
+});
+
+test("admin sees the Email Delivery screen in the active state without a password value", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () =>
+      Promise.resolve({
+        configured: true,
+        host: "smtp.example.com",
+        port: 587,
+        encryption: "SSL_TLS",
+        authEnabled: true,
+        username: "relay-user",
+        fromAddress: "no-reply@ea-tool.local",
+        passwordSaved: true,
+      }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  assert.ok(section, "email delivery section should be rendered for admins");
+  const text = collectText(section);
+  assert.match(text, /SMTP relay active/);
+  assert.match(text, /smtp\.example\.com/);
+  assert.match(text, /587/);
+  assert.match(text, /SSL\/TLS/);
+  assert.match(text, /relay-user/);
+  assert.match(text, /\(saved\)/);
+});
+
+test("non-admin does not see the Email Delivery screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  let configFetched = false;
+  const apiClient = Object.assign({}, mockApiClient, {
+    getCurrentUser: () => Promise.resolve({ name: "Vic Viewer", email: "vic@example.com", role: "VIEWER" }),
+    getEmailDeliveryConfig: () => {
+      configFetched = true;
+      return Promise.resolve({ configured: false });
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  const result = await appApi.init(root);
+  assert.equal(configFetched, false, "viewer should not trigger the email delivery config fetch");
+  assert.ok(!document.getElementById("email-delivery"), "email delivery section must not render for non-admins");
+  const nav = findAll(result.root, (node) => collectText(node) === "Email Delivery" && node.tagName === "A");
+  assert.equal(nav.length, 0);
+});
