@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eatool.backend.accessscope.AccessScopeService;
 import com.eatool.backend.applications.ApplicationRepository;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
@@ -23,8 +26,9 @@ import com.eatool.backend.common.NotFoundException;
  * REST API for Departments, ported from the frontend's former
  * localStorage-only rules in src/catalog.js
  * (createDepartment/updateDepartment/deleteDepartment). Any authenticated
- * Catalog User may read; creating, editing or deleting requires an Editor or
- * Admin Role, enforced centrally in SecurityConfig (see issue #6).
+ * Catalog User may read (filtered by Access Scope, see issue #10); creating,
+ * editing or deleting requires an Editor or Admin Role, enforced centrally in
+ * SecurityConfig (see issue #6).
  */
 @RestController
 @RequestMapping("/api/departments")
@@ -32,15 +36,20 @@ public class DepartmentController {
 
     private final DepartmentRepository departmentRepository;
     private final ApplicationRepository applicationRepository;
+    private final AccessScopeService accessScopeService;
 
-    public DepartmentController(DepartmentRepository departmentRepository, ApplicationRepository applicationRepository) {
+    public DepartmentController(
+            DepartmentRepository departmentRepository,
+            ApplicationRepository applicationRepository,
+            AccessScopeService accessScopeService) {
         this.departmentRepository = departmentRepository;
         this.applicationRepository = applicationRepository;
+        this.accessScopeService = accessScopeService;
     }
 
     @GetMapping
-    public List<Department> list() {
-        return departmentRepository.findAll();
+    public List<Department> list(@AuthenticationPrincipal OidcUser principal) {
+        return accessScopeService.filterDepartments(departmentRepository.findAll(), principal);
     }
 
     @PostMapping

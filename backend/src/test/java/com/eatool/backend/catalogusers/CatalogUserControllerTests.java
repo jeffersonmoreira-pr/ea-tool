@@ -19,10 +19,16 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.eatool.backend.masterdata.BusinessArea;
+import com.eatool.backend.masterdata.BusinessAreaRepository;
+import com.eatool.backend.masterdata.Department;
+import com.eatool.backend.masterdata.DepartmentRepository;
+
 /**
  * Covers issue #8: the Admin-only Catalog Users management API. Only Admins
  * may list users and change Roles; Viewers/Editors are denied; an Admin may
  * not change their own Role; unknown roles and users are rejected cleanly.
+ * Also covers assigning Access Scope (issue #10).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,6 +40,12 @@ class CatalogUserControllerTests {
 
     @Autowired
     private CatalogUserRepository catalogUserRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private BusinessAreaRepository businessAreaRepository;
 
     @Test
     void adminListsUsersWithLoginMethodAndRole() throws Exception {
@@ -127,5 +139,65 @@ class CatalogUserControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"role\":\"EDITOR\"}"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void adminAssignsAccessScope() throws Exception {
+        CatalogUser user =
+                catalogUserRepository.save(new CatalogUser("scope-me@example.com", "Scope Me", Role.VIEWER));
+        Department department = departmentRepository.save(new Department("Assign Finance"));
+        BusinessArea businessArea = businessAreaRepository.save(new BusinessArea("Assign Corporate"));
+
+        mockMvc.perform(put("/api/catalog-users/" + user.getId() + "/access-scope")
+                        .with(adminLogin("admin@example.com"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"departmentIds\":[\"" + department.getId()
+                                + "\"],\"businessAreaIds\":[\"" + businessArea.getId() + "\"]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scopedDepartmentIds[0]").value(department.getId().toString()))
+                .andExpect(jsonPath("$.scopedBusinessAreaIds[0]").value(businessArea.getId().toString()));
+
+        CatalogUser reloaded = catalogUserRepository.findById(user.getId()).orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(reloaded.getScopedDepartmentIds())
+                .containsExactly(department.getId());
+        org.assertj.core.api.Assertions.assertThat(reloaded.getScopedBusinessAreaIds())
+                .containsExactly(businessArea.getId());
+    }
+
+    @Test
+    void assigningScopeWithUnknownDepartmentReturns400() throws Exception {
+        CatalogUser user =
+                catalogUserRepository.save(new CatalogUser("bad-scope@example.com", "Bad Scope", Role.VIEWER));
+
+        mockMvc.perform(put("/api/catalog-users/" + user.getId() + "/access-scope")
+                        .with(adminLogin("admin@example.com"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"departmentIds\":[\"" + UUID.randomUUID() + "\"],\"businessAreaIds\":[]}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void assigningScopeToUnknownUserReturns404() throws Exception {
+        mockMvc.perform(put("/api/catalog-users/" + UUID.randomUUID() + "/access-scope")
+                        .with(adminLogin("admin@example.com"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"departmentIds\":[],\"businessAreaIds\":[]}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void viewerCannotAssignAccessScope() throws Exception {
+        CatalogUser user =
+                catalogUserRepository.save(new CatalogUser("target-scope@example.com", "Target", Role.VIEWER));
+
+        mockMvc.perform(put("/api/catalog-users/" + user.getId() + "/access-scope")
+                        .with(viewerLogin())
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"departmentIds\":[],\"businessAreaIds\":[]}"))
+                .andExpect(status().isForbidden());
     }
 }

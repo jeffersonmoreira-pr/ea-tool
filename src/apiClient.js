@@ -135,6 +135,12 @@
   function updateCatalogUserRole(id, role) {
     return request("PUT", `/api/catalog-users/${encodeURIComponent(id)}/role`, { role });
   }
+  function updateCatalogUserAccessScope(id, scope) {
+    return request("PUT", `/api/catalog-users/${encodeURIComponent(id)}/access-scope`, {
+      departmentIds: (scope && scope.departmentIds) || [],
+      businessAreaIds: (scope && scope.businessAreaIds) || [],
+    });
+  }
 
   return {
     listDepartments,
@@ -156,5 +162,6 @@
     getCurrentUser,
     listCatalogUsers,
     updateCatalogUserRole,
+    updateCatalogUserAccessScope,
   };
 });

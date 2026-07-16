@@ -1,15 +1,20 @@
 package com.eatool.backend.catalogusers;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 /**
@@ -40,6 +45,26 @@ public class CatalogUser {
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
+
+    /**
+     * The Access Scope: the explicit set of Departments and/or Business Areas
+     * this user may see (see CONTEXT.md and ADR-0005). Empty means the user
+     * sees no Applications, Departments or Business Areas until an Admin
+     * assigns a scope; the Admin Role bypasses Access Scope entirely.
+     */
+    @ElementCollection
+    @CollectionTable(
+            name = "catalog_user_scoped_departments",
+            joinColumns = @JoinColumn(name = "catalog_user_id"))
+    @Column(name = "department_id", nullable = false)
+    private Set<UUID> scopedDepartmentIds = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(
+            name = "catalog_user_scoped_business_areas",
+            joinColumns = @JoinColumn(name = "catalog_user_id"))
+    @Column(name = "business_area_id", nullable = false)
+    private Set<UUID> scopedBusinessAreaIds = new HashSet<>();
 
     protected CatalogUser() {
         // JPA
@@ -83,5 +108,18 @@ public class CatalogUser {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Set<UUID> getScopedDepartmentIds() {
+        return scopedDepartmentIds;
+    }
+
+    public Set<UUID> getScopedBusinessAreaIds() {
+        return scopedBusinessAreaIds;
+    }
+
+    public void setAccessScope(Set<UUID> departmentIds, Set<UUID> businessAreaIds) {
+        this.scopedDepartmentIds = new HashSet<>(departmentIds);
+        this.scopedBusinessAreaIds = new HashSet<>(businessAreaIds);
     }
 }
