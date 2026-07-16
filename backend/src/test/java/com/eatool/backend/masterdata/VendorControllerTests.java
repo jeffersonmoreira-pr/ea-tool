@@ -1,7 +1,7 @@
 package com.eatool.backend.masterdata;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,7 +47,7 @@ class VendorControllerTests {
     @Test
     void createListUpdateAndDeleteVendor() throws Exception {
         String createResponse = mockMvc.perform(post("/api/vendors")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Apex Labs\",\"isInternal\":true}"))
@@ -59,12 +59,12 @@ class VendorControllerTests {
                 .getContentAsString();
         String id = createResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
-        mockMvc.perform(get("/api/vendors").with(oidcLogin()))
+        mockMvc.perform(get("/api/vendors").with(editorLogin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/vendors/" + id)
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Apex Laboratories\",\"isInternal\":false}"))
@@ -72,14 +72,14 @@ class VendorControllerTests {
                 .andExpect(jsonPath("$.name").value("Apex Laboratories"))
                 .andExpect(jsonPath("$.isInternal").value(false));
 
-        mockMvc.perform(delete("/api/vendors/" + id).with(oidcLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/vendors/" + id).with(editorLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void createRequiresInternalFlag() throws Exception {
         mockMvc.perform(post("/api/vendors")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Apex Labs\"}"))
@@ -92,7 +92,7 @@ class VendorControllerTests {
         vendorRepository.save(new Vendor("Northstar Software", false));
 
         mockMvc.perform(post("/api/vendors")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"northstar software\",\"isInternal\":false}"))
@@ -128,7 +128,7 @@ class VendorControllerTests {
         application.setLastVerificationDate("");
         applicationRepository.save(application);
 
-        mockMvc.perform(delete("/api/vendors/" + vendor.getId()).with(oidcLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/vendors/" + vendor.getId()).with(editorLogin()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Vendor is in use by Application: Ops Console."));
     }

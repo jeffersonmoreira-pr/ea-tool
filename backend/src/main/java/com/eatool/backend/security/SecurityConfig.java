@@ -3,6 +3,7 @@ package com.eatool.backend.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
@@ -41,6 +42,21 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health").permitAll()
+                        // Reading the catalog is allowed for any authenticated
+                        // Catalog User (Viewer included); this GET rule must come
+                        // before the write rules below so reads never require a
+                        // write Role.
+                        .requestMatchers(HttpMethod.GET, "/api/**").authenticated()
+                        // Creating, editing or deleting Applications and master
+                        // data requires an Editor or Admin Role (see issue #6 and
+                        // ADR-0005). Viewers are denied with 403. Fine-grained
+                        // Edit Permission per record is handled separately (#11).
+                        .requestMatchers(
+                                "/api/applications/**",
+                                "/api/vendors/**",
+                                "/api/departments/**",
+                                "/api/business-areas/**")
+                        .hasAnyRole("EDITOR", "ADMIN")
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl(frontendBaseUrl, true)
