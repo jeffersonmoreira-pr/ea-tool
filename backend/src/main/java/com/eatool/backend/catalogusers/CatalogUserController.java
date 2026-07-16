@@ -1,12 +1,15 @@
 package com.eatool.backend.catalogusers;
 
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
 import com.eatool.backend.common.NotFoundException;
+import com.eatool.backend.masterdata.BusinessAreaRepository;
+import com.eatool.backend.masterdata.DepartmentRepository;
 
 /**
  * Admin-only API backing the Catalog Users management screen (see issue #8):
@@ -29,12 +34,20 @@ import com.eatool.backend.common.NotFoundException;
 public class CatalogUserController {
 
     private final CatalogUserRepository catalogUserRepository;
+    private final DepartmentRepository departmentRepository;
+    private final BusinessAreaRepository businessAreaRepository;
 
-    public CatalogUserController(CatalogUserRepository catalogUserRepository) {
+    public CatalogUserController(
+            CatalogUserRepository catalogUserRepository,
+            DepartmentRepository departmentRepository,
+            BusinessAreaRepository businessAreaRepository) {
         this.catalogUserRepository = catalogUserRepository;
+        this.departmentRepository = departmentRepository;
+        this.businessAreaRepository = businessAreaRepository;
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public List<CatalogUserResponse> list() {
         return catalogUserRepository.findAll().stream()
                 .sorted(Comparator.comparing(CatalogUser::getCreatedAt))
@@ -43,6 +56,7 @@ public class CatalogUserController {
     }
 
     @PutMapping("/{id}/role")
+    @Transactional
     public CatalogUserResponse changeRole(
             @PathVariable UUID id,
             @RequestBody ChangeRoleRequest request,
@@ -57,6 +71,40 @@ public class CatalogUserController {
 
         user.setRole(newRole);
         return CatalogUserResponse.from(catalogUserRepository.save(user));
+    }
+
+    @PutMapping("/{id}/access-scope")
+    @Transactional
+    public CatalogUserResponse assignAccessScope(
+            @PathVariable UUID id, @RequestBody AccessScopeRequest request) {
+        CatalogUser user = catalogUserRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Catalog User not found: " + id));
+
+        Set<UUID> departmentIds =
+                validateReferences(request.getDepartmentIds(), departmentRepository::existsById, "Department");
+        Set<UUID> businessAreaIds =
+                validateReferences(request.getBusinessAreaIds(), businessAreaRepository::existsById, "Business Area");
+
+        user.setAccessScope(departmentIds, businessAreaIds);
+        return CatalogUserResponse.from(catalogUserRepository.save(user));
+    }
+
+    private Set<UUID> validateReferences(
+            List<UUID> rawIds, java.util.function.Predicate<UUID> existsById, String label) {
+        Set<UUID> ids = new LinkedHashSet<>();
+        if (rawIds == null) {
+            return ids;
+        }
+        for (UUID id : rawIds) {
+            if (id == null) {
+                throw new BadRequestException(label + " id is required.");
+            }
+            if (!existsById.test(id)) {
+                throw new BadRequestException(label + " not found: " + id);
+            }
+            ids.add(id);
+        }
+        return ids;
     }
 
     private boolean isSelf(CatalogUser user, OidcUser currentUser) {

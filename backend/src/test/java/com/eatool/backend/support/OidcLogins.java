@@ -19,8 +19,20 @@ public final class OidcLogins {
         return oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_VIEWER"));
     }
 
+    public static RequestPostProcessor viewerLogin(String email) {
+        return oidcLogin()
+                .authorities(new SimpleGrantedAuthority("ROLE_VIEWER"))
+                .idToken(token -> token.claim("email", email));
+    }
+
     public static RequestPostProcessor editorLogin() {
         return oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_EDITOR"));
+    }
+
+    public static RequestPostProcessor editorLogin(String email) {
+        return oidcLogin()
+                .authorities(new SimpleGrantedAuthority("ROLE_EDITOR"))
+                .idToken(token -> token.claim("email", email));
     }
 
     public static RequestPostProcessor adminLogin() {

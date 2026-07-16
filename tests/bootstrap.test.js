@@ -81,6 +81,16 @@ function createUserStore(initialUsers) {
           target.role = role;
           return { ...target };
         }),
+      updateCatalogUserAccessScope: (id, scope) =>
+        toPromise(() => {
+          const target = users.find((user) => user.id === id);
+          if (!target) {
+            throw new Error("Catalog User not found.");
+          }
+          target.scopedDepartmentIds = (scope && scope.departmentIds) || [];
+          target.scopedBusinessAreaIds = (scope && scope.businessAreaIds) || [];
+          return { ...target };
+        }),
     },
   };
 }
@@ -1577,3 +1587,97 @@ test("admin cannot change their own role from the User Management screen", async
   assert.equal(selects.length, 0, "admin's own row must not offer a role select");
   assert.match(collectText(usersSection), /You/);
 });
+
+test("admin sees each user's Access Scope summary on the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    {
+      id: "u-viewer",
+      name: "Vic Viewer",
+      email: "vic@example.com",
+      role: "VIEWER",
+      loginMethod: "SSO",
+      scopedDepartmentIds: ["dept-finance"],
+      scopedBusinessAreaIds: [],
+    },
+    {
+      id: "u-empty",
+      name: "Ned Newbie",
+      email: "ned@example.com",
+      role: "VIEWER",
+      loginMethod: "SSO",
+      scopedDepartmentIds: [],
+      scopedBusinessAreaIds: [],
+    },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const usersSection = document.getElementById("users");
+  const text = collectText(usersSection);
+  assert.match(text, /Access Scope/);
+  assert.match(text, /1 Department/);
+  assert.match(text, /No scope assigned/);
+});
+
+test("admin assigns an Access Scope to a user through the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    {
+      id: "u-viewer",
+      name: "Vic Viewer",
+      email: "vic@example.com",
+      role: "VIEWER",
+      loginMethod: "SSO",
+      scopedDepartmentIds: [],
+      scopedBusinessAreaIds: [],
+    },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const usersSection = document.getElementById("users");
+  const checkboxes = findAll(
+    usersSection,
+    (node) => node.tagName === "INPUT" && node.type === "checkbox",
+  );
+  // The Finance department checkbox comes from the initial catalog master data.
+  const financeCheck = checkboxes.find((check) => check.value === "dept-finance");
+  assert.ok(financeCheck, "a Departments checkbox for Finance should be rendered");
+  financeCheck.checked = true;
+
+  const saveButtons = findAll(
+    usersSection,
+    (node) => node.tagName === "BUTTON" && collectText(node) === "Save Scope",
+  );
+  assert.equal(saveButtons.length, 1);
+  await saveButtons[0].onclick();
+
+  const target = store.users.find((user) => user.id === "u-viewer");
+  assert.deepEqual(target.scopedDepartmentIds, ["dept-finance"]);
+  assert.deepEqual(target.scopedBusinessAreaIds, []);
+  assert.match(collectText(document.getElementById("users")), /Access scope updated for Vic Viewer\./);
+});
+

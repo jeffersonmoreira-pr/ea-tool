@@ -1674,7 +1674,23 @@
     return String(loginMethod || "").toUpperCase() === "LOCAL" ? "Local Login" : "SSO";
   }
 
-  function renderUsersAdmin(document, apiClient, currentUser, users) {
+  function formatAccessScopeSummary(user) {
+    const departmentCount = (user.scopedDepartmentIds || []).length;
+    const businessAreaCount = (user.scopedBusinessAreaIds || []).length;
+    if (departmentCount === 0 && businessAreaCount === 0) {
+      return "No scope assigned";
+    }
+    const parts = [];
+    if (departmentCount > 0) {
+      parts.push(`${departmentCount} Department${departmentCount === 1 ? "" : "s"}`);
+    }
+    if (businessAreaCount > 0) {
+      parts.push(`${businessAreaCount} Business Area${businessAreaCount === 1 ? "" : "s"}`);
+    }
+    return parts.join(" \u00b7 ");
+  }
+
+  function renderUsersAdmin(document, apiClient, currentUser, users, departments, businessAreas) {
     const section = makeElement(document, "section", {
       className: "content-section content-section--compact",
       attributes: { id: "users" },
@@ -1687,7 +1703,7 @@
       header,
       "p",
       "lede",
-      "Manage who can access the portfolio and at what level. Only Admins can view this screen.",
+      "Manage who can access the portfolio, at what level, and which organizational units they can see. Only Admins can view this screen.",
     );
     section.appendChild(header);
 
@@ -1699,7 +1715,7 @@
     const table = makeElement(document, "table", { className: "users-table" });
     const thead = makeElement(document, "thead", {});
     const headRow = makeElement(document, "tr", {});
-    for (const heading of ["Name / Email", "Login Method", "Role"]) {
+    for (const heading of ["Name / Email", "Login Method", "Role", "Access Scope"]) {
       appendTextBlock(document, headRow, "th", "", heading);
     }
     thead.appendChild(headRow);
@@ -1762,12 +1778,107 @@
       }
       row.appendChild(roleCell);
 
+      const scopeCell = makeElement(document, "td", {});
+      renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf);
+      row.appendChild(scopeCell);
+
       tbody.appendChild(row);
     }
     table.appendChild(tbody);
 
     section.append(table, status);
     return section;
+  }
+
+  function renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf) {
+    const summary = makeElement(document, "span", {
+      className: "users-table__scope-summary",
+      text: formatAccessScopeSummary(user),
+    });
+    scopeCell.appendChild(summary);
+
+    if (isSelf) {
+      // An Admin always sees the full catalog regardless of Access Scope, so
+      // editing their own scope is meaningless — show the summary only.
+      return;
+    }
+
+    const editor = makeElement(document, "div", { className: "users-table__scope-editor" });
+    editor.hidden = true;
+
+    const departmentChecks = appendScopeChecklist(
+      document,
+      editor,
+      "Departments",
+      departments || [],
+      user.scopedDepartmentIds || [],
+    );
+    const businessAreaChecks = appendScopeChecklist(
+      document,
+      editor,
+      "Business Areas",
+      businessAreas || [],
+      user.scopedBusinessAreaIds || [],
+    );
+
+    const actions = makeElement(document, "div", { className: "users-table__scope-actions" });
+    const saveButton = makeElement(document, "button", {
+      className: "users-table__scope-save",
+      text: "Save Scope",
+      type: "button",
+    });
+    saveButton.addEventListener("click", function onSaveScope() {
+      const departmentIds = departmentChecks.filter((check) => check.checked).map((check) => check.value);
+      const businessAreaIds = businessAreaChecks.filter((check) => check.checked).map((check) => check.value);
+      saveButton.disabled = true;
+      return apiClient
+        .updateCatalogUserAccessScope(user.id, { departmentIds, businessAreaIds })
+        .then(function onSaved(updated) {
+          user.scopedDepartmentIds = (updated && updated.scopedDepartmentIds) || departmentIds;
+          user.scopedBusinessAreaIds = (updated && updated.scopedBusinessAreaIds) || businessAreaIds;
+          summary.textContent = formatAccessScopeSummary(user);
+          status.textContent = `Access scope updated for ${user.name || user.email}.`;
+          editor.hidden = true;
+          saveButton.disabled = false;
+        })
+        .catch(function onError(error) {
+          status.textContent = error.message;
+          saveButton.disabled = false;
+        });
+    });
+    actions.appendChild(saveButton);
+    editor.appendChild(actions);
+
+    const toggle = makeElement(document, "button", {
+      className: "users-table__scope-edit",
+      text: "Edit scope",
+      type: "button",
+    });
+    toggle.addEventListener("click", function onToggleEditor() {
+      editor.hidden = !editor.hidden;
+    });
+    scopeCell.append(toggle, editor);
+  }
+
+  function appendScopeChecklist(document, editor, legend, options, selectedIds) {
+    const group = makeElement(document, "fieldset", { className: "users-table__scope-group" });
+    appendTextBlock(document, group, "legend", "users-table__scope-legend", legend);
+    const selected = new Set((selectedIds || []).map(String));
+    const checks = [];
+    for (const option of options) {
+      const label = makeElement(document, "label", { className: "users-table__scope-option" });
+      const checkbox = makeElement(document, "input", {
+        type: "checkbox",
+        value: option.id,
+        checked: selected.has(String(option.id)),
+        attributes: { "aria-label": option.name || "" },
+      });
+      label.append(checkbox, makeElement(document, "span", { text: option.name || "" }));
+      group.appendChild(label);
+      checks.push(checkbox);
+    }
+    editor.appendChild(group);
+    return checks;
   }
 
   let activeView = "dashboard";
@@ -1982,7 +2093,14 @@
     ]);
     const contentViews = [dashboardView, catalogView, matrixView, masterView];
     if (isAdmin) {
-      const usersSection = renderUsersAdmin(document, apiClient, currentUser, users);
+      const usersSection = renderUsersAdmin(
+        document,
+        apiClient,
+        currentUser,
+        users,
+        catalog.departments || [],
+        catalog.businessAreas || [],
+      );
       contentViews.push(makeView("users", [usersSection]));
     }
 

@@ -2121,3 +2121,66 @@ body {
   text-transform: uppercase;
   color: #75777e;
 }
+.users-table__scope-summary {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 13px;
+  color: #44474d;
+}
+
+.users-table__scope-edit,
+.users-table__scope-save {
+  padding: 4px 10px;
+  border: 1px solid #75777e;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.users-table__scope-save {
+  background: #041632;
+  border-color: #041632;
+  color: #ffffff;
+}
+
+.users-table__scope-editor {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #c5c6ce;
+  border-radius: 8px;
+  background: #f5f3f6;
+}
+
+.users-table__scope-editor[hidden] {
+  display: none;
+}
+
+.users-table__scope-group {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #c5c6ce;
+  border-radius: 4px;
+}
+
+.users-table__scope-legend {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #44474d;
+}
+
+.users-table__scope-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 13px;
+}
+
+.users-table__scope-actions {
+  display: flex;
+  justify-content: flex-end;
+}

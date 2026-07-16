@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eatool.backend.accessscope.AccessScopeService;
 import com.eatool.backend.applications.ApplicationRepository;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
@@ -22,7 +25,8 @@ import com.eatool.backend.common.NotFoundException;
 /**
  * REST API for Business Areas, ported from the frontend's former
  * localStorage-only rules in src/catalog.js
- * (createBusinessArea/updateBusinessArea/deleteBusinessArea).
+ * (createBusinessArea/updateBusinessArea/deleteBusinessArea). Listing is
+ * filtered by the caller's Access Scope (see issue #10).
  */
 @RestController
 @RequestMapping("/api/business-areas")
@@ -30,16 +34,20 @@ public class BusinessAreaController {
 
     private final BusinessAreaRepository businessAreaRepository;
     private final ApplicationRepository applicationRepository;
+    private final AccessScopeService accessScopeService;
 
     public BusinessAreaController(
-            BusinessAreaRepository businessAreaRepository, ApplicationRepository applicationRepository) {
+            BusinessAreaRepository businessAreaRepository,
+            ApplicationRepository applicationRepository,
+            AccessScopeService accessScopeService) {
         this.businessAreaRepository = businessAreaRepository;
         this.applicationRepository = applicationRepository;
+        this.accessScopeService = accessScopeService;
     }
 
     @GetMapping
-    public List<BusinessArea> list() {
-        return businessAreaRepository.findAll();
+    public List<BusinessArea> list(@AuthenticationPrincipal OidcUser principal) {
+        return accessScopeService.filterBusinessAreas(businessAreaRepository.findAll(), principal);
     }
 
     @PostMapping

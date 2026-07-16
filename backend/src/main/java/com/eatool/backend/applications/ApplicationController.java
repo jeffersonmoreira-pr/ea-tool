@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,26 +16,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eatool.backend.accessscope.AccessScopeService;
+
 /**
  * REST API for Applications, ported from the frontend's former
  * localStorage-only rules in src/catalog.js
  * (createApplication/updateApplication/deleteApplication). TIME
  * Classification and Business Fit Band are always recomputed server-side
- * from Business Fit and Tech Fit (see ApplicationNormalizer).
+ * from Business Fit and Tech Fit (see ApplicationNormalizer). Listing is
+ * filtered by the caller's Access Scope (see issue #10 / AccessScopeService).
  */
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+    private final AccessScopeService accessScopeService;
 
-    public ApplicationController(ApplicationService applicationService) {
+    public ApplicationController(ApplicationService applicationService, AccessScopeService accessScopeService) {
         this.applicationService = applicationService;
+        this.accessScopeService = accessScopeService;
     }
 
     @GetMapping
-    public List<Application> list() {
-        return applicationService.list();
+    public List<Application> list(@AuthenticationPrincipal OidcUser principal) {
+        return accessScopeService.filterApplications(applicationService.list(), principal);
     }
 
     @PostMapping
