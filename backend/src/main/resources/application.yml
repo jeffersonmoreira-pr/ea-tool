@@ -36,12 +36,31 @@ spring:
       # Dev-friendly auto-migration; revisit with Flyway/Liquibase before production use.
       ddl-auto: update
     open-in-view: false
+  # Local Login invite emails (issue #9). Leave unset in dev — the invite link
+  # is logged instead (LoggingInvitationMailer). To send real emails, configure
+  # a corporate SMTP relay, e.g.:
+  # mail:
+  #   host: ${SMTP_HOST}
+  #   port: ${SMTP_PORT:587}
+  #   username: ${SMTP_USERNAME:}
+  #   password: ${SMTP_PASSWORD:}
+  #   properties:
+  #     mail.smtp.auth: true
+  #     mail.smtp.starttls.enable: true
 
 app:
+  # Base URL the browser uses; also where login/logout redirect back to and the
+  # host used to build Local Login invite links (issue #9).
+  frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:8080}
   # Emails provisioned as Admin (instead of the default Viewer) on first SSO
   # login. Configurable without code changes via application.yml or the
   # SEED_ADMIN_EMAILS environment variable (comma-separated list).
   seed-admins: ${SEED_ADMIN_EMAILS:admin.demo@example.com}
+  local-login:
+    # From address for the Local Login invite email (issue #9). Only used when
+    # a real SMTP relay is configured (spring.mail.host below); otherwise the
+    # invite link is logged in dev.
+    mail-from: ${LOCAL_LOGIN_MAIL_FROM:no-reply@ea-tool.local}
 
 management:
   endpoints:

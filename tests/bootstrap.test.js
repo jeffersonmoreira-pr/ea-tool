@@ -75,6 +75,20 @@ function createUserStore(initialUsers) {
     grants,
     client: {
       listCatalogUsers: () => Promise.resolve(users.map((user) => ({ ...user }))),
+      createLocalUser: (input) =>
+        toPromise(() => {
+          const created = {
+            id: `u-${users.length + 1}`,
+            name: input && input.name,
+            email: input && input.email,
+            role: (input && input.role) || "VIEWER",
+            loginMethod: "LOCAL",
+            scopedDepartmentIds: [],
+            scopedBusinessAreaIds: [],
+          };
+          users.push(created);
+          return { ...created };
+        }),
       updateCatalogUserRole: (id, role) =>
         toPromise(() => {
           const target = users.find((user) => user.id === id);
@@ -1574,8 +1588,10 @@ test("admin changes another user's role through the User Management screen", asy
   await appApi.init(root);
 
   const usersSection = document.getElementById("users");
-  const selects = findAll(usersSection, (node) => node.tagName === "SELECT");
-  // Only the non-self (Viewer) row exposes a role select; the admin's own row is read-only.
+  const selects = findAll(usersSection, (node) => node.tagName === "SELECT" && node.name !== "role");
+  // Only the non-self (Viewer) row exposes a per-user role select; the admin's
+  // own row is read-only and the create-local-user form's Role select (name
+  // "role") is excluded here.
   assert.equal(selects.length, 1);
   const select = selects[0];
   select.value = "EDITOR";
@@ -1606,8 +1622,59 @@ test("admin cannot change their own role from the User Management screen", async
   await appApi.init(root);
   const usersSection = document.getElementById("users");
   const selects = findAll(usersSection, (node) => node.tagName === "SELECT");
-  assert.equal(selects.length, 0, "admin's own row must not offer a role select");
+  // The admin's own row is read-only, but the create-local-user form still
+  // exposes a Role select, so exactly one select remains on the screen.
+  const roleSelects = selects.filter((node) => node.name !== "role");
+  assert.equal(roleSelects.length, 0, "admin's own row must not offer a role select");
   assert.match(collectText(usersSection), /You/);
+});
+
+test("admin creates a Local Login account through the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  let createCall = null;
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    createLocalUser: (input) => {
+      createCall = input;
+      return store.client.createLocalUser(input);
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+
+  const usersSection = document.getElementById("users");
+  const forms = findAll(usersSection, (node) => node.className === "local-user-form");
+  assert.equal(forms.length, 1, "admin should see the create-local-user form");
+  const form = forms[0];
+
+  findField(form, "name").value = "Percy Partner";
+  findField(form, "email").value = "percy@partner.com";
+  findField(form, "role").value = "EDITOR";
+
+  await form.onsubmit({ preventDefault() {} });
+
+  assert.deepEqual(createCall, { name: "Percy Partner", email: "percy@partner.com", role: "EDITOR" });
+  assert.ok(
+    store.users.some((user) => user.email === "percy@partner.com" && user.loginMethod === "LOCAL"),
+    "the new Local Login user should be persisted",
+  );
+
+  const refreshed = document.getElementById("users");
+  const text = collectText(refreshed);
+  assert.match(text, /percy@partner\.com/);
+  assert.match(text, /Local Login/);
+  assert.match(text, /Invite sent to percy@partner\.com/);
 });
 
 test("admin sees each user's Access Scope summary on the User Management screen", async () => {

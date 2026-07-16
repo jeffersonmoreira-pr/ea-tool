@@ -2,34 +2,51 @@ package com.eatool.backend.web;
 
 import java.util.Map;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.eatool.backend.catalogusers.CatalogUser;
+import com.eatool.backend.catalogusers.CatalogUserRepository;
+import com.eatool.backend.security.CurrentUserService;
 
 /**
  * Exposes the currently authenticated user's identity so the frontend can
  * display it (e.g. in the sidebar), offer a logout action, and gate the
- * Admin-only Catalog Users screen by Role (see issue #8).
+ * Admin-only Catalog Users screen by Role (see issue #8). Identity is resolved
+ * independently of the login method (SSO or Local Login, see issue #9).
  */
 @RestController
 public class CurrentUserController {
 
-    @GetMapping("/api/me")
-    public Map<String, String> me(@AuthenticationPrincipal OidcUser oidcUser) {
-        return Map.of(
-                "email", oidcUser.getEmail() != null ? oidcUser.getEmail() : "",
-                "name", oidcUser.getFullName() != null ? oidcUser.getFullName() : oidcUser.getPreferredUsername(),
-                "role", resolveRole(oidcUser));
+    private final CurrentUserService currentUserService;
+    private final CatalogUserRepository catalogUserRepository;
+
+    public CurrentUserController(
+            CurrentUserService currentUserService, CatalogUserRepository catalogUserRepository) {
+        this.currentUserService = currentUserService;
+        this.catalogUserRepository = catalogUserRepository;
     }
 
-    private String resolveRole(OidcUser oidcUser) {
-        return oidcUser.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(authority -> authority.startsWith("ROLE_"))
-                .map(authority -> authority.substring("ROLE_".length()))
-                .findFirst()
-                .orElse("");
+    @GetMapping("/api/me")
+    public Map<String, String> me(Authentication authentication) {
+        String email = currentUserService.email(authentication);
+        return Map.of(
+                "email", email != null ? email : "",
+                "name", resolveName(authentication, email),
+                "role", currentUserService.role(authentication));
+    }
+
+    private String resolveName(Authentication authentication, String email) {
+        String displayName = currentUserService.displayName(authentication);
+        if (displayName != null) {
+            return displayName;
+        }
+        if (email != null) {
+            return catalogUserRepository.findByEmail(email)
+                    .map(CatalogUser::getName)
+                    .orElse(email);
+        }
+        return "";
     }
 }

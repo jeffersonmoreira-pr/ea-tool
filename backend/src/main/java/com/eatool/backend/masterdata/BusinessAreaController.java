@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,7 +50,7 @@ public class BusinessAreaController {
     }
 
     @GetMapping
-    public List<BusinessArea> list(@AuthenticationPrincipal OidcUser principal) {
+    public List<BusinessArea> list(Authentication principal) {
         return accessScopeService.filterBusinessAreas(businessAreaRepository.findAll(), principal);
     }
 
@@ -66,7 +65,7 @@ public class BusinessAreaController {
     public BusinessArea update(
             @PathVariable UUID id,
             @RequestBody BusinessAreaRequest request,
-            @AuthenticationPrincipal OidcUser principal) {
+            Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.BUSINESS_AREA, id, principal);
         BusinessArea businessArea = findOrThrow(id);
         String name = requireUniqueName(request.getName(), id);
@@ -76,7 +75,7 @@ public class BusinessAreaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+    public void delete(@PathVariable UUID id, Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.BUSINESS_AREA, id, principal);
         BusinessArea businessArea = findOrThrow(id);
         applicationRepository.findFirstByBusinessAreaId(id).ifPresent(application -> {

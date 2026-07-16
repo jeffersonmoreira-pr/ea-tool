@@ -8,6 +8,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
@@ -46,14 +48,15 @@ class EditPermissionServiceTests {
     @Autowired
     private EditPermissionRepository editPermissionRepository;
 
-    private OidcUser principal(String email, String roleAuthority) {
+    private Authentication principal(String email, String roleAuthority) {
         OidcIdToken token = new OidcIdToken(
                 "token",
                 Instant.now(),
                 Instant.now().plusSeconds(60),
                 Map.of("sub", email, "email", email));
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(roleAuthority));
-        return new DefaultOidcUser(authorities, token);
+        OidcUser oidcUser = new DefaultOidcUser(authorities, token);
+        return new TestingAuthenticationToken(oidcUser, null, authorities);
     }
 
     @Test

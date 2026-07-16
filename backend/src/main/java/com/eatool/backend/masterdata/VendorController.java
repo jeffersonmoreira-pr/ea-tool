@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -61,7 +60,7 @@ public class VendorController {
     public Vendor update(
             @PathVariable UUID id,
             @RequestBody VendorRequest request,
-            @AuthenticationPrincipal OidcUser principal) {
+            Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.VENDOR, id, principal);
         boolean isInternal = requireInternalFlag(request);
         Vendor vendor = findOrThrow(id);
@@ -73,7 +72,7 @@ public class VendorController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+    public void delete(@PathVariable UUID id, Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.VENDOR, id, principal);
         Vendor vendor = findOrThrow(id);
         applicationRepository.findFirstByVendorId(id).ifPresent(application -> {
