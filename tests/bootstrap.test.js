@@ -5,11 +5,65 @@ const test = require("node:test");
 
 const catalogApi = require("../src/catalog.js");
 const appApi = require("../src/app.js");
+const apiClientApi = require("../src/apiClient.js");
 
 const root = path.resolve(__dirname, "..");
 
 function readSource(filePath) {
   return fs.readFileSync(path.join(root, filePath), "utf8");
+}
+
+// The real ApplicationPortfolioApiClient (src/apiClient.js) talks to the Spring Boot
+// backend over fetch(). For UI-level tests we don't want to stand up a real HTTP
+// server, so this mock apiClient delegates to the EXISTING pure catalogApi
+// create/update/delete functions (the same functions the backend is faithfully
+// porting), wrapped in Promises. Each call operates against a disposable "shadow"
+// copy of the record arrays so that catalogApi's push/splice side effects never
+// touch the real `catalog` object directly - app.js's own promise handlers are
+// responsible for pushing/splicing the real catalog collections on success, exactly
+// as they would when talking to the real backend. Record mutations performed via
+// Object.assign (update) do touch the underlying shared record object, which is
+// fine since it mirrors what the server would report back.
+function shadowCatalog(catalog) {
+  return {
+    vendors: catalog.vendors.slice(),
+    departments: catalog.departments.slice(),
+    businessAreas: catalog.businessAreas.slice(),
+    applications: catalog.applications.slice(),
+  };
+}
+
+function toPromise(action) {
+  try {
+    return Promise.resolve(action());
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+function createMockApiClient(catalog) {
+  return {
+    listVendors: () => Promise.resolve(catalog.vendors.slice()),
+    createVendor: (input) => toPromise(() => catalogApi.createVendor(shadowCatalog(catalog), input)),
+    updateVendor: (id, input) => toPromise(() => catalogApi.updateVendor(shadowCatalog(catalog), id, input)),
+    deleteVendor: (id) => toPromise(() => catalogApi.deleteVendor(shadowCatalog(catalog), id)),
+
+    listDepartments: () => Promise.resolve(catalog.departments.slice()),
+    createDepartment: (input) => toPromise(() => catalogApi.createDepartment(shadowCatalog(catalog), input)),
+    updateDepartment: (id, input) => toPromise(() => catalogApi.updateDepartment(shadowCatalog(catalog), id, input)),
+    deleteDepartment: (id) => toPromise(() => catalogApi.deleteDepartment(shadowCatalog(catalog), id)),
+
+    listBusinessAreas: () => Promise.resolve(catalog.businessAreas.slice()),
+    createBusinessArea: (input) => toPromise(() => catalogApi.createBusinessArea(shadowCatalog(catalog), input)),
+    updateBusinessArea: (id, input) =>
+      toPromise(() => catalogApi.updateBusinessArea(shadowCatalog(catalog), id, input)),
+    deleteBusinessArea: (id) => toPromise(() => catalogApi.deleteBusinessArea(shadowCatalog(catalog), id)),
+
+    listApplications: () => Promise.resolve(catalog.applications.slice()),
+    createApplication: (input) => toPromise(() => catalogApi.createApplication(shadowCatalog(catalog), input)),
+    updateApplication: (id, input) => toPromise(() => catalogApi.updateApplication(shadowCatalog(catalog), id, input)),
+    deleteApplication: (id) => toPromise(() => catalogApi.deleteApplication(shadowCatalog(catalog), id)),
+  };
 }
 
 function createMemoryStorage(initial = {}) {
@@ -113,32 +167,43 @@ function createDocument() {
   return document;
 }
 
-test("static shell uses only local assets and source has no service dependency references", () => {
+// NOTE: This test used to assert the frontend had NO fetch/XMLHttpRequest usage and
+// no mention of "backend" anywhere - that was correct for the local-storage-only MVP,
+// but is no longer true (or desirable) now that Departments/Vendors/Business Areas
+// and Applications are persisted through a Spring Boot backend (see src/apiClient.js).
+// The assertions below keep protecting the parts of the architecture that are still
+// true: the static shell only references local script/style assets (no absolute
+// URLs baked into HTML), apiClient.js exists and is wired up before app.js, and the
+// fetch calls it makes use same-origin relative paths with credentials included
+// (rather than a hardcoded absolute host:port), which is what keeps the frontend
+// deployable behind the backend's static file serving.
+test("static shell loads local assets plus the API client, and API calls use relative same-origin URLs", () => {
   const html = readSource("src/index.html");
   assert.match(html, /href="\.\/styles\.css"/);
   assert.match(html, /src="\.\/catalog\.js"/);
+  assert.match(html, /src="\.\/apiClient\.js"/);
   assert.match(html, /src="\.\/app\.js"/);
   assert.doesNotMatch(html, /https?:\/\//);
 
-  const source = ["src/index.html", "src/catalog.js", "src/app.js"].map(readSource).join("\n");
-  const serviceReferenceCount = (source.match(/\bbackend\b/gi) || []).length;
-  assert.equal(serviceReferenceCount, 0);
-  assert.doesNotMatch(source, /\b(fetch|XMLHttpRequest)\b/);
+  // apiClient.js must load before app.js so ApplicationPortfolioApiClient exists
+  // when app.js's DOMContentLoaded handler calls init(root).
+  const apiClientIndex = html.indexOf("apiClient.js");
+  const appIndex = html.indexOf("app.js");
+  assert.ok(apiClientIndex !== -1 && appIndex !== -1 && apiClientIndex < appIndex);
+
+  const apiClientSource = readSource("src/apiClient.js");
+  assert.match(apiClientSource, /credentials:\s*"include"/);
+  assert.match(apiClientSource, /"\/api\//);
+  assert.doesNotMatch(apiClientSource, /https?:\/\//);
 });
 
 test("README documents local execution and final MVP validation", () => {
   const readme = readSource("README.md");
-  assert.match(readme, /Open src\/index\.html directly in a browser/);
-  assert.match(
-    readme,
-    /Data is stored in this browser's local storage under application-portfolio\.catalog\.v1/,
-  );
 
   for (const label of [
     "Seed data",
     "Master data CRUD",
     "Application CRUD",
-    "Local persistence",
     "Derived TIME",
     "Filters",
     "Indicators",
@@ -941,32 +1006,78 @@ test("navigation sections match the MVP catalog areas", () => {
   ]);
 });
 
-test("browser adapter renders the initial catalog shell without network calls", () => {
+// renderApp() itself is purely synchronous over an already-loaded catalog; it never
+// calls the apiClient's list* methods directly (that's init()'s job, exercised
+// separately below with a full Promise.all bootstrap). This test guards that
+// invariant so rendering never triggers a surprise network round-trip.
+test("browser adapter renders the initial catalog shell without calling the apiClient", () => {
   const document = createDocument();
   const storage = createMemoryStorage();
-  const networkCalls = [];
-  const rendered = appApi.renderApp({
-    document,
-    storage,
-    catalogApi,
-    network: {
-      fetch(...args) {
-        networkCalls.push(args);
-      },
+  const apiCalls = [];
+  const catalog = catalogApi.createInitialCatalog();
+  const apiClient = new Proxy(createMockApiClient(catalog), {
+    get(target, prop) {
+      const value = target[prop];
+      if (typeof value === "function") {
+        return (...args) => {
+          apiCalls.push(prop);
+          return value(...args);
+        };
+      }
+      return value;
     },
   });
+  const rendered = appApi.renderApp({ document, storage, catalogApi, apiClient, catalog });
 
   const text = collectText(rendered.root);
   assert.match(text, /Executive Overview/);
   assert.match(text, /Revenue Hub/);
   assert.match(text, /Vendors/);
-  assert.equal(networkCalls.length, 0);
+  assert.equal(apiCalls.length, 0);
 });
 
-test("browser adapter filters applications and refreshes executive indicators after mutations", () => {
+test("browser adapter bootstrap loads all four collections through the apiClient in parallel", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const calls = [];
+  const apiClient = {
+    listVendors: () => {
+      calls.push("listVendors");
+      return mockApiClient.listVendors();
+    },
+    listDepartments: () => {
+      calls.push("listDepartments");
+      return mockApiClient.listDepartments();
+    },
+    listBusinessAreas: () => {
+      calls.push("listBusinessAreas");
+      return mockApiClient.listBusinessAreas();
+    },
+    listApplications: () => {
+      calls.push("listApplications");
+      return mockApiClient.listApplications();
+    },
+  };
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  const result = await appApi.init(root);
+  assert.deepEqual(calls.sort(), ["listApplications", "listBusinessAreas", "listDepartments", "listVendors"]);
+  const text = collectText(result.root);
+  assert.match(text, /Revenue Hub/);
+});
+
+test("browser adapter filters applications and refreshes executive indicators after mutations", async () => {
   const document = createDocument();
   const storage = createMemoryStorage();
-  const rendered = appApi.renderApp({ document, storage, catalogApi });
+  const catalog = catalogApi.createInitialCatalog();
+  const apiClient = createMockApiClient(catalog);
+  const rendered = appApi.renderApp({ document, storage, catalogApi, apiClient, catalog });
 
   function getOverview() {
     return document.getElementById("overview");
@@ -1011,7 +1122,7 @@ test("browser adapter filters applications and refreshes executive indicators af
     .onclick();
   assert.match(collectText(getApplicationsSection()), /Showing 4 of 4 Applications/);
 
-  appApi.renderApp({ document, storage, catalogApi, root: rendered.root, catalog: rendered.catalog, filters: {} });
+  appApi.renderApp({ document, storage, catalogApi, apiClient, root: rendered.root, catalog: rendered.catalog, filters: {} });
   applicationsSection = getApplicationsSection();
   const createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
   findField(createForm, "name").value = "Dispatch Console";
@@ -1029,7 +1140,7 @@ test("browser adapter filters applications and refreshes executive indicators af
   findField(createForm, "personalDataHandling").value = "Yes";
   findField(createForm, "sensitiveBusinessDataHandling").value = "No";
   findField(createForm, "informationStatus").value = "Draft";
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
 
   assert.match(collectText(getOverview()), /5\s+Applications/);
 
@@ -1049,7 +1160,7 @@ test("browser adapter filters applications and refreshes executive indicators af
   findField(editForm, "sensitiveBusinessDataHandling").value = "Unknown";
   findField(editForm, "informationStatus").value = "Needs Review";
   findField(editForm, "lastVerificationDate").value = "";
-  editForm.onsubmit({ preventDefault() {} });
+  await editForm.onsubmit({ preventDefault() {} });
 
   const updatedOverviewText = collectText(getOverview());
   assert.match(updatedOverviewText, /Migrate\s+2/);
@@ -1062,17 +1173,19 @@ test("browser adapter filters applications and refreshes executive indicators af
   const updatedDispatchCard = findAll(applicationsSection, (node) => node.tagName === "ARTICLE").find((card) =>
     collectText(card).includes("Dispatch Console"),
   );
-  findAll(updatedDispatchCard, (node) => node.tagName === "BUTTON")
+  await findAll(updatedDispatchCard, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
 
   assert.match(collectText(getOverview()), /4\s+Applications/);
 });
 
-test("browser adapter manages application create edit delete with persistence", () => {
+test("browser adapter manages application create edit delete with persistence", async () => {
   const document = createDocument();
   const storage = createMemoryStorage();
-  const rendered = appApi.renderApp({ document, storage, catalogApi });
+  const catalog = catalogApi.createInitialCatalog();
+  const apiClient = createMockApiClient(catalog);
+  const rendered = appApi.renderApp({ document, storage, catalogApi, apiClient, catalog });
 
   let applicationsSection = document.getElementById("applications");
   let createForm = findAll(applicationsSection, (node) => node.tagName === "FORM")[0];
@@ -1093,17 +1206,17 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "sensitiveBusinessDataHandling").value = "Unknown";
   assert.ok(findField(createForm, "informationStatus"));
   assert.ok(findField(createForm, "lastVerificationDate"));
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Planned Date is required for planned Applications\./);
 
   findField(createForm, "plannedDate").value = "2026-08-01";
   findField(createForm, "informationStatus").value = "Verified";
   findField(createForm, "lastVerificationDate").value = "";
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Last Verification Date is required for Verified Applications\./);
 
   findField(createForm, "lastVerificationDate").value = "2026-07-14";
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Dispatch Console/);
   assert.match(collectText(rendered.root), /Ops Desk, Dispatch Hub/);
   assert.match(collectText(rendered.root), /planned/);
@@ -1141,7 +1254,7 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(createForm, "criticality").value = "medium";
   findField(createForm, "personalDataHandling").value = "No";
   findField(createForm, "sensitiveBusinessDataHandling").value = "No";
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Application name must be unique\./);
 
   const dispatchCard = findAll(applicationsSection, (node) => node.tagName === "ARTICLE").find((card) =>
@@ -1159,18 +1272,24 @@ test("browser adapter manages application create edit delete with persistence", 
   findField(editForm, "personalDataHandling").value = "Yes";
   findField(editForm, "sensitiveBusinessDataHandling").value = "Unknown";
   findField(editForm, "retirementDate").value = "";
-  editForm.onsubmit({ preventDefault() {} });
+  await editForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(applicationsSection), /Retirement Date is required for retired Applications\./);
 
   findField(editForm, "retirementDate").value = "2025-12-31";
-  editForm.onsubmit({ preventDefault() {} });
+  await editForm.onsubmit({ preventDefault() {} });
 
+  // Simulate a page reload: build a brand new document/DOM, but reuse the same
+  // `catalog` object and apiClient - in the real architecture this data would
+  // instead come back from GET /api/applications (etc.) against the Postgres-backed
+  // Spring Boot backend, so reusing the in-memory catalog here stands in for that
+  // durable server-side persistence without needing an HTTP server in this test.
   const reloadedDocument = createDocument();
-  const reloadedStorage = createMemoryStorage(storage.snapshot());
   const reloaded = appApi.renderApp({
     document: reloadedDocument,
-    storage: reloadedStorage,
+    storage,
     catalogApi,
+    apiClient,
+    catalog,
   });
   const reloadedApplications = reloadedDocument.getElementById("applications");
   const reloadedDispatchCard = findAll(reloadedApplications, (node) => node.tagName === "ARTICLE").find((card) =>
@@ -1195,27 +1314,27 @@ test("browser adapter manages application create edit delete with persistence", 
   assert.equal(findField(reloadedDispatchForm, "businessOwnerName").value, "Ana Silva");
   assert.equal(findField(reloadedDispatchForm, "retirementDate").value, "2025-12-31");
   assert.equal(findField(reloadedDispatchForm, "lastVerificationDate").value, "2026-07-14");
-  findAll(reloadedDispatchCard, (node) => node.tagName === "BUTTON")
+  await findAll(reloadedDispatchCard, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
-  const stored = JSON.parse(reloadedStorage.snapshot()[catalogApi.CATALOG_STORAGE_KEY]);
-  assert.equal(stored.applications.some((application) => application.name === "Dispatch Console"), false);
+  assert.equal(catalog.applications.some((application) => application.name === "Dispatch Console"), false);
 });
 
-test("browser adapter manages vendor CRUD with persisted create and rendered block messages", () => {
+test("browser adapter manages vendor CRUD with persisted create and rendered block messages", async () => {
   const document = createDocument();
   const storage = createMemoryStorage();
-  const rendered = appApi.renderApp({ document, storage, catalogApi });
+  const catalog = catalogApi.createInitialCatalog();
+  const apiClient = createMockApiClient(catalog);
+  const rendered = appApi.renderApp({ document, storage, catalogApi, apiClient, catalog });
 
   let vendorsSection = document.getElementById("vendors");
   const createForm = findAll(vendorsSection, (node) => node.tagName === "FORM")[0];
   const createInputs = findAll(createForm, (node) => node.tagName === "INPUT");
   createInputs.find((input) => input.name === "name").value = "Apex Labs";
   createInputs.find((input) => input.name === "isInternal").checked = true;
-  createForm.onsubmit({ preventDefault() {} });
+  await createForm.onsubmit({ preventDefault() {} });
 
-  const stored = JSON.parse(storage.snapshot()[catalogApi.CATALOG_STORAGE_KEY]);
-  const storedVendor = stored.vendors.find((vendor) => vendor.name === "Apex Labs");
+  const storedVendor = catalog.vendors.find((vendor) => vendor.name === "Apex Labs");
   assert.equal(storedVendor.isInternal, true);
   assert.match(collectText(rendered.root), /Apex Labs/);
   assert.match(collectText(rendered.root), /Internal Vendor/);
@@ -1225,7 +1344,7 @@ test("browser adapter manages vendor CRUD with persisted create and rendered blo
   const duplicateInputs = findAll(duplicateForm, (node) => node.tagName === "INPUT");
   duplicateInputs.find((input) => input.name === "name").value = "Apex Labs";
   duplicateInputs.find((input) => input.name === "isInternal").checked = true;
-  duplicateForm.onsubmit({ preventDefault() {} });
+  await duplicateForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(vendorsSection), /Vendor name must be unique\./);
 
   const northstarItem = findAll(vendorsSection, (node) => node.tagName === "LI").find((item) =>
@@ -1234,20 +1353,22 @@ test("browser adapter manages vendor CRUD with persisted create and rendered blo
   const deleteButton = findAll(northstarItem, (node) => node.tagName === "BUTTON").find(
     (button) => button.textContent === "Delete",
   );
-  deleteButton.onclick();
+  await deleteButton.onclick();
   assert.match(collectText(vendorsSection), /Vendor is in use by Application: Revenue Hub\./);
 });
 
-test("browser adapter manages department and business area create edit delete controls", () => {
+test("browser adapter manages department and business area create edit delete controls", async () => {
   const document = createDocument();
   const storage = createMemoryStorage();
-  const rendered = appApi.renderApp({ document, storage, catalogApi });
+  const catalog = catalogApi.createInitialCatalog();
+  const apiClient = createMockApiClient(catalog);
+  const rendered = appApi.renderApp({ document, storage, catalogApi, apiClient, catalog });
 
   let departmentsSection = document.getElementById("departments");
   const departmentCreateForm = findAll(departmentsSection, (node) => node.tagName === "FORM")[0];
   findAll(departmentCreateForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
     "Legal";
-  departmentCreateForm.onsubmit({ preventDefault() {} });
+  await departmentCreateForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Legal/);
 
   departmentsSection = document.getElementById("departments");
@@ -1257,14 +1378,14 @@ test("browser adapter manages department and business area create edit delete co
   const legalEditForm = findAll(legalItem, (node) => node.tagName === "FORM")[0];
   findAll(legalEditForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
     "Legal Affairs";
-  legalEditForm.onsubmit({ preventDefault() {} });
+  await legalEditForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Legal Affairs/);
 
   departmentsSection = document.getElementById("departments");
   const financeItem = findAll(departmentsSection, (node) => node.tagName === "LI").find((item) =>
     collectText(item).includes("Finance"),
   );
-  findAll(financeItem, (node) => node.tagName === "BUTTON")
+  await findAll(financeItem, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
   assert.match(collectText(departmentsSection), /Department is in use by Application: Revenue Hub\./);
@@ -1273,7 +1394,7 @@ test("browser adapter manages department and business area create edit delete co
   const legalAffairsItem = findAll(departmentsSection, (node) => node.tagName === "LI").find((item) =>
     collectText(item).includes("Legal Affairs"),
   );
-  findAll(legalAffairsItem, (node) => node.tagName === "BUTTON")
+  await findAll(legalAffairsItem, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
   assert.doesNotMatch(collectText(rendered.root), /Legal Affairs/);
@@ -1282,7 +1403,7 @@ test("browser adapter manages department and business area create edit delete co
   const areaCreateForm = findAll(businessAreasSection, (node) => node.tagName === "FORM")[0];
   findAll(areaCreateForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
     "Customer Growth";
-  areaCreateForm.onsubmit({ preventDefault() {} });
+  await areaCreateForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Customer Growth/);
 
   businessAreasSection = document.getElementById("business-areas");
@@ -1292,14 +1413,14 @@ test("browser adapter manages department and business area create edit delete co
   const growthEditForm = findAll(growthItem, (node) => node.tagName === "FORM")[0];
   findAll(growthEditForm, (node) => node.tagName === "INPUT").find((input) => input.name === "name").value =
     "Customer Growth Strategy";
-  growthEditForm.onsubmit({ preventDefault() {} });
+  await growthEditForm.onsubmit({ preventDefault() {} });
   assert.match(collectText(rendered.root), /Customer Growth Strategy/);
 
   businessAreasSection = document.getElementById("business-areas");
   const revenueItem = findAll(businessAreasSection, (node) => node.tagName === "LI").find((item) =>
     collectText(item).includes("Revenue Management"),
   );
-  findAll(revenueItem, (node) => node.tagName === "BUTTON")
+  await findAll(revenueItem, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
   assert.match(collectText(businessAreasSection), /Business Area is in use by Application: Revenue Hub\./);
@@ -1308,7 +1429,7 @@ test("browser adapter manages department and business area create edit delete co
   const strategyItem = findAll(businessAreasSection, (node) => node.tagName === "LI").find((item) =>
     collectText(item).includes("Customer Growth Strategy"),
   );
-  findAll(strategyItem, (node) => node.tagName === "BUTTON")
+  await findAll(strategyItem, (node) => node.tagName === "BUTTON")
     .find((button) => button.textContent === "Delete")
     .onclick();
   assert.doesNotMatch(collectText(rendered.root), /Customer Growth Strategy/);
