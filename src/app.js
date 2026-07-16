@@ -1663,6 +1663,113 @@
     return section;
   }
 
+  const ROLE_OPTIONS = ["VIEWER", "EDITOR", "ADMIN"];
+
+  function formatRoleLabel(role) {
+    const value = String(role || "").toUpperCase();
+    return value ? value.charAt(0) + value.slice(1).toLowerCase() : "";
+  }
+
+  function formatLoginMethodLabel(loginMethod) {
+    return String(loginMethod || "").toUpperCase() === "LOCAL" ? "Local Login" : "SSO";
+  }
+
+  function renderUsersAdmin(document, apiClient, currentUser, users) {
+    const section = makeElement(document, "section", {
+      className: "content-section content-section--compact",
+      attributes: { id: "users" },
+    });
+
+    const header = makeElement(document, "div", { className: "view__header" });
+    appendTextBlock(document, header, "h2", "section-title", "User Management");
+    appendTextBlock(
+      document,
+      header,
+      "p",
+      "lede",
+      "Manage who can access the portfolio and at what level. Only Admins can view this screen.",
+    );
+    section.appendChild(header);
+
+    const status = makeElement(document, "p", {
+      className: "master-data-status",
+      attributes: { role: "status", "aria-live": "polite" },
+    });
+
+    const table = makeElement(document, "table", { className: "users-table" });
+    const thead = makeElement(document, "thead", {});
+    const headRow = makeElement(document, "tr", {});
+    for (const heading of ["Name / Email", "Login Method", "Role"]) {
+      appendTextBlock(document, headRow, "th", "", heading);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = makeElement(document, "tbody", {});
+    for (const user of users) {
+      const row = makeElement(document, "tr", { className: "users-table__row" });
+
+      const identityCell = makeElement(document, "td", {});
+      appendTextBlock(document, identityCell, "p", "users-table__name", user.name || "");
+      appendTextBlock(document, identityCell, "p", "users-table__email", user.email || "");
+      row.appendChild(identityCell);
+
+      const methodCell = makeElement(document, "td", {});
+      appendTextBlock(document, methodCell, "span", "badge", formatLoginMethodLabel(user.loginMethod));
+      row.appendChild(methodCell);
+
+      const roleCell = makeElement(document, "td", {});
+      const isSelf = currentUser && currentUser.email
+        && String(currentUser.email).toLowerCase() === String(user.email || "").toLowerCase();
+      if (isSelf) {
+        appendTextBlock(document, roleCell, "span", "badge users-table__role-self", formatRoleLabel(user.role));
+        appendTextBlock(document, roleCell, "span", "users-table__hint", "You");
+      } else {
+        const select = makeElement(document, "select", {
+          className: "users-table__role-select",
+          value: user.role,
+          attributes: { "aria-label": `Role for ${user.name || user.email}` },
+        });
+        for (const roleOption of ROLE_OPTIONS) {
+          const option = makeElement(document, "option", {
+            text: formatRoleLabel(roleOption),
+            value: roleOption,
+            attributes: { value: roleOption },
+          });
+          if (roleOption === String(user.role || "").toUpperCase()) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        }
+        select.addEventListener("change", function onRoleChange() {
+          const nextRole = select.value;
+          const previousRole = user.role;
+          select.disabled = true;
+          return apiClient
+            .updateCatalogUserRole(user.id, nextRole)
+            .then(function onUpdated(updated) {
+              user.role = updated && updated.role ? updated.role : nextRole;
+              status.textContent = `${user.name || user.email} is now ${formatRoleLabel(user.role)}.`;
+              select.disabled = false;
+            })
+            .catch(function onError(error) {
+              status.textContent = error.message;
+              select.value = previousRole;
+              select.disabled = false;
+            });
+        });
+        roleCell.appendChild(select);
+      }
+      row.appendChild(roleCell);
+
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+
+    section.append(table, status);
+    return section;
+  }
+
   let activeView = "dashboard";
 
   function renderApp(options) {
@@ -1673,14 +1780,17 @@
     const root = options.root || document.getElementById("app");
     const catalog = options.catalog || catalogApi.createInitialCatalog();
     const filters = options.filters || {};
+    const currentUser = options.currentUser || null;
+    const users = options.users || [];
+    const isAdmin = currentUser && String(currentUser.role || "").toUpperCase() === "ADMIN";
     const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
 
     function rerender(nextCatalog) {
-      renderApp({ document, storage, catalogApi, apiClient, root, catalog: nextCatalog, filters });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog: nextCatalog, filters, currentUser, users });
     }
 
     function setFilters(nextFilters) {
-      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters, currentUser, users });
     }
 
     const overviewSection = renderOverview(document, catalog, catalogApi, filters, setFilters);
@@ -1766,6 +1876,9 @@
       { key: "matrix", label: "Analytics Matrix" },
       { key: "master", label: "Master Data" },
     ];
+    if (isAdmin) {
+      NAV_VIEWS.push({ key: "users", label: "User Management" });
+    }
     const nav = makeElement(document, "nav", {
       className: "portfolio-nav",
       attributes: { "aria-label": "Primary navigation" },
@@ -1867,6 +1980,11 @@
       departmentsSection,
       businessAreasSection,
     ]);
+    const contentViews = [dashboardView, catalogView, matrixView, masterView];
+    if (isAdmin) {
+      const usersSection = renderUsersAdmin(document, apiClient, currentUser, users);
+      contentViews.push(makeView("users", [usersSection]));
+    }
 
     const sidebar = makeElement(document, "aside", { className: "app-sidebar" });
     const brand = makeElement(document, "div", { className: "app-brand" });
@@ -1875,7 +1993,7 @@
     sidebar.append(brand, nav);
 
     const content = makeElement(document, "div", { className: "app-content" });
-    content.append(dashboardView, catalogView, matrixView, masterView);
+    content.append(...contentViews);
 
     root.replaceChildren(sidebar, content);
     return { root, catalog };
@@ -1890,15 +2008,32 @@
       return null;
     }
 
+    const loadCurrentUser =
+      typeof apiClient.getCurrentUser === "function"
+        ? apiClient.getCurrentUser().catch(function onMeError() {
+            return null;
+          })
+        : Promise.resolve(null);
+
     return Promise.all([
       apiClient.listVendors(),
       apiClient.listDepartments(),
       apiClient.listBusinessAreas(),
       apiClient.listApplications(),
+      loadCurrentUser,
     ])
-      .then(function onLoaded([vendors, departments, businessAreas, applications]) {
+      .then(function onLoaded([vendors, departments, businessAreas, applications, currentUser]) {
         const catalog = { vendors, departments, businessAreas, applications };
-        return renderApp({ document, storage, catalogApi, apiClient, catalog });
+        const isAdmin = currentUser && String(currentUser.role || "").toUpperCase() === "ADMIN";
+        const usersPromise =
+          isAdmin && typeof apiClient.listCatalogUsers === "function"
+            ? apiClient.listCatalogUsers().catch(function onUsersError() {
+                return [];
+              })
+            : Promise.resolve([]);
+        return usersPromise.then(function onUsers(users) {
+          return renderApp({ document, storage, catalogApi, apiClient, catalog, currentUser, users });
+        });
       })
       .catch(function onLoadError(error) {
         const root2 = document.getElementById("app");

@@ -34,6 +34,10 @@ public class CatalogUser {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LoginMethod loginMethod;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -42,9 +46,14 @@ public class CatalogUser {
     }
 
     public CatalogUser(String email, String name, Role role) {
+        this(email, name, role, LoginMethod.SSO);
+    }
+
+    public CatalogUser(String email, String name, Role role, LoginMethod loginMethod) {
         this.email = email;
         this.name = name;
         this.role = role;
+        this.loginMethod = loginMethod;
         this.createdAt = Instant.now();
     }
 
@@ -62,6 +71,14 @@ public class CatalogUser {
 
     public Role getRole() {
         return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public LoginMethod getLoginMethod() {
+        return loginMethod;
     }
 
     public Instant getCreatedAt() {

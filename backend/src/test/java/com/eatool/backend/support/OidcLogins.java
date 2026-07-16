@@ -26,4 +26,10 @@ public final class OidcLogins {
     public static RequestPostProcessor adminLogin() {
         return oidcLogin().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
     }
+
+    public static RequestPostProcessor adminLogin(String email) {
+        return oidcLogin()
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                .idToken(token -> token.claim("email", email));
+    }
 }

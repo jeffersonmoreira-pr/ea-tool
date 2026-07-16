@@ -126,6 +126,16 @@
     return request("DELETE", `/api/applications/${encodeURIComponent(id)}`);
   }
 
+  function getCurrentUser() {
+    return request("GET", "/api/me");
+  }
+  function listCatalogUsers() {
+    return request("GET", "/api/catalog-users");
+  }
+  function updateCatalogUserRole(id, role) {
+    return request("PUT", `/api/catalog-users/${encodeURIComponent(id)}/role`, { role });
+  }
+
   return {
     listDepartments,
     createDepartment,
@@ -143,5 +153,8 @@
     createApplication,
     updateApplication,
     deleteApplication,
+    getCurrentUser,
+    listCatalogUsers,
+    updateCatalogUserRole,
   };
 });

@@ -42,6 +42,13 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health").permitAll()
+                        // The Catalog Users admin API (list users, change Role)
+                        // is Admin-only. It must come before the generic GET
+                        // rule below, since request matchers are evaluated in
+                        // order and the first match wins — otherwise a GET on
+                        // /api/catalog-users would match the authenticated-only
+                        // rule and leak the user list to non-Admins (issue #8).
+                        .requestMatchers("/api/catalog-users/**").hasRole("ADMIN")
                         // Reading the catalog is allowed for any authenticated
                         // Catalog User (Viewer included); this GET rule must come
                         // before the write rules below so reads never require a

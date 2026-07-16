@@ -66,6 +66,25 @@ function createMockApiClient(catalog) {
   };
 }
 
+function createUserStore(initialUsers) {
+  const users = initialUsers.map((user) => ({ ...user }));
+  return {
+    users,
+    client: {
+      listCatalogUsers: () => Promise.resolve(users.map((user) => ({ ...user }))),
+      updateCatalogUserRole: (id, role) =>
+        toPromise(() => {
+          const target = users.find((user) => user.id === id);
+          if (!target) {
+            throw new Error("Catalog User not found.");
+          }
+          target.role = role;
+          return { ...target };
+        }),
+    },
+  };
+}
+
 function createMemoryStorage(initial = {}) {
   const values = new Map(Object.entries(initial));
 
@@ -1433,4 +1452,128 @@ test("browser adapter manages department and business area create edit delete co
     .find((button) => button.textContent === "Delete")
     .onclick();
   assert.doesNotMatch(collectText(rendered.root), /Customer Growth Strategy/);
+});
+
+function adminRoot(document, apiClient, currentUser) {
+  return {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+    __currentUser: currentUser,
+  };
+}
+
+test("admin sees the User Management screen listing users with login method and role", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    { id: "u-viewer", name: "Vic Viewer", email: "vic@example.com", role: "VIEWER", loginMethod: "LOCAL" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  const result = await appApi.init(root);
+  const nav = findAll(result.root, (node) => collectText(node) === "User Management" && node.tagName === "A");
+  assert.equal(nav.length, 1);
+
+  const usersSection = document.getElementById("users");
+  assert.ok(usersSection, "users section should be rendered for admins");
+  const text = collectText(usersSection);
+  assert.match(text, /Vic Viewer/);
+  assert.match(text, /vic@example.com/);
+  assert.match(text, /Local Login/);
+  assert.match(text, /SSO/);
+});
+
+test("non-admin does not see the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  let listUsersCalled = false;
+  const apiClient = Object.assign({}, mockApiClient, {
+    getCurrentUser: () => Promise.resolve({ name: "Vic Viewer", email: "vic@example.com", role: "VIEWER" }),
+    listCatalogUsers: () => {
+      listUsersCalled = true;
+      return Promise.resolve([]);
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  const result = await appApi.init(root);
+  assert.equal(listUsersCalled, false, "viewer should not trigger the admin users fetch");
+  assert.ok(!document.getElementById("users"), "users section must not render for non-admins");
+  const nav = findAll(result.root, (node) => collectText(node) === "User Management" && node.tagName === "A");
+  assert.equal(nav.length, 0);
+});
+
+test("admin changes another user's role through the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    { id: "u-viewer", name: "Vic Viewer", email: "vic@example.com", role: "VIEWER", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+
+  const usersSection = document.getElementById("users");
+  const selects = findAll(usersSection, (node) => node.tagName === "SELECT");
+  // Only the non-self (Viewer) row exposes a role select; the admin's own row is read-only.
+  assert.equal(selects.length, 1);
+  const select = selects[0];
+  select.value = "EDITOR";
+  await select.onchange();
+
+  assert.equal(store.users.find((user) => user.id === "u-viewer").role, "EDITOR");
+  const refreshed = document.getElementById("users");
+  assert.match(collectText(refreshed), /Vic Viewer is now Editor\./);
+});
+
+test("admin cannot change their own role from the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const usersSection = document.getElementById("users");
+  const selects = findAll(usersSection, (node) => node.tagName === "SELECT");
+  assert.equal(selects.length, 0, "admin's own row must not offer a role select");
+  assert.match(collectText(usersSection), /You/);
 });
