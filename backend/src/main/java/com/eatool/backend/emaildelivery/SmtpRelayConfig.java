@@ -118,4 +118,27 @@ public class SmtpRelayConfig {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
+    /**
+     * Applies an update from the write path (issue #24). The caller passes the
+     * already-encrypted password ciphertext (or the current one when the Admin
+     * left the field blank), so this entity never sees a clear-text password.
+     */
+    public void update(
+            String host,
+            int port,
+            SmtpEncryption encryption,
+            boolean authEnabled,
+            String username,
+            String passwordCiphertext,
+            String fromAddress) {
+        this.host = host;
+        this.port = port;
+        this.encryption = encryption;
+        this.authEnabled = authEnabled;
+        this.username = username;
+        this.passwordCiphertext = passwordCiphertext;
+        this.fromAddress = fromAddress;
+        this.updatedAt = Instant.now();
+    }
 }

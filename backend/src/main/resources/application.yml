@@ -61,6 +61,12 @@ app:
     # a real SMTP relay is configured (spring.mail.host below); otherwise the
     # invite link is logged in dev.
     mail-from: ${LOCAL_LOGIN_MAIL_FROM:no-reply@ea-tool.local}
+  email-delivery:
+    # Key used to encrypt the SMTP relay password at rest (issue #24). Must be a
+    # Base64-encoded 16/24/32-byte value. The default below is a throwaway dev
+    # key; production MUST override it via the EMAIL_DELIVERY_ENCRYPTION_KEY
+    # environment variable and keep it out of source control.
+    encryption-key: ${EMAIL_DELIVERY_ENCRYPTION_KEY:ZGV2LW9ubHktZW1haWwtZGVsaXZlcnktYWVzLWtleSE=}
 
 management:
   endpoints:

@@ -1920,11 +1920,152 @@ test("admin sees the Email Delivery screen in the active state without a passwor
   assert.ok(section, "email delivery section should be rendered for admins");
   const text = collectText(section);
   assert.match(text, /SMTP relay active/);
-  assert.match(text, /smtp\.example\.com/);
-  assert.match(text, /587/);
   assert.match(text, /SSL\/TLS/);
-  assert.match(text, /relay-user/);
-  assert.match(text, /\(saved\)/);
+  assert.equal(findField(section, "host").value, "smtp.example.com");
+  assert.equal(String(findField(section, "port").value), "587");
+  assert.equal(findField(section, "username").value, "relay-user");
+  assert.equal(findField(section, "fromAddress").value, "no-reply@ea-tool.local");
+  const passwordInput = findField(section, "password");
+  assert.equal(passwordInput.value, "", "password value must never be pre-filled");
+  assert.match(passwordInput.attributes.placeholder || "", /\(saved\)/);
+});
+
+test("admin saves a valid SMTP relay configuration and lands in the active state", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  let savedPayload = null;
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () => Promise.resolve({ configured: false, passwordSaved: false }),
+    saveEmailDeliveryConfig: (payload) => {
+      savedPayload = payload;
+      return Promise.resolve({
+        configured: true,
+        host: payload.host,
+        port: payload.port,
+        encryption: payload.encryption,
+        authEnabled: payload.authEnabled,
+        username: payload.username,
+        fromAddress: payload.fromAddress,
+        passwordSaved: true,
+      });
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  let section = document.getElementById("email-delivery");
+  findField(section, "host").value = "smtp.example.com";
+  findField(section, "port").value = "587";
+  const authInput = findField(section, "authEnabled");
+  authInput.checked = true;
+  authInput.onchange();
+  findField(section, "username").value = "relay-user";
+  findField(section, "password").value = "s3cr3t-pass";
+  findField(section, "fromAddress").value = "no-reply@ea-tool.local";
+  const form = findAll(section, (node) => node.tagName === "FORM")[0];
+  await form.onsubmit({ preventDefault() {} });
+
+  assert.ok(savedPayload, "saveEmailDeliveryConfig should be called");
+  assert.equal(savedPayload.host, "smtp.example.com");
+  assert.equal(savedPayload.port, 587);
+  assert.equal(savedPayload.authEnabled, true);
+  assert.equal(savedPayload.username, "relay-user");
+  assert.equal(savedPayload.password, "s3cr3t-pass");
+  assert.equal(savedPayload.fromAddress, "no-reply@ea-tool.local");
+
+  section = document.getElementById("email-delivery");
+  assert.match(collectText(section), /SMTP relay active/);
+});
+
+test("admin sees inline validation errors and no save call for an invalid configuration", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  let saveCalled = false;
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () => Promise.resolve({ configured: false, passwordSaved: false }),
+    saveEmailDeliveryConfig: () => {
+      saveCalled = true;
+      return Promise.resolve({ configured: true, passwordSaved: false });
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  findField(section, "host").value = "not a host";
+  findField(section, "port").value = "70000";
+  findField(section, "fromAddress").value = "not-an-email";
+  const form = findAll(section, (node) => node.tagName === "FORM")[0];
+  await form.onsubmit({ preventDefault() {} });
+
+  assert.equal(saveCalled, false, "invalid form must not call the save API");
+  const text = collectText(section);
+  assert.match(text, /valid hostname/i);
+  assert.match(text, /Port must be between 1 and 65535/i);
+  assert.match(text, /valid from address/i);
+});
+
+test("admin keeps the current password by submitting the password field blank", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  let savedPayload = null;
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () =>
+      Promise.resolve({
+        configured: true,
+        host: "smtp.example.com",
+        port: 587,
+        encryption: "STARTTLS",
+        authEnabled: true,
+        username: "relay-user",
+        fromAddress: "no-reply@ea-tool.local",
+        passwordSaved: true,
+      }),
+    saveEmailDeliveryConfig: (payload) => {
+      savedPayload = payload;
+      return Promise.resolve({ configured: true, passwordSaved: true });
+    },
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  // Leave the password field blank; auth is already enabled with a saved password.
+  const form = findAll(section, (node) => node.tagName === "FORM")[0];
+  await form.onsubmit({ preventDefault() {} });
+
+  assert.ok(savedPayload, "saveEmailDeliveryConfig should be called");
+  assert.equal(savedPayload.password, "", "blank password must be sent to keep the current one");
 });
 
 test("non-admin does not see the Email Delivery screen", async () => {
