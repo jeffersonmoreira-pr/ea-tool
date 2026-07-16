@@ -1674,6 +1674,87 @@
     return String(loginMethod || "").toUpperCase() === "LOCAL" ? "Local Login" : "SSO";
   }
 
+  function formatEncryptionLabel(encryption) {
+    switch (String(encryption || "").toUpperCase()) {
+      case "SSL_TLS":
+        return "SSL/TLS";
+      case "STARTTLS":
+        return "STARTTLS";
+      case "NONE":
+        return "None";
+      default:
+        return String(encryption || "");
+    }
+  }
+
+  function appendDetail(document, list, term, value) {
+    appendTextBlock(document, list, "dt", "email-delivery__term", term);
+    appendTextBlock(document, list, "dd", "email-delivery__value", value);
+  }
+
+  function renderEmailDelivery(document, config) {
+    const cfg = config || { configured: false };
+    const section = makeElement(document, "section", {
+      className: "content-section content-section--compact",
+      attributes: { id: "email-delivery" },
+    });
+
+    const header = makeElement(document, "div", { className: "view__header" });
+    appendTextBlock(document, header, "h2", "section-title", "Email Delivery (SMTP Relay)");
+    appendTextBlock(
+      document,
+      header,
+      "p",
+      "lede",
+      "The SMTP relay used to send Local Login password-invite emails. Only Admins can view this screen. This configuration replaces any server environment settings.",
+    );
+    section.appendChild(header);
+
+    const configured = Boolean(cfg.configured);
+    const pill = makeElement(document, "span", {
+      className: configured
+        ? "email-delivery__status email-delivery__status--active"
+        : "email-delivery__status email-delivery__status--warning",
+      text: configured
+        ? "SMTP relay active \u2014 invites are emailed"
+        : "No relay configured \u2014 in development, invite links are written to the log",
+      attributes: { role: "status" },
+    });
+    section.appendChild(pill);
+
+    const card = makeElement(document, "div", { className: "email-delivery__card" });
+    appendTextBlock(document, card, "h3", "email-delivery__card-title", "Relay settings");
+
+    if (!configured) {
+      appendTextBlock(
+        document,
+        card,
+        "p",
+        "email-delivery__empty",
+        "No SMTP relay is configured yet. Invite links are written to the application log in development.",
+      );
+    } else {
+      const details = makeElement(document, "dl", { className: "email-delivery__details" });
+      appendDetail(document, details, "Host", cfg.host || "");
+      appendDetail(document, details, "Port", cfg.port === null || cfg.port === undefined ? "" : String(cfg.port));
+      appendDetail(document, details, "Encryption", formatEncryptionLabel(cfg.encryption));
+      appendDetail(document, details, "Authentication", cfg.authEnabled ? "Required" : "Disabled");
+      if (cfg.authEnabled) {
+        appendDetail(document, details, "Username", cfg.username || "");
+        appendDetail(
+          document,
+          details,
+          "Password",
+          cfg.passwordSaved ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Not set",
+        );
+      }
+      appendDetail(document, details, "From address", cfg.fromAddress || "");
+      card.appendChild(details);
+    }
+    section.appendChild(card);
+    return section;
+  }
+
   function formatAccessScopeSummary(user) {
     const departmentCount = (user.scopedDepartmentIds || []).length;
     const businessAreaCount = (user.scopedBusinessAreaIds || []).length;
@@ -2116,15 +2197,16 @@
     const filters = options.filters || {};
     const currentUser = options.currentUser || null;
     const users = options.users || [];
+    const emailDelivery = options.emailDelivery || null;
     const isAdmin = currentUser && String(currentUser.role || "").toUpperCase() === "ADMIN";
     const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
 
     function rerender(nextCatalog) {
-      renderApp({ document, storage, catalogApi, apiClient, root, catalog: nextCatalog, filters, currentUser, users });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog: nextCatalog, filters, currentUser, users, emailDelivery });
     }
 
     function setFilters(nextFilters) {
-      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters, currentUser, users });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters, currentUser, users, emailDelivery });
     }
 
     const overviewSection = renderOverview(document, catalog, catalogApi, filters, setFilters);
@@ -2212,6 +2294,7 @@
     ];
     if (isAdmin) {
       NAV_VIEWS.push({ key: "users", label: "User Management" });
+      NAV_VIEWS.push({ key: "email-delivery", label: "Email Delivery" });
     }
     const nav = makeElement(document, "nav", {
       className: "portfolio-nav",
@@ -2327,6 +2410,8 @@
         catalog.vendors || [],
       );
       contentViews.push(makeView("users", [usersSection]));
+      const emailDeliverySection = renderEmailDelivery(document, emailDelivery);
+      contentViews.push(makeView("email-delivery", [emailDeliverySection]));
     }
 
     const sidebar = makeElement(document, "aside", { className: "app-sidebar" });
@@ -2374,8 +2459,14 @@
                 return [];
               })
             : Promise.resolve([]);
-        return usersPromise.then(function onUsers(users) {
-          return renderApp({ document, storage, catalogApi, apiClient, catalog, currentUser, users });
+        const emailDeliveryPromise =
+          isAdmin && typeof apiClient.getEmailDeliveryConfig === "function"
+            ? apiClient.getEmailDeliveryConfig().catch(function onEmailDeliveryError() {
+                return null;
+              })
+            : Promise.resolve(null);
+        return Promise.all([usersPromise, emailDeliveryPromise]).then(function onAdminData([users, emailDelivery]) {
+          return renderApp({ document, storage, catalogApi, apiClient, catalog, currentUser, users, emailDelivery });
         });
       })
       .catch(function onLoadError(error) {

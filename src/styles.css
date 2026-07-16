@@ -2288,3 +2288,75 @@ body {
   padding: 2px 0;
   font-size: 13px;
 }
+
+/* Email Delivery (SMTP Relay) admin screen — issue #23. */
+.email-delivery__status {
+  display: inline-block;
+  margin: 4px 0 20px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.email-delivery__status--active {
+  color: #0e5a3f;
+  background: rgba(14, 159, 110, 0.12);
+}
+
+.email-delivery__status--warning {
+  color: #8a5300;
+  background: rgba(199, 119, 0, 0.14);
+}
+
+.email-delivery__card {
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  max-width: 720px;
+}
+
+.email-delivery__card-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.email-delivery__empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.email-delivery__details {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.email-delivery__term {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.email-delivery__value {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .email-delivery__details {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .email-delivery__value {
+    margin-bottom: 8px;
+  }
+}

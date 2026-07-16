@@ -129,6 +129,9 @@
   function getCurrentUser() {
     return request("GET", "/api/me");
   }
+  function getEmailDeliveryConfig() {
+    return request("GET", "/api/email-delivery");
+  }
   function listCatalogUsers() {
     return request("GET", "/api/catalog-users");
   }
@@ -182,6 +185,7 @@
     updateApplication,
     deleteApplication,
     getCurrentUser,
+    getEmailDeliveryConfig,
     listCatalogUsers,
     updateCatalogUserRole,
     createLocalUser,

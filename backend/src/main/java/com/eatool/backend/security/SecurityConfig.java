@@ -82,6 +82,11 @@ public class SecurityConfig {
                         // authenticated-only rule and leak the user list to
                         // non-Admins (issue #8).
                         .requestMatchers("/api/catalog-users/**").hasRole("ADMIN")
+                        // The Email Delivery (SMTP Relay) admin API is Admin-only
+                        // and must also come before the generic GET rule below, so
+                        // a GET on /api/email-delivery never leaks the relay
+                        // configuration to non-Admins (issue #23).
+                        .requestMatchers("/api/email-delivery/**").hasRole("ADMIN")
                         // Reading the catalog is allowed for any authenticated
                         // Catalog User (Viewer included); this GET rule must come
                         // before the write rules below so reads never require a
