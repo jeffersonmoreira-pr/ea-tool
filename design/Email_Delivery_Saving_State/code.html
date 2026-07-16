@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Email Delivery Configuration - Saving...</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin 2s linear infinite;
+        }
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#d5d6d8",
+                        "on-secondary-container": "#505f7f",
+                        "surface-dim": "#d3daea",
+                        "tertiary-fixed-dim": "#c5c6c8",
+                        "outline": "#717880",
+                        "primary-container": "#0c6291",
+                        "secondary-fixed": "#d7e2ff",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e2e8f8",
+                        "surface-tint": "#106493",
+                        "on-surface": "#151c27",
+                        "surface-container-low": "#f0f3ff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#ebf1ff",
+                        "on-primary-fixed-variant": "#004b72",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#5b5d5f",
+                        "surface-container": "#e7eefe",
+                        "inverse-primary": "#90cdff",
+                        "secondary": "#4f5e7e",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "tertiary": "#434647",
+                        "on-secondary-fixed": "#091b37",
+                        "surface-container-highest": "#dce2f3",
+                        "primary-fixed-dim": "#90cdff",
+                        "surface-bright": "#f9f9ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#001e30",
+                        "inverse-surface": "#2a313d",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#dce2f3",
+                        "secondary-fixed-dim": "#b7c7eb",
+                        "secondary-container": "#cadaff",
+                        "primary": "#00496f",
+                        "outline-variant": "#c0c7d0",
+                        "on-surface-variant": "#40484f",
+                        "on-primary-container": "#b2dbff",
+                        "on-secondary-fixed-variant": "#374765",
+                        "tertiary-fixed": "#e1e2e4",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#151c27",
+                        "primary-fixed": "#cbe6ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "gutter": "24px",
+                        "stack-md": "16px",
+                        "margin-page": "32px",
+                        "panel-padding": "24px",
+                        "container-max": "1280px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-01em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-02em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["13px", {"lineHeight": "16px", "letterSpacing": "01em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 flex flex-col fixed left-0 top-0 bg-primary border-r border-outline-variant z-50">
+<div class="p-6">
+<h1 class="text-title-sm font-headline font-bold text-on-primary">Portfolio Admin</h1>
+<p class="text-[10px] text-on-primary/60 uppercase tracking-widest mt-1">Enterprise Control</p>
+</div>
+<nav class="flex flex-col h-full p-4 space-y-2 overflow-y-auto">
+<!-- Executive Overview -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-label-md font-label-md">Executive Overview</span>
+</a>
+<!-- Applications -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-label-md font-label-md">Applications</span>
+</a>
+<!-- Vendors -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">handshake</span>
+<span class="text-label-md font-label-md">Vendors</span>
+</a>
+<!-- Departments -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="text-label-md font-label-md">Departments</span>
+</a>
+<!-- Business Areas -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">domain</span>
+<span class="text-label-md font-label-md">Business Areas</span>
+</a>
+<!-- User Management -->
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:bg-primary-fixed-dim/10 hover:text-on-primary transition-colors duration-200 rounded-lg group" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-label-md font-label-md">User Management</span>
+</a>
+<!-- Email Delivery (Active) -->
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-semibold rounded-lg scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">mail</span>
+<span class="text-label-md font-label-md">Email Delivery</span>
+</a>
+</nav>
+<div class="mt-auto p-4 border-t border-on-primary/10">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a corporate IT administrator with a focused, friendly expression. The portrait is set against a clean, modern office background with soft blue tones and minimalist decor. High-quality corporate photography style with natural lighting and a shallow depth of field, emphasizing reliability and technical authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA03IaI4Cva3Y-Xgg19jdoSS_UcPJASUcvoBLRMy56Rg0YgMbe7eASpNH0T-8fzNSqYvE4E4Fx1X8wTrPngM-FVoulccjuEGSGrYWuVfc71XZqiiiAb0uTF14oqxSKlVoXYmDBUwHG3Jfyo5QR1ko4BO5KZ-mUKCI2L3DP_yKPoPe6-mtwguAXLICebiM1h_ldnfwxxFcxWujn478xWOCPD_y3_7ywCFIQFoDisEKtA5p-axKm5f5R8"/>
+</div>
+<div class="flex flex-col">
+<span class="text-label-md text-on-primary">Admin User</span>
+<span class="text-[10px] text-on-primary/50">Enterprise Level</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="h-16 w-full fixed top-0 z-40 bg-surface border-b border-outline-variant">
+<div class="flex justify-between items-center pl-72 pr-8 w-full h-full">
+<div class="flex items-center gap-4 flex-1">
+<span class="text-title-sm font-headline font-bold text-primary">Strategic Enterprise Ledger</span>
+<div class="relative max-w-md w-full ml-8">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-body-sm focus:ring-2 focus:ring-primary/20" disabled="" placeholder="Search configurations..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-surface"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-outline-variant mx-2"></div>
+<button class="text-label-md font-bold text-primary hover:underline">Logout</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-20 p-8 min-h-screen">
+<!-- Progress Indicator -->
+<div class="mb-8 p-4 bg-primary/5 border border-primary/10 rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-8 h-8 rounded-full border-4 border-primary/20 border-t-primary animate-spin"></div>
+<div>
+<h2 class="text-headline-sm font-headline-sm text-primary">Saving In-Progress</h2>
+<p class="text-body-sm text-on-surface-variant">Syncing configuration with global delivery endpoints. Please do not close the window.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-label-sm font-label-sm text-primary uppercase tracking-tighter">Status: Synchronizing</span>
+<div class="w-32 h-1.5 bg-primary/10 rounded-full mt-2 overflow-hidden">
+<div class="w-2/3 h-full bg-primary loading-shimmer"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Primary Configuration (8 Columns) -->
+<div class="col-span-12 lg:col-span-8 space-y-gutter opacity-60 pointer-events-none transition-opacity duration-500">
+<!-- SMTP Configuration Card -->
+<div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(27,43,72,0.08)] overflow-hidden border border-outline-variant/30">
+<div class="p-panel-padding">
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">SMTP Configuration</h3>
+<p class="text-body-sm text-on-surface-variant mb-6">Core protocol settings for outgoing mail servers.</p>
+<div class="h-px bg-outline-variant/30 -mx-6 mb-6"></div>
+<div class="grid grid-cols-2 gap-stack-md">
+<div class="space-y-stack-sm">
+<label class="text-label-md font-label-md text-on-surface-variant">SMTP Hostname</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low border-outline-variant/50 rounded-lg text-body-md text-on-surface/70 cursor-not-allowed" readonly="" type="text" value="smtp.enterprise-secure.com"/>
+</div>
+<div class="space-y-stack-sm">
+<label class="text-label-md font-label-md text-on-surface-variant">Port Number</label>
+<input class="w-full px-4 py-2.5 bg-surface-container-low border-outline-variant/50 rounded-lg text-body-md text-on-surface/70 cursor-not-allowed" readonly="" type="text" value="587"/>
+</div>
+<div class="col-span-2 space-y-stack-sm">
+<label class="text-label-md font-label-md text-on-surface-variant">Encryption Layer</label>
+<div class="flex gap-4">
+<label class="flex items-center gap-2 px-4 py-2 border border-primary bg-primary/5 rounded-lg cursor-not-allowed">
+<div class="w-4 h-4 rounded-full border-4 border-primary"></div>
+<span class="text-body-md font-medium text-primary">STARTTLS</span>
+</label>
+<label class="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg opacity-50 cursor-not-allowed">
+<div class="w-4 h-4 rounded-full border border-outline"></div>
+<span class="text-body-md text-on-surface-variant">SSL/TLS</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tracking & Security Card -->
+<div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(27,43,72,0.08)] overflow-hidden border border-outline-variant/30">
+<div class="p-panel-padding">
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-1">Tracking &amp; Security</h3>
+<p class="text-body-sm text-on-surface-variant mb-6">Manage engagement analytics and sender verification.</p>
+<div class="h-px bg-outline-variant/30 -mx-6 mb-6"></div>
+<div class="space-y-6">
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-label-md font-bold text-on-surface">Open Tracking</span>
+<span class="text-body-sm text-on-surface-variant">Inject invisible 1x1 pixel for read receipts.</span>
+</div>
+<div class="w-12 h-6 bg-primary/30 rounded-full relative opacity-50">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg border border-outline-variant/20">
+<div class="flex flex-col">
+<span class="text-label-md font-bold text-on-surface">Click Tracking</span>
+<span class="text-body-sm text-on-surface-variant">Rewrite URLs to monitor user click-through rates.</span>
+</div>
+<div class="w-12 h-6 bg-primary/30 rounded-full relative opacity-50">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Stats & Meta Actions (4 Columns) -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<!-- Active Actions Card -->
+<div class="bg-white rounded-xl shadow-[0px_8px_24px_rgba(27,43,72,0.12)] p-panel-padding border border-primary/20 sticky top-24">
+<h3 class="text-headline-sm font-headline-sm text-on-surface mb-6">Deployment Status</h3>
+<div class="space-y-4">
+<!-- THE LOADING BUTTON -->
+<button class="w-full py-4 px-6 bg-primary/50 text-white rounded-xl flex items-center justify-center gap-3 cursor-wait" disabled="">
+<span class="material-symbols-outlined animate-spin text-[20px]">sync</span>
+<span class="font-bold text-body-lg">Saving configuration...</span>
+</button>
+<button class="w-full py-4 px-6 border-2 border-outline-variant text-on-surface-variant/40 rounded-xl font-bold text-body-lg cursor-not-allowed" disabled="">
+                            Discard Changes
+                        </button>
+<div class="pt-6 border-t border-outline-variant/30">
+<div class="flex items-start gap-3 p-3 bg-surface-container-highest rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<p class="text-body-sm text-on-surface-variant">The server is currently processing your updates. Background jobs for <span class="font-bold">5 nodes</span> are being synchronized.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Delivery Health Preview -->
+<div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(27,43,72,0.08)] p-panel-padding border border-outline-variant/30 opacity-80 pointer-events-none">
+<h3 class="text-label-md font-label-md text-on-surface-variant uppercase tracking-wider mb-4">System Health</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Queue Load</span>
+<span class="text-label-sm px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Optimal</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full overflow-hidden">
+<div class="w-[12%] h-full bg-primary/40"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-body-sm text-on-surface-variant">Bounce Rate</span>
+<span class="text-label-sm font-bold text-on-surface">0.02%</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-body-sm text-on-surface-variant">Latency</span>
+<span class="text-label-sm font-bold text-on-surface">124ms</span>
+</div>
+</div>
+</div>
+<!-- Active Jobs Visual -->
+<div class="relative h-48 rounded-xl overflow-hidden shadow-[0px_4px_12px_rgba(27,43,72,0.08)] border border-outline-variant/30">
+
+<div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+<div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-lg">
+<span class="material-symbols-outlined text-primary animate-bounce">cloud_upload</span>
+</div>
+<p class="text-label-md font-bold text-on-surface">Real-time Sync Active</p>
+<p class="text-[10px] text-on-surface-variant mt-1">v2.4.1 Build 2293</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Log Preview (Data List Style) -->
+<section class="mt-gutter opacity-50 pointer-events-none">
+<div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(27,43,72,0.08)] overflow-hidden border border-outline-variant/30">
+<div class="p-6 border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Deployment History</h3>
+<button class="text-primary text-label-md font-bold flex items-center gap-2">
+                        View Full Logs <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/30">
+<th class="px-6 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase">Event ID</th>
+<th class="px-6 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase">Type</th>
+<th class="px-6 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase">Target</th>
+<th class="px-6 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase">Timestamp</th>
+<th class="px-6 py-3 text-label-sm font-label-sm text-on-surface-variant uppercase">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/20">
+<tr class="h-[48px]">
+<td class="px-6 py-2 font-mono text-[11px] text-on-surface-variant">TXN-49202</td>
+<td class="px-6 py-2 text-body-sm">SMTP Update</td>
+<td class="px-6 py-2 text-body-sm">Master Cluster</td>
+<td class="px-6 py-2 text-body-sm text-on-surface-variant">Oct 24, 14:22:01</td>
+<td class="px-6 py-2">
+<span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-label-sm">Success</span>
+</td>
+</tr>
+<tr class="h-[48px]">
+<td class="px-6 py-2 font-mono text-[11px] text-on-surface-variant">TXN-49198</td>
+<td class="px-6 py-2 text-body-sm">Key Rotation</td>
+<td class="px-6 py-2 text-body-sm">Global CDN</td>
+<td class="px-6 py-2 text-body-sm text-on-surface-variant">Oct 24, 13:45:12</td>
+<td class="px-6 py-2">
+<span class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-label-sm">Success</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+<!-- Contextual FAB (Hidden during saving for focus) -->
+<div class="fixed bottom-8 right-8 z-50 pointer-events-none opacity-0 transition-opacity duration-300">
+<button class="w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]">help</span>
+</button>
+</div>
+<!-- Micro-interaction Script -->
+<script>
+        // Simulate a tiny progress update for visual feedback
+        const progressBar = document.querySelector('.loading-shimmer');
+        let width = 66;
+        const interval = setInterval(() => {
+            if (width >= 92) {
+                clearInterval(interval);
+            } else {
+                width += (Math.random() * 0.5);
+                progressBar.style.width = width + '%';
+            }
+        }, 800);
+    </script>
+</body></html>
