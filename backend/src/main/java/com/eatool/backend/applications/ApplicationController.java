@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eatool.backend.accessscope.AccessScopeService;
+import com.eatool.backend.editpermission.EditPermissionService;
+import com.eatool.backend.editpermission.EditableRecordType;
 
 /**
  * REST API for Applications, ported from the frontend's former
@@ -32,10 +34,15 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
     private final AccessScopeService accessScopeService;
+    private final EditPermissionService editPermissionService;
 
-    public ApplicationController(ApplicationService applicationService, AccessScopeService accessScopeService) {
+    public ApplicationController(
+            ApplicationService applicationService,
+            AccessScopeService accessScopeService,
+            EditPermissionService editPermissionService) {
         this.applicationService = applicationService;
         this.accessScopeService = accessScopeService;
+        this.editPermissionService = editPermissionService;
     }
 
     @GetMapping
@@ -50,13 +57,18 @@ public class ApplicationController {
     }
 
     @PutMapping("/{id}")
-    public Application update(@PathVariable UUID id, @RequestBody ApplicationRequest request) {
+    public Application update(
+            @PathVariable UUID id,
+            @RequestBody ApplicationRequest request,
+            @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.APPLICATION, id, principal);
         return applicationService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
+    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.APPLICATION, id, principal);
         applicationService.delete(id);
     }
 }

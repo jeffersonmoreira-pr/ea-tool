@@ -21,6 +21,8 @@ import com.eatool.backend.applications.ApplicationRepository;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
 import com.eatool.backend.common.NotFoundException;
+import com.eatool.backend.editpermission.EditPermissionService;
+import com.eatool.backend.editpermission.EditableRecordType;
 
 /**
  * REST API for Business Areas, ported from the frontend's former
@@ -35,14 +37,17 @@ public class BusinessAreaController {
     private final BusinessAreaRepository businessAreaRepository;
     private final ApplicationRepository applicationRepository;
     private final AccessScopeService accessScopeService;
+    private final EditPermissionService editPermissionService;
 
     public BusinessAreaController(
             BusinessAreaRepository businessAreaRepository,
             ApplicationRepository applicationRepository,
-            AccessScopeService accessScopeService) {
+            AccessScopeService accessScopeService,
+            EditPermissionService editPermissionService) {
         this.businessAreaRepository = businessAreaRepository;
         this.applicationRepository = applicationRepository;
         this.accessScopeService = accessScopeService;
+        this.editPermissionService = editPermissionService;
     }
 
     @GetMapping
@@ -58,7 +63,11 @@ public class BusinessAreaController {
     }
 
     @PutMapping("/{id}")
-    public BusinessArea update(@PathVariable UUID id, @RequestBody BusinessAreaRequest request) {
+    public BusinessArea update(
+            @PathVariable UUID id,
+            @RequestBody BusinessAreaRequest request,
+            @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.BUSINESS_AREA, id, principal);
         BusinessArea businessArea = findOrThrow(id);
         String name = requireUniqueName(request.getName(), id);
         businessArea.setName(name);
@@ -67,7 +76,8 @@ public class BusinessAreaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
+    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.BUSINESS_AREA, id, principal);
         BusinessArea businessArea = findOrThrow(id);
         applicationRepository.findFirstByBusinessAreaId(id).ifPresent(application -> {
             throw new ConflictException("Business Area is in use by Application: " + application.getName() + ".");

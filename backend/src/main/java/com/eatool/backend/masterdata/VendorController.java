@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,8 @@ import com.eatool.backend.applications.ApplicationRepository;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
 import com.eatool.backend.common.NotFoundException;
+import com.eatool.backend.editpermission.EditPermissionService;
+import com.eatool.backend.editpermission.EditableRecordType;
 
 /**
  * REST API for Vendors, ported from the frontend's former localStorage-only
@@ -29,10 +33,15 @@ public class VendorController {
 
     private final VendorRepository vendorRepository;
     private final ApplicationRepository applicationRepository;
+    private final EditPermissionService editPermissionService;
 
-    public VendorController(VendorRepository vendorRepository, ApplicationRepository applicationRepository) {
+    public VendorController(
+            VendorRepository vendorRepository,
+            ApplicationRepository applicationRepository,
+            EditPermissionService editPermissionService) {
         this.vendorRepository = vendorRepository;
         this.applicationRepository = applicationRepository;
+        this.editPermissionService = editPermissionService;
     }
 
     @GetMapping
@@ -49,7 +58,11 @@ public class VendorController {
     }
 
     @PutMapping("/{id}")
-    public Vendor update(@PathVariable UUID id, @RequestBody VendorRequest request) {
+    public Vendor update(
+            @PathVariable UUID id,
+            @RequestBody VendorRequest request,
+            @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.VENDOR, id, principal);
         boolean isInternal = requireInternalFlag(request);
         Vendor vendor = findOrThrow(id);
         String name = requireUniqueName(request.getName(), id);
@@ -60,7 +73,8 @@ public class VendorController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
+    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.VENDOR, id, principal);
         Vendor vendor = findOrThrow(id);
         applicationRepository.findFirstByVendorId(id).ifPresent(application -> {
             throw new ConflictException("Vendor is in use by Application: " + application.getName() + ".");

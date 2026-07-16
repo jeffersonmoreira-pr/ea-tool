@@ -21,6 +21,8 @@ import com.eatool.backend.applications.ApplicationRepository;
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
 import com.eatool.backend.common.NotFoundException;
+import com.eatool.backend.editpermission.EditPermissionService;
+import com.eatool.backend.editpermission.EditableRecordType;
 
 /**
  * REST API for Departments, ported from the frontend's former
@@ -37,14 +39,17 @@ public class DepartmentController {
     private final DepartmentRepository departmentRepository;
     private final ApplicationRepository applicationRepository;
     private final AccessScopeService accessScopeService;
+    private final EditPermissionService editPermissionService;
 
     public DepartmentController(
             DepartmentRepository departmentRepository,
             ApplicationRepository applicationRepository,
-            AccessScopeService accessScopeService) {
+            AccessScopeService accessScopeService,
+            EditPermissionService editPermissionService) {
         this.departmentRepository = departmentRepository;
         this.applicationRepository = applicationRepository;
         this.accessScopeService = accessScopeService;
+        this.editPermissionService = editPermissionService;
     }
 
     @GetMapping
@@ -60,7 +65,11 @@ public class DepartmentController {
     }
 
     @PutMapping("/{id}")
-    public Department update(@PathVariable UUID id, @RequestBody DepartmentRequest request) {
+    public Department update(
+            @PathVariable UUID id,
+            @RequestBody DepartmentRequest request,
+            @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.DEPARTMENT, id, principal);
         Department department = findOrThrow(id);
         String name = requireUniqueName(request.getName(), id);
         department.setName(name);
@@ -69,7 +78,8 @@ public class DepartmentController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
+    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+        editPermissionService.requireCanEdit(EditableRecordType.DEPARTMENT, id, principal);
         Department department = findOrThrow(id);
         applicationRepository.findFirstByDepartmentId(id).ifPresent(application -> {
             throw new ConflictException("Department is in use by Application: " + application.getName() + ".");

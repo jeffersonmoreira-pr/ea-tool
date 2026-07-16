@@ -1,6 +1,7 @@
 package com.eatool.backend.masterdata;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.eatool.backend.support.OidcLogins.adminLogin;
 import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -71,14 +72,14 @@ class DepartmentControllerTests {
         String id = createResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
         mockMvc.perform(put("/api/departments/" + id)
-                        .with(editorLogin())
+                        .with(adminLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Legal Affairs\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Legal Affairs"));
 
-        mockMvc.perform(delete("/api/departments/" + id).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/departments/" + id).with(adminLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -134,7 +135,7 @@ class DepartmentControllerTests {
         application.setLastVerificationDate("");
         applicationRepository.save(application);
 
-        mockMvc.perform(delete("/api/departments/" + department.getId()).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/departments/" + department.getId()).with(adminLogin()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Department is in use by Application: Marketing Suite."));
     }
@@ -143,14 +144,14 @@ class DepartmentControllerTests {
     void deleteOfUnreferencedDepartmentSucceeds() throws Exception {
         Department department = departmentRepository.save(new Department("Unused Department"));
 
-        mockMvc.perform(delete("/api/departments/" + department.getId()).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/departments/" + department.getId()).with(adminLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void updateOfUnknownDepartmentReturnsNotFound() throws Exception {
         mockMvc.perform(put("/api/departments/" + UUID.randomUUID())
-                        .with(editorLogin())
+                        .with(adminLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Anything\"}"))
