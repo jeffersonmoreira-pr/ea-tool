@@ -1863,6 +1863,17 @@
       text: "Save configuration",
     });
     actions.appendChild(saveButton);
+
+    let testButton = null;
+    if (configured) {
+      testButton = makeElement(document, "button", {
+        className: "button button--ghost",
+        type: "button",
+        text: "Send test email\u2026",
+      });
+      actions.appendChild(testButton);
+    }
+
     const status = makeElement(document, "p", {
       className: "email-delivery__form-status",
       attributes: { role: "status" },
@@ -1954,6 +1965,102 @@
     });
 
     section.appendChild(form);
+
+    const toast = makeElement(document, "div", {
+      className: "email-delivery__toast",
+      attributes: { id: "email-delivery-toast", role: "status", hidden: "hidden" },
+    });
+    toast.hidden = true;
+    section.appendChild(toast);
+
+    if (testButton) {
+      const popover = makeElement(document, "div", {
+        className: "email-delivery__popover",
+        attributes: {
+          id: "email-delivery-test-popover",
+          role: "dialog",
+          "aria-label": "Send a test email",
+          hidden: "hidden",
+        },
+      });
+      popover.hidden = true;
+      appendTextBlock(document, popover, "h3", "email-delivery__popover-title", "Send a test message to:");
+
+      const recipientField = makeEmailDeliveryField(document, {
+        id: "email-delivery-test-recipient",
+        name: "testRecipient",
+        label: "Recipient email",
+        type: "email",
+        placeholder: "you@example.com",
+      });
+      popover.appendChild(recipientField.wrapper);
+
+      const popoverActions = makeElement(document, "div", { className: "email-delivery__popover-actions" });
+      const cancelButton = makeElement(document, "button", {
+        className: "button button--ghost",
+        type: "button",
+        text: "Cancel",
+      });
+      const sendButton = makeElement(document, "button", {
+        className: "button button--primary",
+        type: "button",
+        text: "Send",
+      });
+      popoverActions.append(cancelButton, sendButton);
+      popover.appendChild(popoverActions);
+      section.appendChild(popover);
+
+      function closePopover() {
+        popover.hidden = true;
+        popover.setAttribute("hidden", "hidden");
+      }
+
+      function showToast(message, isError) {
+        toast.hidden = false;
+        toast.removeAttribute("hidden");
+        toast.className = isError
+          ? "email-delivery__toast email-delivery__toast--error"
+          : "email-delivery__toast email-delivery__toast--success";
+        toast.textContent = message;
+      }
+
+      testButton.addEventListener("click", function onOpenTest() {
+        recipientField.error.textContent = "";
+        recipientField.input.value = "";
+        popover.hidden = false;
+        popover.removeAttribute("hidden");
+      });
+
+      cancelButton.addEventListener("click", function onCancelTest() {
+        closePopover();
+      });
+
+      sendButton.addEventListener("click", function onSendTest() {
+        const recipient = String(recipientField.input.value || "").trim();
+        recipientField.error.textContent = "";
+        if (!recipient || !EMAIL_DELIVERY_EMAIL_PATTERN.test(recipient)) {
+          recipientField.error.textContent = "Enter a valid recipient email.";
+          return undefined;
+        }
+        sendButton.disabled = true;
+        sendButton.textContent = "Sending\u2026";
+        return apiClient
+          .sendTestEmail(recipient)
+          .then(function onSent() {
+            closePopover();
+            showToast(`Test email sent to ${recipient}.`, false);
+          })
+          .catch(function onError(error) {
+            closePopover();
+            showToast(error && error.message ? error.message : "Unable to send the test email.", true);
+          })
+          .then(function restore() {
+            sendButton.disabled = false;
+            sendButton.textContent = "Send";
+          });
+      });
+    }
+
     return section;
   }
 

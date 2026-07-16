@@ -2420,10 +2420,88 @@ body {
   flex-wrap: wrap;
 }
 
+.button {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button--primary {
+  background: var(--primary, #2563eb);
+  color: #fff;
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--primary, #2563eb);
+  border-color: var(--line);
+}
+
 .email-delivery__form-status {
   margin: 0;
   font-size: 13px;
   color: var(--muted);
+}
+
+.email-delivery__toast {
+  max-width: 720px;
+  margin: 16px 0 0;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.email-delivery__toast[hidden] {
+  display: none;
+}
+
+.email-delivery__toast--success {
+  color: #0e5a3f;
+  background: rgba(14, 159, 110, 0.12);
+  border: 1px solid rgba(14, 159, 110, 0.3);
+}
+
+.email-delivery__toast--error {
+  color: #b42318;
+  background: rgba(180, 35, 24, 0.1);
+  border: 1px solid rgba(180, 35, 24, 0.3);
+}
+
+.email-delivery__popover {
+  max-width: 420px;
+  margin: 16px 0 0;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.email-delivery__popover[hidden] {
+  display: none;
+}
+
+.email-delivery__popover-title {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.email-delivery__popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 @media (max-width: 640px) {

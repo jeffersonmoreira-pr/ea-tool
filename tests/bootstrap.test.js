@@ -208,6 +208,9 @@ function createElement(tagName, ownerDocument) {
         ownerDocument.nodesById.set(this.id, this);
       }
     },
+    removeAttribute(name) {
+      delete this.attributes[name];
+    },
     addEventListener(type, handler) {
       this[`on${type}`] = handler;
     },
@@ -2066,6 +2069,129 @@ test("admin keeps the current password by submitting the password field blank", 
 
   assert.ok(savedPayload, "saveEmailDeliveryConfig should be called");
   assert.equal(savedPayload.password, "", "blank password must be sent to keep the current one");
+});
+
+function createActiveEmailDeliveryAdmin(extra) {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+    getEmailDeliveryConfig: () =>
+      Promise.resolve({
+        configured: true,
+        host: "smtp.example.com",
+        port: 587,
+        encryption: "STARTTLS",
+        authEnabled: true,
+        username: "relay-user",
+        fromAddress: "no-reply@ea-tool.local",
+        passwordSaved: true,
+      }),
+  }, extra || {});
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+  return { document, root };
+}
+
+test("admin opens the test-email popover and sends a test message to a recipient", async () => {
+  let sentTo = null;
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    sendTestEmail: (recipient) => {
+      sentTo = recipient;
+      return Promise.resolve(undefined);
+    },
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  const testButton = findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Send test email"))[0];
+  assert.ok(testButton, "active state should offer a Send test email button");
+
+  const popover = document.getElementById("email-delivery-test-popover");
+  assert.equal(popover.hidden, true, "popover starts hidden");
+  testButton.onclick();
+  assert.equal(popover.hidden, false, "clicking opens the popover");
+
+  findField(popover, "testRecipient").value = "person@example.com";
+  const sendButton = findAll(popover, (node) => node.tagName === "BUTTON" && node.textContent === "Send")[0];
+  await sendButton.onclick();
+
+  assert.equal(sentTo, "person@example.com");
+  assert.equal(popover.hidden, true, "popover closes after a successful send");
+  const toast = document.getElementById("email-delivery-toast");
+  assert.equal(toast.hidden, false);
+  assert.match(toast.textContent, /Test email sent to person@example\.com/);
+  assert.match(toast.className, /--success/);
+});
+
+test("admin sees an error toast when the test email fails", async () => {
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    sendTestEmail: () => Promise.reject(new Error("Test email failed: Connection refused: check host and port")),
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  const testButton = findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Send test email"))[0];
+  testButton.onclick();
+  const popover = document.getElementById("email-delivery-test-popover");
+  findField(popover, "testRecipient").value = "person@example.com";
+  const sendButton = findAll(popover, (node) => node.tagName === "BUTTON" && node.textContent === "Send")[0];
+  await sendButton.onclick();
+
+  const toast = document.getElementById("email-delivery-toast");
+  assert.equal(toast.hidden, false);
+  assert.match(toast.textContent, /Connection refused/);
+  assert.match(toast.className, /--error/);
+});
+
+test("test-email popover validates the recipient before calling the API", async () => {
+  let called = false;
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    sendTestEmail: () => {
+      called = true;
+      return Promise.resolve(undefined);
+    },
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  const testButton = findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Send test email"))[0];
+  testButton.onclick();
+  const popover = document.getElementById("email-delivery-test-popover");
+  findField(popover, "testRecipient").value = "not-an-email";
+  const sendButton = findAll(popover, (node) => node.tagName === "BUTTON" && node.textContent === "Send")[0];
+  await sendButton.onclick();
+
+  assert.equal(called, false, "invalid recipient must not call the API");
+  assert.match(collectText(popover), /valid recipient email/i);
+});
+
+test("non-admin does not get a test-email option (screen hidden)", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const apiClient = Object.assign({}, mockApiClient, {
+    getCurrentUser: () => Promise.resolve({ name: "Vic Viewer", email: "vic@example.com", role: "VIEWER" }),
+    getEmailDeliveryConfig: () => Promise.resolve({ configured: true, passwordSaved: true }),
+    sendTestEmail: () => Promise.reject(new Error("should not be called")),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  assert.ok(!document.getElementById("email-delivery-test-popover"), "no test popover for non-admins");
 });
 
 test("non-admin does not see the Email Delivery screen", async () => {

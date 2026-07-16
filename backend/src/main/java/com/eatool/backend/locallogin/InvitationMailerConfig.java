@@ -3,7 +3,9 @@ package com.eatool.backend.locallogin;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.eatool.backend.emaildelivery.DefaultSmtpMailSenderFactory;
 import com.eatool.backend.emaildelivery.EmailDeliveryService;
+import com.eatool.backend.emaildelivery.SmtpMailSenderFactory;
 import com.eatool.backend.emaildelivery.SmtpPasswordEncryptor;
 
 /**
