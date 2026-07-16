@@ -146,6 +146,9 @@
   function sendTestEmail(recipient) {
     return request("POST", "/api/email-delivery/test", { recipient });
   }
+  function clearEmailDeliveryConfig() {
+    return request("DELETE", "/api/email-delivery");
+  }
   function listCatalogUsers() {
     return request("GET", "/api/catalog-users");
   }
@@ -202,6 +205,7 @@
     getEmailDeliveryConfig,
     saveEmailDeliveryConfig,
     sendTestEmail,
+    clearEmailDeliveryConfig,
     listCatalogUsers,
     updateCatalogUserRole,
     createLocalUser,

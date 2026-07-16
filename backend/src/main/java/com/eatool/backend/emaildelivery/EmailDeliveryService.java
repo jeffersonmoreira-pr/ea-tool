@@ -47,6 +47,16 @@ public class EmailDeliveryService {
     }
 
     /**
+     * Clears the persisted SMTP relay configuration (issue #27), reverting the
+     * system to the no-relay state so invites fall back to the dev log (ADR-0009).
+     * Idempotent: clearing when nothing is configured is a no-op.
+     */
+    @Transactional
+    public void clearConfig() {
+        repository.deleteAll();
+    }
+
+    /**
      * Sends a test email through the currently persisted relay (issue #26) so the
      * Admin can validate the connection before trusting delivery. Throws
      * {@link BadRequestException} when the recipient is invalid, when no relay is

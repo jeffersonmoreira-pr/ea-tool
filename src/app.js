@@ -1865,6 +1865,7 @@
     actions.appendChild(saveButton);
 
     let testButton = null;
+    let clearButton = null;
     if (configured) {
       testButton = makeElement(document, "button", {
         className: "button button--ghost",
@@ -1872,6 +1873,13 @@
         text: "Send test email\u2026",
       });
       actions.appendChild(testButton);
+
+      clearButton = makeElement(document, "button", {
+        className: "button button--danger",
+        type: "button",
+        text: "Clear configuration",
+      });
+      actions.appendChild(clearButton);
     }
 
     const status = makeElement(document, "p", {
@@ -2057,6 +2065,73 @@
           .then(function restore() {
             sendButton.disabled = false;
             sendButton.textContent = "Send";
+          });
+      });
+    }
+
+    if (clearButton) {
+      const confirmDialog = makeElement(document, "div", {
+        className: "email-delivery__popover email-delivery__confirm",
+        attributes: {
+          id: "email-delivery-clear-confirm",
+          role: "dialog",
+          "aria-label": "Remove SMTP configuration",
+          hidden: "hidden",
+        },
+      });
+      confirmDialog.hidden = true;
+      appendTextBlock(
+        document,
+        confirmDialog,
+        "p",
+        "email-delivery__confirm-message",
+        "Remove SMTP configuration? Invite emails will stop being sent."
+      );
+
+      const confirmActions = makeElement(document, "div", { className: "email-delivery__popover-actions" });
+      const keepButton = makeElement(document, "button", {
+        className: "button button--ghost",
+        type: "button",
+        text: "Cancel",
+      });
+      const confirmButton = makeElement(document, "button", {
+        className: "button button--danger",
+        type: "button",
+        text: "Remove configuration",
+      });
+      confirmActions.append(keepButton, confirmButton);
+      confirmDialog.appendChild(confirmActions);
+      section.appendChild(confirmDialog);
+
+      function closeConfirm() {
+        confirmDialog.hidden = true;
+        confirmDialog.setAttribute("hidden", "hidden");
+      }
+
+      clearButton.addEventListener("click", function onOpenClear() {
+        confirmDialog.hidden = false;
+        confirmDialog.removeAttribute("hidden");
+      });
+
+      keepButton.addEventListener("click", function onKeep() {
+        closeConfirm();
+      });
+
+      confirmButton.addEventListener("click", function onConfirmClear() {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Removing\u2026";
+        return apiClient
+          .clearEmailDeliveryConfig()
+          .then(function onCleared() {
+            if (typeof setEmailDelivery === "function") {
+              setEmailDelivery({ configured: false });
+            }
+          })
+          .catch(function onError(error) {
+            closeConfirm();
+            confirmButton.disabled = false;
+            confirmButton.textContent = "Remove configuration";
+            status.textContent = error && error.message ? error.message : "Unable to clear the configuration.";
           });
       });
     }
