@@ -2,7 +2,10 @@
 
 ## Status
 
-Aceita
+Aceita. Atualizada pela fatia #25 (envio real implementado): o envio de convite
+passou a ser dirigido pela configuração de SMTP relay persistida no banco (ver
+ADR-0010). O `LoggingInvitationMailer` permanece como fallback quando não há
+relay configurado no banco.
 
 ## Contexto
 

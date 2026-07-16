@@ -2,7 +2,11 @@
 
 ## Status
 
-Aceita
+Aceita. Concretizada pela fatia #25: o envio real do convite de Local Login passou
+a ser dirigido por esta configuração de banco (`RelayInvitationMailer` resolve a
+config em runtime, descriptografa a senha e envia via SMTP; sem config, faz
+fallback para log). A partir daí a config de banco tem precedência sobre
+`spring.mail.*`.
 
 ## Contexto
 
@@ -46,8 +50,7 @@ Isso levanta duas questões:
 
 - A configuração de SMTP em runtime substitui o uso de `spring.mail.*` como fonte de
   verdade para o envio de convites; a fatia #25 fará o mailer ler dinamicamente a
-  config do banco em vez do condicional `spring.mail.host`.
-- A chave de criptografia é operacionalmente crítica: perdê-la torna a senha
+  config do banco em vez do condicional `spring.mail.host`.- A chave de criptografia é operacionalmente crítica: perdê-la torna a senha
   persistida irrecuperável (será necessário re-salvar a configuração), e vazá-la
   compromete o segredo. Produção **deve** definir `EMAIL_DELIVERY_ENCRYPTION_KEY` e
   mantê-la fora do controle de versão.
