@@ -1,12 +1,10 @@
-package com.eatool.backend.locallogin;
+package com.eatool.backend.emaildelivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import com.eatool.backend.emaildelivery.SmtpEncryption;
-import com.eatool.backend.emaildelivery.SmtpRelayConfig;
 
 /**
  * Unit test for {@link DefaultSmtpMailSenderFactory} (issue #25): the persisted

@@ -6,6 +6,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import com.eatool.backend.emaildelivery.EmailDeliveryService;
+import com.eatool.backend.emaildelivery.SmtpMailSenderFactory;
 import com.eatool.backend.emaildelivery.SmtpPasswordEncryptor;
 import com.eatool.backend.emaildelivery.SmtpRelayConfig;
 

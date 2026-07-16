@@ -1,12 +1,10 @@
-package com.eatool.backend.locallogin;
+package com.eatool.backend.emaildelivery;
 
 import java.util.Properties;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
-import com.eatool.backend.emaildelivery.SmtpEncryption;
-import com.eatool.backend.emaildelivery.SmtpRelayConfig;
 
 /**
  * Default {@link SmtpMailSenderFactory}: builds a {@link JavaMailSenderImpl}

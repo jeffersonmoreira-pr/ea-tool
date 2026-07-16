@@ -143,6 +143,9 @@
       fromAddress: input && input.fromAddress,
     });
   }
+  function sendTestEmail(recipient) {
+    return request("POST", "/api/email-delivery/test", { recipient });
+  }
   function listCatalogUsers() {
     return request("GET", "/api/catalog-users");
   }
@@ -198,6 +201,7 @@
     getCurrentUser,
     getEmailDeliveryConfig,
     saveEmailDeliveryConfig,
+    sendTestEmail,
     listCatalogUsers,
     updateCatalogUserRole,
     createLocalUser,

@@ -4,8 +4,13 @@ import static com.eatool.backend.support.OidcLogins.adminLogin;
 import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static com.eatool.backend.support.OidcLogins.viewerLogin;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,17 +19,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mail.MailSendException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Covers issues #23 (read) and #24 (save) of the Admin-only Email Delivery
- * (SMTP Relay) API. Only Admins may view or save the configuration;
- * Viewers/Editors are denied. The response reports whether a relay is configured
- * and whether a password is saved, but never exposes the password. On save, the
- * password is encrypted at rest, a blank password keeps the current one, and the
- * host/port/from/username inputs are validated.
+ * Covers issues #23 (read), #24 (save) and #26 (test-send) of the Admin-only
+ * Email Delivery (SMTP Relay) API. Only Admins may view, save or test the
+ * configuration; Viewers/Editors are denied. The response reports whether a relay
+ * is configured and whether a password is saved, but never exposes the password.
+ * On save, the password is encrypted at rest, a blank password keeps the current
+ * one, and the host/port/from/username inputs are validated. The test-send routes
+ * the probe email through the current relay and reports success or a readable
+ * failure reason.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -39,6 +50,9 @@ class EmailDeliveryControllerTests {
 
     @Autowired
     private SmtpPasswordEncryptor passwordEncryptor;
+
+    @MockBean
+    private SmtpMailSenderFactory mailSenderFactory;
 
     @Test
     void adminSeesEmptyStateWhenNoRelayConfigured() throws Exception {
@@ -250,6 +264,84 @@ class EmailDeliveryControllerTests {
         mockMvc.perform(put("/api/email-delivery")
                         .with(editorLogin()).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    private void seedRelay() {
+        repository.save(new SmtpRelayConfig(
+                "smtp.example.com", 587, SmtpEncryption.STARTTLS,
+                true, "relay-user", passwordEncryptor.encrypt("relay-secret"), "no-reply@ea-tool.local"));
+    }
+
+    @Test
+    void adminSendsTestEmailThroughCurrentRelay() throws Exception {
+        seedRelay();
+        JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
+        when(mailSenderFactory.create(any(), any())).thenReturn(mailSender);
+
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(adminLogin("admin@example.com")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"recipient@example.com\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(mailSender).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void adminTestEmailReportsReadableFailure() throws Exception {
+        seedRelay();
+        JavaMailSender mailSender = org.mockito.Mockito.mock(JavaMailSender.class);
+        doThrow(new MailSendException("Connection refused: check host and port"))
+                .when(mailSender).send(any(SimpleMailMessage.class));
+        when(mailSenderFactory.create(any(), any())).thenReturn(mailSender);
+
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(adminLogin("admin@example.com")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"recipient@example.com\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Connection refused")));
+    }
+
+    @Test
+    void testEmailRejectsInvalidRecipient() throws Exception {
+        seedRelay();
+
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(adminLogin("admin@example.com")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"not-an-email\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Enter a valid recipient email."));
+    }
+
+    @Test
+    void testEmailFailsWhenNoRelayConfigured() throws Exception {
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(adminLogin("admin@example.com")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"recipient@example.com\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value(org.hamcrest.Matchers.containsString("Configure and save the SMTP relay")));
+    }
+
+    @Test
+    void viewerCannotSendTestEmail() throws Exception {
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(viewerLogin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"recipient@example.com\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void editorCannotSendTestEmail() throws Exception {
+        mockMvc.perform(post("/api/email-delivery/test")
+                        .with(editorLogin()).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"recipient\":\"recipient@example.com\"}"))
                 .andExpect(status().isForbidden());
     }
 }

@@ -1,8 +1,7 @@
-package com.eatool.backend.locallogin;
+package com.eatool.backend.emaildelivery;
 
 import org.springframework.mail.javamail.JavaMailSender;
 
-import com.eatool.backend.emaildelivery.SmtpRelayConfig;
 
 /**
  * Builds a {@link JavaMailSender} from the SMTP relay configuration persisted in

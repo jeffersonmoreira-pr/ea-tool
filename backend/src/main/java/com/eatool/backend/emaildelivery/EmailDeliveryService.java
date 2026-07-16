@@ -3,6 +3,9 @@ package com.eatool.backend.emaildelivery;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.mail.MailException;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +15,9 @@ import com.eatool.backend.common.BadRequestException;
  * Resolves and persists the singleton SMTP relay configuration (issue #20). The
  * read path (issue #23) exposes the current configuration without the password;
  * the write path (issue #24) validates the input, encrypts the password at rest,
- * and keeps the existing password when the Admin submits a blank one. Test-send
- * and clear paths arrive in later slices (issues #26-#27).
+ * and keeps the existing password when the Admin submits a blank one. The
+ * test-send path (issue #26) sends a probe email through the current relay so the
+ * Admin can validate host/port/credentials. The clear path arrives in issue #27.
  */
 @Service
 public class EmailDeliveryService {
@@ -26,16 +30,68 @@ public class EmailDeliveryService {
 
     private final SmtpRelayConfigRepository repository;
     private final SmtpPasswordEncryptor passwordEncryptor;
+    private final SmtpMailSenderFactory mailSenderFactory;
 
     public EmailDeliveryService(
-            SmtpRelayConfigRepository repository, SmtpPasswordEncryptor passwordEncryptor) {
+            SmtpRelayConfigRepository repository,
+            SmtpPasswordEncryptor passwordEncryptor,
+            SmtpMailSenderFactory mailSenderFactory) {
         this.repository = repository;
         this.passwordEncryptor = passwordEncryptor;
+        this.mailSenderFactory = mailSenderFactory;
     }
 
     @Transactional(readOnly = true)
     public Optional<SmtpRelayConfig> getConfig() {
         return repository.findFirstByOrderByUpdatedAtDesc();
+    }
+
+    /**
+     * Sends a test email through the currently persisted relay (issue #26) so the
+     * Admin can validate the connection before trusting delivery. Throws
+     * {@link BadRequestException} when the recipient is invalid, when no relay is
+     * configured, or when the send fails (carrying a readable reason).
+     *
+     * <p>Intentionally not {@code @Transactional}: the config read runs in its own
+     * short transaction and the blocking SMTP send happens outside any transaction
+     * so it never pins a pooled DB connection across the network round-trip.
+     */
+    public void sendTestEmail(String rawRecipient) {
+        String recipient = rawRecipient == null ? "" : rawRecipient.trim();
+        if (recipient.isEmpty() || !EMAIL_PATTERN.matcher(recipient).matches()) {
+            throw new BadRequestException("Enter a valid recipient email.");
+        }
+
+        SmtpRelayConfig relay = repository.findFirstByOrderByUpdatedAtDesc()
+                .orElseThrow(() -> new BadRequestException(
+                        "Configure and save the SMTP relay before sending a test email."));
+
+        String plainPassword = relay.hasPassword()
+                ? passwordEncryptor.decrypt(relay.getPasswordCiphertext())
+                : null;
+        JavaMailSender mailSender = mailSenderFactory.create(relay, plainPassword);
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(relay.getFromAddress());
+        message.setTo(recipient);
+        message.setSubject("EA Tool SMTP relay test");
+        message.setText("This is a test email from EA Tool confirming that the SMTP relay "
+                + "configuration works. If you received it, delivery is set up correctly.");
+
+        try {
+            mailSender.send(message);
+        } catch (MailException error) {
+            throw new BadRequestException("Test email failed: " + readableCause(error));
+        }
+    }
+
+    private static String readableCause(Throwable error) {
+        Throwable cause = error;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        String message = cause.getMessage();
+        return message == null || message.isBlank() ? cause.getClass().getSimpleName() : message;
     }
 
     @Transactional
