@@ -1,6 +1,7 @@
 package com.eatool.backend.masterdata;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.eatool.backend.support.OidcLogins.adminLogin;
 import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -63,14 +64,14 @@ class BusinessAreaControllerTests {
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/business-areas/" + id)
-                        .with(editorLogin())
+                        .with(adminLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Growth & Retention\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Growth & Retention"));
 
-        mockMvc.perform(delete("/api/business-areas/" + id).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/business-areas/" + id).with(adminLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -126,7 +127,7 @@ class BusinessAreaControllerTests {
         application.setLastVerificationDate("");
         applicationRepository.save(application);
 
-        mockMvc.perform(delete("/api/business-areas/" + businessArea.getId()).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/business-areas/" + businessArea.getId()).with(adminLogin()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Business Area is in use by Application: Area App."));
     }

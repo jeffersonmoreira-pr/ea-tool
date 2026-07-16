@@ -1690,7 +1690,7 @@
     return parts.join(" \u00b7 ");
   }
 
-  function renderUsersAdmin(document, apiClient, currentUser, users, departments, businessAreas) {
+  function renderUsersAdmin(document, apiClient, currentUser, users, departments, businessAreas, applications, vendors) {
     const section = makeElement(document, "section", {
       className: "content-section content-section--compact",
       attributes: { id: "users" },
@@ -1715,7 +1715,7 @@
     const table = makeElement(document, "table", { className: "users-table" });
     const thead = makeElement(document, "thead", {});
     const headRow = makeElement(document, "tr", {});
-    for (const heading of ["Name / Email", "Login Method", "Role", "Access Scope"]) {
+    for (const heading of ["Name / Email", "Login Method", "Role", "Access Scope", "Edit Permissions"]) {
       appendTextBlock(document, headRow, "th", "", heading);
     }
     thead.appendChild(headRow);
@@ -1781,6 +1781,17 @@
       const scopeCell = makeElement(document, "td", {});
       renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf);
       row.appendChild(scopeCell);
+
+      const editPermissionsCell = makeElement(document, "td", {});
+      renderEditPermissionsCell(
+        document,
+        apiClient,
+        editPermissionsCell,
+        status,
+        user,
+        buildEditableRecordGroups(applications, vendors, departments, businessAreas),
+      );
+      row.appendChild(editPermissionsCell);
 
       tbody.appendChild(row);
     }
@@ -1879,6 +1890,120 @@
     }
     editor.appendChild(group);
     return checks;
+  }
+
+  function buildEditableRecordGroups(applications, vendors, departments, businessAreas) {
+    return [
+      { type: "APPLICATION", legend: "Applications", records: applications || [] },
+      { type: "VENDOR", legend: "Vendors", records: vendors || [] },
+      { type: "DEPARTMENT", legend: "Departments", records: departments || [] },
+      { type: "BUSINESS_AREA", legend: "Business Areas", records: businessAreas || [] },
+    ];
+  }
+
+  function renderEditPermissionsCell(document, apiClient, cell, status, user, recordGroups) {
+    const isEditor = String(user.role || "").toUpperCase() === "EDITOR";
+    const summary = makeElement(document, "span", {
+      className: "users-table__perm-summary",
+      text: isEditor ? "Manage permissions" : "Editor Role required",
+    });
+    cell.appendChild(summary);
+
+    if (!isEditor) {
+      // Edit Permission is a per-record grant layered on the Editor Role, so it
+      // only applies to Editors. Viewers and Admins are handled by their Role.
+      return;
+    }
+
+    const editor = makeElement(document, "div", { className: "users-table__perm-editor" });
+    editor.hidden = true;
+
+    let loaded = false;
+    const grantedKeys = new Set();
+
+    function keyOf(recordType, recordId) {
+      return `${recordType}:${recordId}`;
+    }
+
+    function updateSummary() {
+      const count = grantedKeys.size;
+      summary.textContent = count === 0 ? "No records granted" : `${count} record${count === 1 ? "" : "s"} granted`;
+    }
+
+    function buildChecklists() {
+      for (const group of recordGroups) {
+        const fieldset = makeElement(document, "fieldset", { className: "users-table__perm-group" });
+        appendTextBlock(document, fieldset, "legend", "users-table__perm-legend", group.legend);
+        for (const record of group.records) {
+          const label = makeElement(document, "label", { className: "users-table__perm-option" });
+          const checkbox = makeElement(document, "input", {
+            type: "checkbox",
+            value: record.id,
+            checked: grantedKeys.has(keyOf(group.type, record.id)),
+            attributes: { "aria-label": `${group.legend}: ${record.name || ""}` },
+          });
+          checkbox.addEventListener("change", function onToggleGrant() {
+            const shouldGrant = checkbox.checked;
+            checkbox.disabled = true;
+            const action = shouldGrant
+              ? apiClient.grantCatalogUserEditPermission(user.id, { recordType: group.type, recordId: record.id })
+              : apiClient.revokeCatalogUserEditPermission(user.id, group.type, record.id);
+            return action
+              .then(function onDone() {
+                if (shouldGrant) {
+                  grantedKeys.add(keyOf(group.type, record.id));
+                } else {
+                  grantedKeys.delete(keyOf(group.type, record.id));
+                }
+                updateSummary();
+                status.textContent = `Edit permission ${shouldGrant ? "granted" : "revoked"} for ${
+                  record.name || "record"
+                } (${user.name || user.email}).`;
+                checkbox.disabled = false;
+              })
+              .catch(function onError(error) {
+                checkbox.checked = !shouldGrant;
+                status.textContent = error.message;
+                checkbox.disabled = false;
+              });
+          });
+          label.append(checkbox, makeElement(document, "span", { text: record.name || "" }));
+          fieldset.appendChild(label);
+        }
+        editor.appendChild(fieldset);
+      }
+    }
+
+    const toggle = makeElement(document, "button", {
+      className: "users-table__perm-edit",
+      text: "Edit permissions",
+      type: "button",
+    });
+    toggle.addEventListener("click", function onToggleEditor() {
+      if (!loaded) {
+        toggle.disabled = true;
+        return apiClient
+          .listCatalogUserEditPermissions(user.id)
+          .then(function onLoaded(grants) {
+            for (const grant of grants || []) {
+              grantedKeys.add(keyOf(grant.recordType, grant.recordId));
+            }
+            loaded = true;
+            updateSummary();
+            buildChecklists();
+            editor.hidden = false;
+            toggle.disabled = false;
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
+            toggle.disabled = false;
+          });
+      }
+      editor.hidden = !editor.hidden;
+      return undefined;
+    });
+
+    cell.append(toggle, editor);
   }
 
   let activeView = "dashboard";
@@ -2100,6 +2225,8 @@
         users,
         catalog.departments || [],
         catalog.businessAreas || [],
+        catalog.applications || [],
+        catalog.vendors || [],
       );
       contentViews.push(makeView("users", [usersSection]));
     }

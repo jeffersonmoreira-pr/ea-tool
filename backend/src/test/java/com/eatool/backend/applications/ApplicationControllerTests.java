@@ -1,6 +1,7 @@
 package com.eatool.backend.applications;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.eatool.backend.support.OidcLogins.adminLogin;
 import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -101,7 +102,7 @@ class ApplicationControllerTests {
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/applications/" + id)
-                        .with(editorLogin())
+                        .with(adminLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createApplicationRequest(refs[0], refs[1], refs[2], 1, "low")))
@@ -109,7 +110,7 @@ class ApplicationControllerTests {
                 .andExpect(jsonPath("$.businessFitBand").value("low"))
                 .andExpect(jsonPath("$.timeClassification").value("Eliminate"));
 
-        mockMvc.perform(delete("/api/applications/" + id).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/applications/" + id).with(adminLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

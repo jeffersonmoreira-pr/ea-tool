@@ -141,6 +141,21 @@
       businessAreaIds: (scope && scope.businessAreaIds) || [],
     });
   }
+  function listCatalogUserEditPermissions(id) {
+    return request("GET", `/api/catalog-users/${encodeURIComponent(id)}/edit-permissions`);
+  }
+  function grantCatalogUserEditPermission(id, grant) {
+    return request("POST", `/api/catalog-users/${encodeURIComponent(id)}/edit-permissions`, {
+      recordType: grant && grant.recordType,
+      recordId: grant && grant.recordId,
+    });
+  }
+  function revokeCatalogUserEditPermission(id, recordType, recordId) {
+    return request(
+      "DELETE",
+      `/api/catalog-users/${encodeURIComponent(id)}/edit-permissions/${encodeURIComponent(recordType)}/${encodeURIComponent(recordId)}`,
+    );
+  }
 
   return {
     listDepartments,
@@ -163,5 +178,8 @@
     listCatalogUsers,
     updateCatalogUserRole,
     updateCatalogUserAccessScope,
+    listCatalogUserEditPermissions,
+    grantCatalogUserEditPermission,
+    revokeCatalogUserEditPermission,
   };
 });

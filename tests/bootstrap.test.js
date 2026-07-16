@@ -68,8 +68,11 @@ function createMockApiClient(catalog) {
 
 function createUserStore(initialUsers) {
   const users = initialUsers.map((user) => ({ ...user }));
+  const grants = new Map();
+  const grantKey = (id, recordType, recordId) => `${id}|${recordType}|${recordId}`;
   return {
     users,
+    grants,
     client: {
       listCatalogUsers: () => Promise.resolve(users.map((user) => ({ ...user }))),
       updateCatalogUserRole: (id, role) =>
@@ -90,6 +93,25 @@ function createUserStore(initialUsers) {
           target.scopedDepartmentIds = (scope && scope.departmentIds) || [];
           target.scopedBusinessAreaIds = (scope && scope.businessAreaIds) || [];
           return { ...target };
+        }),
+      listCatalogUserEditPermissions: (id) =>
+        toPromise(() =>
+          Array.from(grants.values()).filter((grant) => grant.catalogUserId === id),
+        ),
+      grantCatalogUserEditPermission: (id, grant) =>
+        toPromise(() => {
+          const entry = {
+            catalogUserId: id,
+            recordType: grant && grant.recordType,
+            recordId: grant && grant.recordId,
+          };
+          grants.set(grantKey(id, entry.recordType, entry.recordId), entry);
+          return entry;
+        }),
+      revokeCatalogUserEditPermission: (id, recordType, recordId) =>
+        toPromise(() => {
+          grants.delete(grantKey(id, recordType, recordId));
+          return undefined;
         }),
     },
   };
@@ -1681,3 +1703,90 @@ test("admin assigns an Access Scope to a user through the User Management screen
   assert.match(collectText(document.getElementById("users")), /Access scope updated for Vic Viewer\./);
 });
 
+
+test("admin sees Edit Permissions management only for Editor users", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    { id: "u-editor", name: "Eve Editor", email: "eve@example.com", role: "EDITOR", loginMethod: "SSO" },
+    { id: "u-viewer", name: "Vic Viewer", email: "vic@example.com", role: "VIEWER", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const usersSection = document.getElementById("users");
+  const text = collectText(usersSection);
+  assert.match(text, /Edit Permissions/);
+  assert.match(text, /Manage permissions/);
+  assert.match(text, /Editor Role required/);
+
+  const permButtons = findAll(
+    usersSection,
+    (node) => node.tagName === "BUTTON" && collectText(node) === "Edit permissions",
+  );
+  assert.equal(permButtons.length, 1, "only the Editor row should offer an Edit permissions button");
+});
+
+test("admin grants and revokes an Edit Permission through the User Management screen", async () => {
+  const document = createDocument();
+  const catalog = catalogApi.createInitialCatalog();
+  const mockApiClient = createMockApiClient(catalog);
+  const store = createUserStore([
+    { id: "u-admin", name: "Ada Admin", email: "ada@example.com", role: "ADMIN", loginMethod: "SSO" },
+    { id: "u-editor", name: "Eve Editor", email: "eve@example.com", role: "EDITOR", loginMethod: "SSO" },
+  ]);
+  const apiClient = Object.assign({}, mockApiClient, store.client, {
+    getCurrentUser: () => Promise.resolve({ name: "Ada Admin", email: "ada@example.com", role: "ADMIN" }),
+  });
+  const root = {
+    ApplicationPortfolioCatalog: catalogApi,
+    ApplicationPortfolioApiClient: apiClient,
+    document,
+    localStorage: createMemoryStorage(),
+  };
+
+  await appApi.init(root);
+  const usersSection = document.getElementById("users");
+
+  const permToggle = findAll(
+    usersSection,
+    (node) => node.tagName === "BUTTON" && collectText(node) === "Edit permissions",
+  )[0];
+  assert.ok(permToggle, "an Edit permissions toggle should be rendered for the Editor");
+  await permToggle.onclick();
+
+  // A Vendor record only appears in the Edit Permission checklist (not the
+  // Access Scope editor), so its checkbox is unambiguous.
+  const vendorCheck = findAll(
+    usersSection,
+    (node) => node.tagName === "INPUT" && node.type === "checkbox" && node.value === "vendor-northstar",
+  )[0];
+  assert.ok(vendorCheck, "a Vendors checkbox should be rendered in the Edit Permission editor");
+
+  vendorCheck.checked = true;
+  await vendorCheck.onchange();
+  assert.ok(
+    store.grants.has("u-editor|VENDOR|vendor-northstar"),
+    "granting should record an Edit Permission for the Editor on that Vendor",
+  );
+  assert.match(collectText(document.getElementById("users")), /Edit permission granted/);
+
+  vendorCheck.checked = false;
+  await vendorCheck.onchange();
+  assert.equal(
+    store.grants.has("u-editor|VENDOR|vendor-northstar"),
+    false,
+    "revoking should remove the Edit Permission",
+  );
+  assert.match(collectText(document.getElementById("users")), /Edit permission revoked/);
+});

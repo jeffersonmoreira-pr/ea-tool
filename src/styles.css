@@ -2184,3 +2184,55 @@ body {
   display: flex;
   justify-content: flex-end;
 }
+
+.users-table__perm-summary {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 13px;
+  color: #44474d;
+}
+
+.users-table__perm-edit {
+  padding: 4px 10px;
+  border: 1px solid #75777e;
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.users-table__perm-editor {
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid #c5c6ce;
+  border-radius: 8px;
+  background: #f5f3f6;
+}
+
+.users-table__perm-editor[hidden] {
+  display: none;
+}
+
+.users-table__perm-group {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid #c5c6ce;
+  border-radius: 4px;
+}
+
+.users-table__perm-legend {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #44474d;
+}
+
+.users-table__perm-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  font-size: 13px;
+}

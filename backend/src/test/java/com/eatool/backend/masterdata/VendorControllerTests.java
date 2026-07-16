@@ -1,6 +1,7 @@
 package com.eatool.backend.masterdata;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static com.eatool.backend.support.OidcLogins.adminLogin;
 import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -64,7 +65,7 @@ class VendorControllerTests {
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/vendors/" + id)
-                        .with(editorLogin())
+                        .with(adminLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Apex Laboratories\",\"isInternal\":false}"))
@@ -72,7 +73,7 @@ class VendorControllerTests {
                 .andExpect(jsonPath("$.name").value("Apex Laboratories"))
                 .andExpect(jsonPath("$.isInternal").value(false));
 
-        mockMvc.perform(delete("/api/vendors/" + id).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/vendors/" + id).with(adminLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -128,7 +129,7 @@ class VendorControllerTests {
         application.setLastVerificationDate("");
         applicationRepository.save(application);
 
-        mockMvc.perform(delete("/api/vendors/" + vendor.getId()).with(editorLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/vendors/" + vendor.getId()).with(adminLogin()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Vendor is in use by Application: Ops Console."));
     }
