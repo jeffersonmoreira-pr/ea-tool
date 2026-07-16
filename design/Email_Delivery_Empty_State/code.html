@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Email Delivery Configuration - Strategic Enterprise Ledger</title>
+<!-- Tailwind CSS with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .active-nav-item {
+            /* Handled via style_active_navigation from JSON */
+        }
+        /* Custom scrollbar for enterprise feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c0c7d0;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #717880;
+        }
+    </style>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#d5d6d8",
+                        "on-secondary-container": "#505f7f",
+                        "surface-dim": "#d3daea",
+                        "tertiary-fixed-dim": "#c5c6c8",
+                        "outline": "#717880",
+                        "primary-container": "#0c6291",
+                        "secondary-fixed": "#d7e2ff",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#e2e8f8",
+                        "surface-tint": "#106493",
+                        "on-surface": "#151c27",
+                        "surface-container-low": "#f0f3ff",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#ebf1ff",
+                        "on-primary-fixed-variant": "#004b72",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-fixed": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#5b5d5f",
+                        "surface-container": "#e7eefe",
+                        "inverse-primary": "#90cdff",
+                        "secondary": "#4f5e7e",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9ff",
+                        "tertiary": "#434647",
+                        "on-secondary-fixed": "#091b37",
+                        "surface-container-highest": "#dce2f3",
+                        "primary-fixed-dim": "#90cdff",
+                        "surface-bright": "#f9f9ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#001e30",
+                        "inverse-surface": "#2a313d",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#dce2f3",
+                        "secondary-fixed-dim": "#b7c7eb",
+                        "secondary-container": "#cadaff",
+                        "primary": "#00496f",
+                        "outline-variant": "#c0c7d0",
+                        "on-surface-variant": "#40484f",
+                        "on-primary-container": "#b2dbff",
+                        "on-secondary-fixed-variant": "#374765",
+                        "tertiary-fixed": "#e1e2e4",
+                        "on-tertiary-fixed-variant": "#444749",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#151c27",
+                        "primary-fixed": "#cbe6ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "32px",
+                        "gutter": "24px",
+                        "stack-md": "16px",
+                        "margin-page": "32px",
+                        "panel-padding": "24px",
+                        "container-max": "1280px",
+                        "stack-sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", {"lineHeight": "26px", "fontWeight": "600"}],
+                        "body-sm": ["12px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                        "headline-lg": ["30px", {"lineHeight": "38px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-md": ["13px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-background">
+<!-- SideNavBar Shell -->
+<aside class="h-screen w-64 flex flex-col fixed left-0 top-0 bg-primary dark:bg-primary-container border-r border-outline-variant dark:border-outline z-50">
+<!-- Brand Header -->
+<div class="p-6">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-lg bg-on-primary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" data-icon="account_balance">account_balance</span>
+</div>
+<span class="text-title-sm font-headline font-bold text-on-primary dark:text-on-primary-container">Portfolio Admin</span>
+</div>
+<p class="text-[10px] uppercase tracking-wider text-on-primary/60 font-bold">Enterprise Control</p>
+</div>
+<!-- Navigation items -->
+<nav class="flex flex-col h-full p-4 space-y-2 overflow-y-auto">
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-caps font-label-caps font-medium">Executive Overview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="text-label-caps font-label-caps font-medium">Applications</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="handshake">handshake</span>
+<span class="text-label-caps font-label-caps font-medium">Vendors</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+<span class="text-label-caps font-label-caps font-medium">Departments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="domain">domain</span>
+<span class="text-label-caps font-label-caps font-medium">Business Areas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-primary/70 dark:text-on-primary-container/70 hover:text-on-primary dark:hover:text-on-primary-container hover:bg-primary-fixed-dim/10 dark:hover:bg-primary/20 transition-all duration-200 rounded-lg group active:scale-95" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-label-caps font-label-caps font-medium">User Management</span>
+</a>
+<!-- Active State: Email Delivery -->
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary font-semibold rounded-lg transition-transform active:scale-100" href="#">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+<span class="text-label-caps font-label-caps font-medium">Email Delivery</span>
+</a>
+</nav>
+<!-- User Profile Minimal -->
+<div class="mt-auto p-4 border-t border-on-primary/10">
+<div class="flex items-center gap-3 p-2">
+<div class="w-8 h-8 rounded-full bg-on-primary-container flex items-center justify-center text-primary font-bold text-xs">AD</div>
+<div class="overflow-hidden">
+<p class="text-on-primary text-xs font-semibold truncate">Admin Workspace</p>
+<p class="text-on-primary/60 text-[10px] truncate">System Administrator</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Shell -->
+<header class="h-16 w-full fixed top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline flex justify-between items-center pl-72 pr-8">
+<div class="flex items-center gap-6">
+<h1 class="text-title-sm font-headline font-bold text-primary dark:text-inverse-primary uppercase tracking-tighter">Strategic Enterprise Ledger</h1>
+<div class="relative group">
+<span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant pointer-events-none">
+<span class="material-symbols-outlined text-body-sm" data-icon="search">search</span>
+</span>
+<input class="bg-surface-container-lowest border-none rounded-full pl-10 pr-4 py-1.5 text-body-sm w-64 focus:ring-2 focus:ring-primary transition-all" placeholder="Global search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-6 w-[1px] bg-outline-variant mx-2"></div>
+<button class="text-label-md font-bold text-primary hover:opacity-80 transition-opacity">Logout</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="pl-64 pt-16 min-h-screen">
+<div class="max-w-[880px] mx-auto py-12 px-8">
+<!-- Page Header -->
+<header class="mb-8">
+<div class="flex items-start justify-between mb-2">
+<div>
+<h2 class="text-headline-md font-headline text-on-surface mb-1">Email Delivery (SMTP Relay)</h2>
+<p class="text-on-surface-variant text-body-md">Configure the SMTP relay for outgoing system communications and notifications.</p>
+</div>
+</div>
+<!-- Status Pill (Amber Warning) -->
+<div class="inline-flex items-center gap-2 bg-[#fff7ed] border border-[#ffedd5] px-3 py-2 rounded-lg mt-4 shadow-sm">
+<span class="material-symbols-outlined text-[#d97706] text-[18px]" data-icon="warning">warning</span>
+<span class="text-label-sm text-[#92400e]">No relay configured — in development, invite links are written to the log</span>
+</div>
+</header>
+<!-- Configuration Form -->
+<div class="bg-white rounded-xl shadow-[0px_4px_12px_rgba(27,43,72,0.08)] overflow-hidden">
+<div class="px-panel-padding py-stack-md border-b border-outline-variant">
+<h3 class="text-headline-sm font-headline-sm text-on-surface">Relay settings</h3>
+</div>
+<div class="p-panel-padding">
+<form class="space-y-6">
+<!-- Host and Port (Two Column) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2">
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">Host</label>
+<input class="w-full bg-white border border-outline-variant rounded-lg p-2.5 text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-4 outline-none transition-all" placeholder="e.g. smtp.example.com" type="text"/>
+</div>
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">Port</label>
+<input class="w-full bg-white border border-outline-variant rounded-lg p-2.5 text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-4 outline-none transition-all" type="number" value="587"/>
+</div>
+</div>
+<!-- Encryption -->
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">Encryption</label>
+<div class="grid grid-cols-3 gap-3">
+<button class="px-4 py-2 text-body-md font-medium rounded-lg border border-outline-variant hover:bg-surface transition-colors" type="button">None</button>
+<button class="px-4 py-2 text-body-md font-medium rounded-lg border-2 border-primary bg-primary-fixed-dim/10 text-primary" type="button">STARTTLS</button>
+<button class="px-4 py-2 text-body-md font-medium rounded-lg border border-outline-variant hover:bg-surface transition-colors" type="button">SSL/TLS</button>
+</div>
+</div>
+<div class="h-px bg-outline-variant my-4"></div>
+<!-- Auth Toggle and Credentials -->
+<div class="flex items-center justify-between mb-4">
+<div>
+<h4 class="text-label-md font-bold text-on-surface">Authentication</h4>
+<p class="text-body-sm text-on-surface-variant">Require credentials for the SMTP server</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">Username</label>
+<input autocomplete="off" class="w-full bg-white border border-outline-variant rounded-lg p-2.5 text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-4 outline-none transition-all" type="text"/>
+</div>
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">Password</label>
+<input autocomplete="new-password" class="w-full bg-white border border-outline-variant rounded-lg p-2.5 text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-4 outline-none transition-all" type="password"/>
+</div>
+</div>
+<div class="h-px bg-outline-variant my-4"></div>
+<!-- Sender Info -->
+<div>
+<label class="block text-label-md font-label-md text-on-surface-variant mb-1">From Address</label>
+<input class="w-full bg-white border border-outline-variant rounded-lg p-2.5 text-body-md focus:ring-2 focus:ring-primary focus:ring-offset-4 outline-none transition-all" placeholder="noreply@enterprise-ledger.com" type="email"/>
+<p class="mt-2 text-body-sm text-on-surface-variant">This address will be shown as the sender of all system-generated emails.</p>
+</div>
+</form>
+</div>
+<!-- Card Footer Actions -->
+<div class="px-panel-padding py-6 bg-surface-container-low flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<button class="px-6 py-2.5 bg-primary text-white rounded-lg text-label-md font-bold hover:opacity-90 active:scale-95 transition-all shadow-md">
+                            Save configuration
+                        </button>
+<button class="px-6 py-2.5 border border-primary text-primary opacity-40 cursor-not-allowed rounded-lg text-label-md font-bold flex items-center gap-2" disabled="">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                            Send test email...
+                        </button>
+</div>
+<button class="px-4 py-2 text-[#1b2b48] hover:bg-error-container hover:text-on-error-container rounded-lg text-label-md font-bold transition-colors flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:text-error" data-icon="delete_sweep">delete_sweep</span>
+                        Clear configuration
+                    </button>
+</div>
+</div>
+<!-- Contextual Help / Status -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="p-6 bg-surface-container-high rounded-xl">
+<h4 class="text-label-md font-bold text-on-surface mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="terminal">terminal</span>
+                        Development Mode
+                    </h4>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                        The system is currently running in 'local' environment. SMTP calls are intercepted and logged to the <code>/logs/email.log</code> file instead of being dispatched via the network.
+                    </p>
+</div>
+<div class="p-6 bg-surface-container-high rounded-xl">
+<h4 class="text-label-md font-bold text-on-surface mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="security">security</span>
+                        Security Note
+                    </h4>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                        Credentials are encrypted at rest using AES-256. Ensure your SMTP provider supports STARTTLS or SSL/TLS for secure communication over the wire.
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            if (!btn.disabled) {
+                btn.addEventListener('click', (e) => {
+                    const ripple = document.createElement('span');
+                    ripple.className = 'absolute inset-0 bg-white/20 rounded-lg pointer-events-none animate-ping';
+                    btn.classList.add('relative');
+                    btn.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 500);
+                });
+            }
+        });
+
+        // Theme toggle logic (conceptual)
+        const toggleTheme = () => {
+            document.documentElement.classList.toggle('dark');
+        }
+    </script>
+</body></html>
