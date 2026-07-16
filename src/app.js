@@ -1674,25 +1674,46 @@
     return String(loginMethod || "").toUpperCase() === "LOCAL" ? "Local Login" : "SSO";
   }
 
-  function formatEncryptionLabel(encryption) {
-    switch (String(encryption || "").toUpperCase()) {
-      case "SSL_TLS":
-        return "SSL/TLS";
-      case "STARTTLS":
-        return "STARTTLS";
-      case "NONE":
-        return "None";
-      default:
-        return String(encryption || "");
+  const EMAIL_DELIVERY_ENCRYPTION_OPTIONS = [
+    { value: "NONE", label: "None" },
+    { value: "STARTTLS", label: "STARTTLS" },
+    { value: "SSL_TLS", label: "SSL/TLS" },
+  ];
+
+  const EMAIL_DELIVERY_HOST_PATTERN =
+    /^(?=.{1,253}$)([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  const EMAIL_DELIVERY_EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+  function makeEmailDeliveryField(document, options) {
+    const wrapper = makeElement(document, "div", { className: "email-delivery__field" });
+    const label = makeElement(document, "label", {
+      className: "email-delivery__label",
+      text: options.label,
+      attributes: { for: options.id },
+    });
+    wrapper.appendChild(label);
+    const input = makeElement(document, "input", {
+      className: "email-delivery__input",
+      id: options.id,
+      name: options.name,
+      type: options.type || "text",
+      value: options.value || "",
+      attributes: options.placeholder ? { placeholder: options.placeholder } : {},
+    });
+    wrapper.appendChild(input);
+    if (options.hint) {
+      appendTextBlock(document, wrapper, "p", "email-delivery__hint", options.hint);
     }
+    const error = makeElement(document, "p", {
+      className: "email-delivery__error",
+      id: `${options.id}-error`,
+      attributes: { role: "alert" },
+    });
+    wrapper.appendChild(error);
+    return { wrapper, input, error };
   }
 
-  function appendDetail(document, list, term, value) {
-    appendTextBlock(document, list, "dt", "email-delivery__term", term);
-    appendTextBlock(document, list, "dd", "email-delivery__value", value);
-  }
-
-  function renderEmailDelivery(document, config) {
+  function renderEmailDelivery(document, config, apiClient, setEmailDelivery) {
     const cfg = config || { configured: false };
     const section = makeElement(document, "section", {
       className: "content-section content-section--compact",
@@ -1722,36 +1743,217 @@
     });
     section.appendChild(pill);
 
-    const card = makeElement(document, "div", { className: "email-delivery__card" });
-    appendTextBlock(document, card, "h3", "email-delivery__card-title", "Relay settings");
+    const form = makeElement(document, "form", {
+      className: "email-delivery__form",
+      attributes: { novalidate: "novalidate" },
+    });
 
-    if (!configured) {
-      appendTextBlock(
-        document,
-        card,
-        "p",
-        "email-delivery__empty",
-        "No SMTP relay is configured yet. Invite links are written to the application log in development.",
+    const hostField = makeEmailDeliveryField(document, {
+      id: "email-delivery-host",
+      name: "host",
+      label: "Host",
+      value: cfg.host || "",
+      placeholder: "smtp.example.com",
+    });
+    const portField = makeEmailDeliveryField(document, {
+      id: "email-delivery-port",
+      name: "port",
+      label: "Port",
+      type: "number",
+      value: cfg.port === null || cfg.port === undefined ? "" : String(cfg.port),
+      placeholder: "587",
+    });
+    form.append(hostField.wrapper, portField.wrapper);
+
+    const encryptionField = makeElement(document, "div", { className: "email-delivery__field" });
+    appendTextBlock(document, encryptionField, "span", "email-delivery__label", "Encryption");
+    const segmented = makeElement(document, "div", {
+      className: "email-delivery__segmented",
+      attributes: { role: "radiogroup", "aria-label": "Encryption" },
+    });
+    const currentEncryption = String(cfg.encryption || "STARTTLS").toUpperCase();
+    const encryptionInputs = [];
+    for (const option of EMAIL_DELIVERY_ENCRYPTION_OPTIONS) {
+      const optionId = `email-delivery-encryption-${option.value.toLowerCase()}`;
+      const optionLabel = makeElement(document, "label", {
+        className: "email-delivery__segment",
+        attributes: { for: optionId },
+      });
+      const radio = makeElement(document, "input", {
+        id: optionId,
+        name: "encryption",
+        type: "radio",
+        value: option.value,
+        checked: option.value === currentEncryption,
+        attributes: { value: option.value },
+      });
+      encryptionInputs.push(radio);
+      optionLabel.appendChild(radio);
+      optionLabel.appendChild(
+        makeElement(document, "span", { className: "email-delivery__segment-label", text: option.label }),
       );
-    } else {
-      const details = makeElement(document, "dl", { className: "email-delivery__details" });
-      appendDetail(document, details, "Host", cfg.host || "");
-      appendDetail(document, details, "Port", cfg.port === null || cfg.port === undefined ? "" : String(cfg.port));
-      appendDetail(document, details, "Encryption", formatEncryptionLabel(cfg.encryption));
-      appendDetail(document, details, "Authentication", cfg.authEnabled ? "Required" : "Disabled");
-      if (cfg.authEnabled) {
-        appendDetail(document, details, "Username", cfg.username || "");
-        appendDetail(
-          document,
-          details,
-          "Password",
-          cfg.passwordSaved ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "Not set",
-        );
-      }
-      appendDetail(document, details, "From address", cfg.fromAddress || "");
-      card.appendChild(details);
+      segmented.appendChild(optionLabel);
     }
-    section.appendChild(card);
+    encryptionField.appendChild(segmented);
+    form.appendChild(encryptionField);
+
+    const authField = makeElement(document, "div", { className: "email-delivery__field email-delivery__field--toggle" });
+    const authLabel = makeElement(document, "label", {
+      className: "email-delivery__toggle",
+      attributes: { for: "email-delivery-auth" },
+    });
+    const authInput = makeElement(document, "input", {
+      id: "email-delivery-auth",
+      name: "authEnabled",
+      type: "checkbox",
+      checked: Boolean(cfg.authEnabled),
+    });
+    authLabel.appendChild(authInput);
+    authLabel.appendChild(
+      makeElement(document, "span", { className: "email-delivery__toggle-label", text: "Require authentication" }),
+    );
+    authField.appendChild(authLabel);
+    form.appendChild(authField);
+
+    const usernameField = makeEmailDeliveryField(document, {
+      id: "email-delivery-username",
+      name: "username",
+      label: "Username",
+      value: cfg.username || "",
+      placeholder: "relay-user",
+    });
+    const passwordSaved = Boolean(cfg.passwordSaved);
+    const passwordField = makeEmailDeliveryField(document, {
+      id: "email-delivery-password",
+      name: "password",
+      label: "Password",
+      type: "password",
+      placeholder: passwordSaved ? "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022 (saved)" : "",
+      hint: passwordSaved ? "Leave blank to keep the current password." : "",
+    });
+    form.append(usernameField.wrapper, passwordField.wrapper);
+
+    const fromField = makeEmailDeliveryField(document, {
+      id: "email-delivery-from",
+      name: "fromAddress",
+      label: "From address",
+      value: cfg.fromAddress || "",
+      placeholder: "no-reply@example.com",
+    });
+    form.appendChild(fromField.wrapper);
+
+    function applyAuthState() {
+      const enabled = Boolean(authInput.checked);
+      usernameField.input.disabled = !enabled;
+      passwordField.input.disabled = !enabled;
+      usernameField.wrapper.className = enabled
+        ? "email-delivery__field"
+        : "email-delivery__field email-delivery__field--disabled";
+      passwordField.wrapper.className = enabled
+        ? "email-delivery__field"
+        : "email-delivery__field email-delivery__field--disabled";
+    }
+    authInput.addEventListener("change", applyAuthState);
+    applyAuthState();
+
+    const actions = makeElement(document, "div", { className: "email-delivery__actions" });
+    const saveButton = makeElement(document, "button", {
+      className: "button button--primary",
+      type: "submit",
+      text: "Save configuration",
+    });
+    actions.appendChild(saveButton);
+    const status = makeElement(document, "p", {
+      className: "email-delivery__form-status",
+      attributes: { role: "status" },
+    });
+    actions.appendChild(status);
+    form.appendChild(actions);
+
+    function selectedEncryption() {
+      const selected = encryptionInputs.find(function isChecked(radio) {
+        return radio.checked;
+      });
+      return selected ? selected.value : "";
+    }
+
+    function clearErrors() {
+      hostField.error.textContent = "";
+      portField.error.textContent = "";
+      usernameField.error.textContent = "";
+      passwordField.error.textContent = "";
+      fromField.error.textContent = "";
+      status.textContent = "";
+    }
+
+    function validate() {
+      clearErrors();
+      let valid = true;
+      const host = String(hostField.input.value || "").trim();
+      if (!host || !EMAIL_DELIVERY_HOST_PATTERN.test(host)) {
+        hostField.error.textContent = "Enter a valid hostname.";
+        valid = false;
+      }
+      const portValue = String(portField.input.value || "").trim();
+      const port = Number(portValue);
+      if (!portValue || !Number.isInteger(port) || port < 1 || port > 65535) {
+        portField.error.textContent = "Port must be between 1 and 65535.";
+        valid = false;
+      }
+      const from = String(fromField.input.value || "").trim();
+      if (!from || !EMAIL_DELIVERY_EMAIL_PATTERN.test(from)) {
+        fromField.error.textContent = "Enter a valid from address.";
+        valid = false;
+      }
+      if (authInput.checked) {
+        const username = String(usernameField.input.value || "").trim();
+        if (!username) {
+          usernameField.error.textContent = "Username is required when authentication is enabled.";
+          valid = false;
+        }
+        const password = String(passwordField.input.value || "");
+        if (!password && !passwordSaved) {
+          passwordField.error.textContent = "Password is required when authentication is enabled.";
+          valid = false;
+        }
+      }
+      return valid;
+    }
+
+    form.addEventListener("submit", function onSubmit(event) {
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+      if (!validate()) {
+        return undefined;
+      }
+      const payload = {
+        host: String(hostField.input.value || "").trim(),
+        port: Number(String(portField.input.value || "").trim()),
+        encryption: selectedEncryption(),
+        authEnabled: Boolean(authInput.checked),
+        username: authInput.checked ? String(usernameField.input.value || "").trim() : null,
+        password: authInput.checked ? String(passwordField.input.value || "") : "",
+        fromAddress: String(fromField.input.value || "").trim(),
+      };
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving\u2026";
+      status.textContent = "Saving configuration\u2026";
+      return apiClient
+        .saveEmailDeliveryConfig(payload)
+        .then(function onSaved(updated) {
+          if (typeof setEmailDelivery === "function") {
+            setEmailDelivery(updated);
+          }
+        })
+        .catch(function onError(error) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Save configuration";
+          status.textContent = error && error.message ? error.message : "Unable to save the configuration.";
+        });
+    });
+
+    section.appendChild(form);
     return section;
   }
 
@@ -2209,6 +2411,10 @@
       renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters, currentUser, users, emailDelivery });
     }
 
+    function setEmailDelivery(nextEmailDelivery) {
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters, currentUser, users, emailDelivery: nextEmailDelivery });
+    }
+
     const overviewSection = renderOverview(document, catalog, catalogApi, filters, setFilters);
     const applicationsSection = renderApplications(
       document,
@@ -2410,7 +2616,7 @@
         catalog.vendors || [],
       );
       contentViews.push(makeView("users", [usersSection]));
-      const emailDeliverySection = renderEmailDelivery(document, emailDelivery);
+      const emailDeliverySection = renderEmailDelivery(document, emailDelivery, apiClient, setEmailDelivery);
       contentViews.push(makeView("email-delivery", [emailDeliverySection]));
     }
 

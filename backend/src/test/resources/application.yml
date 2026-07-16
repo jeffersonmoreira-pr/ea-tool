@@ -31,3 +31,5 @@ spring:
 
 app:
   seed-admins: seed.admin@example.com
+  email-delivery:
+    encryption-key: dGVzdC1hZXMta2V5LTMyLWJ5dGVzLWxvbmctdmFsdWU=

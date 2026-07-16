@@ -132,6 +132,17 @@
   function getEmailDeliveryConfig() {
     return request("GET", "/api/email-delivery");
   }
+  function saveEmailDeliveryConfig(input) {
+    return request("PUT", "/api/email-delivery", {
+      host: input && input.host,
+      port: input && input.port,
+      encryption: input && input.encryption,
+      authEnabled: Boolean(input && input.authEnabled),
+      username: input && input.username,
+      password: input && input.password,
+      fromAddress: input && input.fromAddress,
+    });
+  }
   function listCatalogUsers() {
     return request("GET", "/api/catalog-users");
   }
@@ -186,6 +197,7 @@
     deleteApplication,
     getCurrentUser,
     getEmailDeliveryConfig,
+    saveEmailDeliveryConfig,
     listCatalogUsers,
     updateCatalogUserRole,
     createLocalUser,
