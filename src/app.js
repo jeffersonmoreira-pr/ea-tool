@@ -724,7 +724,7 @@
     return section;
   }
 
-  function renderApplications(document, catalog, catalogApi, storage, rerender, applications, filters, setFilters) {
+  function renderApplications(document, catalog, catalogApi, apiClient, storage, rerender, applications, filters, setFilters) {
     const activeFilters = filters || {};
     const applyFilters = typeof setFilters === "function" ? setFilters : function noop() {};
     const baseList = applications || catalog.applications;
@@ -936,13 +936,15 @@
       if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
-      try {
-        catalogApi.createApplication(catalog, readApplicationForm(createForm));
-        catalogApi.saveCatalog(storage, catalog);
-        rerender(catalog);
-      } catch (error) {
-        status.textContent = error.message;
-      }
+      return apiClient
+        .createApplication(readApplicationForm(createForm))
+        .then(function onCreated(created) {
+          catalog.applications.push(created);
+          rerender(catalog);
+        })
+        .catch(function onError(error) {
+          status.textContent = error.message;
+        });
     });
     createModalCard.append(createModalHead, createForm);
     createModal.appendChild(createModalCard);
@@ -1017,13 +1019,15 @@
         if (event && typeof event.preventDefault === "function") {
           event.preventDefault();
         }
-        try {
-          catalogApi.updateApplication(catalog, application.id, readApplicationForm(form));
-          catalogApi.saveCatalog(storage, catalog);
-          rerender(catalog);
-        } catch (error) {
-          status.textContent = error.message;
-        }
+        return apiClient
+          .updateApplication(application.id, readApplicationForm(form))
+          .then(function onUpdated(updated) {
+            Object.assign(application, updated);
+            rerender(catalog);
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
+          });
       });
       const deleteButton = makeElement(document, "button", {
         className: "master-data-delete application-delete",
@@ -1031,9 +1035,18 @@
         text: "Delete",
       });
       deleteButton.addEventListener("click", function onDelete() {
-        catalogApi.deleteApplication(catalog, application.id);
-        catalogApi.saveCatalog(storage, catalog);
-        rerender(catalog);
+        return apiClient
+          .deleteApplication(application.id)
+          .then(function onDeleted() {
+            const index = catalog.applications.indexOf(application);
+            if (index !== -1) {
+              catalog.applications.splice(index, 1);
+            }
+            rerender(catalog);
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
+          });
       });
       detailsCard.append(form, deleteButton);
       detailsModal.appendChild(detailsCard);
@@ -1198,7 +1211,7 @@
     return section;
   }
 
-  function renderMasterData(document, catalog, catalogApi, storage, rerender, config) {
+  function renderMasterData(document, catalog, catalogApi, apiClient, storage, rerender, config) {
     const section = makeElement(document, "section", {
       className: "content-section content-section--compact",
       attributes: { id: config.id },
@@ -1322,16 +1335,18 @@
       if (event && typeof event.preventDefault === "function") {
         event.preventDefault();
       }
-      try {
-        config.create(catalog, {
+      return config
+        .create({
           name: createName.value,
           isInternal: createInternal ? createInternal.checked === true : undefined,
+        })
+        .then(function onCreated(created) {
+          config.records(catalog).push(created);
+          rerender(catalog);
+        })
+        .catch(function onError(error) {
+          status.textContent = error.message;
         });
-        catalogApi.saveCatalog(storage, catalog);
-        rerender(catalog);
-      } catch (error) {
-        status.textContent = error.message;
-      }
     });
     createModalCard.append(createModalHead, createForm);
     createModal.appendChild(createModalCard);
@@ -1439,16 +1454,21 @@
         if (event && typeof event.preventDefault === "function") {
           event.preventDefault();
         }
-        try {
-          config.update(catalog, record.id, {
+        return config
+          .update(record.id, {
             name: editName.value,
             isInternal: editInternal ? editInternal.checked === true : undefined,
+          })
+          .then(function onUpdated(updated) {
+            const existing = config.records(catalog).find((candidate) => candidate.id === record.id);
+            if (existing) {
+              Object.assign(existing, updated);
+            }
+            rerender(catalog);
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
           });
-          catalogApi.saveCatalog(storage, catalog);
-          rerender(catalog);
-        } catch (error) {
-          status.textContent = error.message;
-        }
       });
 
       const deleteButton = makeElement(document, "button", {
@@ -1461,13 +1481,19 @@
         },
       });
       deleteButton.addEventListener("click", function onDelete() {
-        try {
-          config.delete(catalog, record.id);
-          catalogApi.saveCatalog(storage, catalog);
-          rerender(catalog);
-        } catch (error) {
-          status.textContent = error.message;
-        }
+        return config
+          .delete(record.id)
+          .then(function onDeleted() {
+            const records = config.records(catalog);
+            const index = records.findIndex((candidate) => candidate.id === record.id);
+            if (index !== -1) {
+              records.splice(index, 1);
+            }
+            rerender(catalog);
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
+          });
       });
 
       const editButton = makeElement(document, "button", {
@@ -1643,17 +1669,18 @@
     const document = options.document;
     const storage = options.storage;
     const catalogApi = options.catalogApi;
+    const apiClient = options.apiClient;
     const root = options.root || document.getElementById("app");
-    const catalog = options.catalog || catalogApi.loadCatalog(storage);
+    const catalog = options.catalog || catalogApi.createInitialCatalog();
     const filters = options.filters || {};
     const summary = catalogApi.createExecutivePortfolioSummary(catalog, filters);
 
     function rerender(nextCatalog) {
-      renderApp({ document, storage, catalogApi, root, catalog: nextCatalog, filters });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog: nextCatalog, filters });
     }
 
     function setFilters(nextFilters) {
-      renderApp({ document, storage, catalogApi, root, catalog, filters: nextFilters });
+      renderApp({ document, storage, catalogApi, apiClient, root, catalog, filters: nextFilters });
     }
 
     const overviewSection = renderOverview(document, catalog, catalogApi, filters, setFilters);
@@ -1661,43 +1688,44 @@
       document,
       catalog,
       catalogApi,
+      apiClient,
       storage,
       rerender,
       summary.filteredApplications,
       filters,
       setFilters,
     );
-    const vendorsSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+    const vendorsSection = renderMasterData(document, catalog, catalogApi, apiClient, storage, rerender, {
       id: "vendors",
       title: "Vendors",
       singular: "Vendor",
       kind: "vendor",
       usageField: "vendorId",
       records: (currentCatalog) => currentCatalog.vendors,
-      create: catalogApi.createVendor,
-      update: catalogApi.updateVendor,
-      delete: catalogApi.deleteVendor,
+      create: (input) => apiClient.createVendor(input),
+      update: (id, input) => apiClient.updateVendor(id, input),
+      delete: (id) => apiClient.deleteVendor(id),
       describe: catalogApi.getVendorDisplayType,
     });
-    const departmentsSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+    const departmentsSection = renderMasterData(document, catalog, catalogApi, apiClient, storage, rerender, {
       id: "departments",
       title: "Departments",
       singular: "Department",
       usageField: "departmentId",
       records: (currentCatalog) => currentCatalog.departments,
-      create: catalogApi.createDepartment,
-      update: catalogApi.updateDepartment,
-      delete: catalogApi.deleteDepartment,
+      create: (input) => apiClient.createDepartment(input),
+      update: (id, input) => apiClient.updateDepartment(id, input),
+      delete: (id) => apiClient.deleteDepartment(id),
     });
-    const businessAreasSection = renderMasterData(document, catalog, catalogApi, storage, rerender, {
+    const businessAreasSection = renderMasterData(document, catalog, catalogApi, apiClient, storage, rerender, {
       id: "business-areas",
       title: "Business Areas",
       singular: "Business Area",
       usageField: "businessAreaId",
       records: (currentCatalog) => currentCatalog.businessAreas,
-      create: catalogApi.createBusinessArea,
-      update: catalogApi.updateBusinessArea,
-      delete: catalogApi.deleteBusinessArea,
+      create: (input) => apiClient.createBusinessArea(input),
+      update: (id, input) => apiClient.updateBusinessArea(id, input),
+      delete: (id) => apiClient.deleteBusinessArea(id),
     });
     const analyticsSection = renderAnalyticsMatrix(document, catalog);
 
@@ -1855,12 +1883,30 @@
 
   function init(root) {
     const catalogApi = root.ApplicationPortfolioCatalog;
+    const apiClient = root.ApplicationPortfolioApiClient;
     const document = root.document;
     const storage = root.localStorage;
-    if (!catalogApi || !document) {
+    if (!catalogApi || !apiClient || !document) {
       return null;
     }
-    return renderApp({ document, storage, catalogApi });
+
+    return Promise.all([
+      apiClient.listVendors(),
+      apiClient.listDepartments(),
+      apiClient.listBusinessAreas(),
+      apiClient.listApplications(),
+    ])
+      .then(function onLoaded([vendors, departments, businessAreas, applications]) {
+        const catalog = { vendors, departments, businessAreas, applications };
+        return renderApp({ document, storage, catalogApi, apiClient, catalog });
+      })
+      .catch(function onLoadError(error) {
+        const root2 = document.getElementById("app");
+        if (root2) {
+          root2.textContent = `Unable to load the application portfolio: ${error.message}`;
+        }
+        return null;
+      });
   }
 
   return { init, renderApp };
