@@ -1,32 +1,37 @@
 package com.eatool.backend.locallogin;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.mail.javamail.JavaMailSender;
+
+import com.eatool.backend.emaildelivery.EmailDeliveryService;
+import com.eatool.backend.emaildelivery.SmtpPasswordEncryptor;
 
 /**
- * Selects the {@link InvitationMailer} implementation: the SMTP-backed sender
- * when a corporate relay is configured ({@code spring.mail.host}), or the
- * logging fallback otherwise so the Local Login flow works in dev without mail
- * infrastructure (issue #9, ADR-0004).
+ * Wires the Local Login invite mailer (issue #9, ADR-0004). Since issue #25 the
+ * SMTP relay is resolved dynamically at send time from the database
+ * configuration (the source of truth, ADR-0010) rather than from
+ * {@code spring.mail.*} at boot: {@link RelayInvitationMailer} sends via the
+ * persisted relay when one exists and otherwise falls back to logging the invite
+ * link ({@link LoggingInvitationMailer}) so the flow works in dev without mail
+ * infrastructure (ADR-0009).
  */
 @Configuration
 public class InvitationMailerConfig {
 
     @Bean
-    @ConditionalOnProperty(prefix = "spring.mail", name = "host")
-    public InvitationMailer smtpInvitationMailer(
-            JavaMailSender mailSender,
-            @Value("${app.local-login.mail-from:no-reply@ea-tool.local}") String fromAddress) {
-        return new SmtpInvitationMailer(mailSender, fromAddress);
+    public SmtpMailSenderFactory smtpMailSenderFactory() {
+        return new DefaultSmtpMailSenderFactory();
     }
 
     @Bean
-    @ConditionalOnMissingBean(InvitationMailer.class)
-    public InvitationMailer loggingInvitationMailer() {
-        return new LoggingInvitationMailer();
+    public InvitationMailer invitationMailer(
+            EmailDeliveryService emailDeliveryService,
+            SmtpPasswordEncryptor passwordEncryptor,
+            SmtpMailSenderFactory smtpMailSenderFactory) {
+        return new RelayInvitationMailer(
+                emailDeliveryService,
+                passwordEncryptor,
+                smtpMailSenderFactory,
+                new LoggingInvitationMailer());
     }
 }

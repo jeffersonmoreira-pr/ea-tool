@@ -36,17 +36,12 @@ spring:
       # Dev-friendly auto-migration; revisit with Flyway/Liquibase before production use.
       ddl-auto: update
     open-in-view: false
-  # Local Login invite emails (issue #9). Leave unset in dev — the invite link
-  # is logged instead (LoggingInvitationMailer). To send real emails, configure
-  # a corporate SMTP relay, e.g.:
-  # mail:
-  #   host: ${SMTP_HOST}
-  #   port: ${SMTP_PORT:587}
-  #   username: ${SMTP_USERNAME:}
-  #   password: ${SMTP_PASSWORD:}
-  #   properties:
-  #     mail.smtp.auth: true
-  #     mail.smtp.starttls.enable: true
+  # Local Login invite emails (issue #9). Since issue #25 the SMTP relay is
+  # configured at runtime through the Email Delivery admin screen and persisted
+  # in the database (the source of truth, ADR-0010) — the DB config takes
+  # precedence over spring.mail.* and drives real sending. When no relay is
+  # saved, the invite link is logged instead (LoggingInvitationMailer), so the
+  # flow works in dev without mail infrastructure (ADR-0009).
 
 app:
   # Base URL the browser uses; also where login/logout redirect back to and the
@@ -57,9 +52,9 @@ app:
   # SEED_ADMIN_EMAILS environment variable (comma-separated list).
   seed-admins: ${SEED_ADMIN_EMAILS:admin.demo@example.com}
   local-login:
-    # From address for the Local Login invite email (issue #9). Only used when
-    # a real SMTP relay is configured (spring.mail.host below); otherwise the
-    # invite link is logged in dev.
+    # Deprecated since issue #25: the invite From address now comes from the
+    # SMTP relay configuration persisted in the database (Email Delivery screen,
+    # ADR-0010). Kept only as a harmless default; no longer used for real sends.
     mail-from: ${LOCAL_LOGIN_MAIL_FROM:no-reply@ea-tool.local}
   email-delivery:
     # Key used to encrypt the SMTP relay password at rest (issue #24). Must be a
