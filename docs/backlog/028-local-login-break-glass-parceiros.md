@@ -14,11 +14,11 @@ Implementar o Local Login como segundo `AuthenticationProvider` no Spring Securi
 
 ## Criterios De Aceite
 
-- [ ] Um Admin consegue criar uma conta de Local Login pela tela de gestao de usuarios, informando nome, e-mail e Role inicial.
-- [ ] O sistema envia um e-mail de convite (via SMTP corporativo) com um link de definicao de senha para a conta recem-criada.
-- [ ] O link de convite permite ao usuario definir sua senha uma unica vez; links ja usados ou expirados sao rejeitados.
-- [ ] Apos definir a senha, o usuario consegue autenticar por usuario/senha em uma tela de login local, coexistindo com o botao de login SSO.
-- [ ] Contas de Local Login nunca sao criadas por autocadastro, apenas por um Admin.
+- [x] Um Admin consegue criar uma conta de Local Login pela tela de gestao de usuarios, informando nome, e-mail e Role inicial.
+- [x] O sistema envia um e-mail de convite (via SMTP corporativo) com um link de definicao de senha para a conta recem-criada.
+- [x] O link de convite permite ao usuario definir sua senha uma unica vez; links ja usados ou expirados sao rejeitados.
+- [x] Apos definir a senha, o usuario consegue autenticar por usuario/senha em uma tela de login local, coexistindo com o botao de login SSO.
+- [x] Contas de Local Login nunca sao criadas por autocadastro, apenas por um Admin.
 
 ## Bloqueado Por
 

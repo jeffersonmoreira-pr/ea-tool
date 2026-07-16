@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +13,7 @@ import com.eatool.backend.catalogusers.CatalogUser;
 import com.eatool.backend.catalogusers.CatalogUserRepository;
 import com.eatool.backend.masterdata.BusinessArea;
 import com.eatool.backend.masterdata.Department;
+import com.eatool.backend.security.CurrentUserService;
 
 /**
  * Applies Access Scope visibility to catalog listings (issue #10, ADR-0005).
@@ -34,13 +34,15 @@ import com.eatool.backend.masterdata.Department;
 public class AccessScopeService {
 
     private final CatalogUserRepository catalogUserRepository;
+    private final CurrentUserService currentUserService;
 
-    public AccessScopeService(CatalogUserRepository catalogUserRepository) {
+    public AccessScopeService(CatalogUserRepository catalogUserRepository, CurrentUserService currentUserService) {
         this.catalogUserRepository = catalogUserRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional(readOnly = true)
-    public List<Application> filterApplications(List<Application> applications, OidcUser principal) {
+    public List<Application> filterApplications(List<Application> applications, Authentication principal) {
         if (seesFullCatalog(principal)) {
             return applications;
         }
@@ -57,7 +59,7 @@ public class AccessScopeService {
     }
 
     @Transactional(readOnly = true)
-    public List<Department> filterDepartments(List<Department> departments, OidcUser principal) {
+    public List<Department> filterDepartments(List<Department> departments, Authentication principal) {
         if (seesFullCatalog(principal)) {
             return departments;
         }
@@ -72,7 +74,7 @@ public class AccessScopeService {
     }
 
     @Transactional(readOnly = true)
-    public List<BusinessArea> filterBusinessAreas(List<BusinessArea> businessAreas, OidcUser principal) {
+    public List<BusinessArea> filterBusinessAreas(List<BusinessArea> businessAreas, Authentication principal) {
         if (seesFullCatalog(principal)) {
             return businessAreas;
         }
@@ -86,19 +88,15 @@ public class AccessScopeService {
                 .toList();
     }
 
-    private boolean seesFullCatalog(OidcUser principal) {
-        if (principal == null) {
-            return false;
-        }
-        return principal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+    private boolean seesFullCatalog(Authentication principal) {
+        return currentUserService.isAdmin(principal);
     }
 
-    private CatalogUser currentUser(OidcUser principal) {
-        if (principal == null || principal.getEmail() == null) {
+    private CatalogUser currentUser(Authentication principal) {
+        String email = currentUserService.email(principal);
+        if (email == null) {
             return null;
         }
-        return catalogUserRepository.findByEmail(principal.getEmail()).orElse(null);
+        return catalogUserRepository.findByEmail(email).orElse(null);
     }
 }

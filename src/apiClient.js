@@ -135,6 +135,13 @@
   function updateCatalogUserRole(id, role) {
     return request("PUT", `/api/catalog-users/${encodeURIComponent(id)}/role`, { role });
   }
+  function createLocalUser(input) {
+    return request("POST", "/api/catalog-users/local", {
+      name: input && input.name,
+      email: input && input.email,
+      role: input && input.role,
+    });
+  }
   function updateCatalogUserAccessScope(id, scope) {
     return request("PUT", `/api/catalog-users/${encodeURIComponent(id)}/access-scope`, {
       departmentIds: (scope && scope.departmentIds) || [],
@@ -177,6 +184,7 @@
     getCurrentUser,
     listCatalogUsers,
     updateCatalogUserRole,
+    createLocalUser,
     updateCatalogUserAccessScope,
     listCatalogUserEditPermissions,
     grantCatalogUserEditPermission,

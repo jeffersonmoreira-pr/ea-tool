@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,7 +45,7 @@ public class ApplicationController {
     }
 
     @GetMapping
-    public List<Application> list(@AuthenticationPrincipal OidcUser principal) {
+    public List<Application> list(Authentication principal) {
         return accessScopeService.filterApplications(applicationService.list(), principal);
     }
 
@@ -60,14 +59,14 @@ public class ApplicationController {
     public Application update(
             @PathVariable UUID id,
             @RequestBody ApplicationRequest request,
-            @AuthenticationPrincipal OidcUser principal) {
+            Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.APPLICATION, id, principal);
         return applicationService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id, @AuthenticationPrincipal OidcUser principal) {
+    public void delete(@PathVariable UUID id, Authentication principal) {
         editPermissionService.requireCanEdit(EditableRecordType.APPLICATION, id, principal);
         applicationService.delete(id);
     }

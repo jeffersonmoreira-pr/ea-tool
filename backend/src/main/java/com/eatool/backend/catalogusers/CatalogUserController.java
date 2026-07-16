@@ -7,21 +7,26 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eatool.backend.common.BadRequestException;
 import com.eatool.backend.common.ConflictException;
 import com.eatool.backend.common.NotFoundException;
+import com.eatool.backend.locallogin.CreateLocalUserRequest;
+import com.eatool.backend.locallogin.LocalLoginService;
 import com.eatool.backend.masterdata.BusinessAreaRepository;
 import com.eatool.backend.masterdata.DepartmentRepository;
+import com.eatool.backend.security.CurrentUserService;
 
 /**
  * Admin-only API backing the Catalog Users management screen (see issue #8):
@@ -36,14 +41,20 @@ public class CatalogUserController {
     private final CatalogUserRepository catalogUserRepository;
     private final DepartmentRepository departmentRepository;
     private final BusinessAreaRepository businessAreaRepository;
+    private final CurrentUserService currentUserService;
+    private final LocalLoginService localLoginService;
 
     public CatalogUserController(
             CatalogUserRepository catalogUserRepository,
             DepartmentRepository departmentRepository,
-            BusinessAreaRepository businessAreaRepository) {
+            BusinessAreaRepository businessAreaRepository,
+            CurrentUserService currentUserService,
+            LocalLoginService localLoginService) {
         this.catalogUserRepository = catalogUserRepository;
         this.departmentRepository = departmentRepository;
         this.businessAreaRepository = businessAreaRepository;
+        this.currentUserService = currentUserService;
+        this.localLoginService = localLoginService;
     }
 
     @GetMapping
@@ -55,12 +66,20 @@ public class CatalogUserController {
                 .toList();
     }
 
+    @PostMapping("/local")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CatalogUserResponse createLocalUser(@RequestBody CreateLocalUserRequest request) {
+        CatalogUser user = localLoginService.createLocalUser(
+                request.getName(), request.getEmail(), request.getRole());
+        return CatalogUserResponse.from(user);
+    }
+
     @PutMapping("/{id}/role")
     @Transactional
     public CatalogUserResponse changeRole(
             @PathVariable UUID id,
             @RequestBody ChangeRoleRequest request,
-            @AuthenticationPrincipal OidcUser currentUser) {
+            Authentication currentUser) {
         Role newRole = parseRole(request.getRole());
         CatalogUser user = catalogUserRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Catalog User not found: " + id));
@@ -107,8 +126,8 @@ public class CatalogUserController {
         return ids;
     }
 
-    private boolean isSelf(CatalogUser user, OidcUser currentUser) {
-        String currentEmail = currentUser == null ? null : currentUser.getEmail();
+    private boolean isSelf(CatalogUser user, Authentication currentUser) {
+        String currentEmail = currentUserService.email(currentUser);
         return currentEmail != null && currentEmail.equalsIgnoreCase(user.getEmail());
     }
 

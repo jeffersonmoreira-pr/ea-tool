@@ -43,6 +43,14 @@ public class CatalogUser {
     @Column(nullable = false, length = 20)
     private LoginMethod loginMethod;
 
+    /**
+     * The BCrypt hash of the Local Login password (issue #9). Null for SSO
+     * users and for Local Login accounts that have not yet set a password via
+     * their invite link. Never exposed by any read model.
+     */
+    @Column(name = "password_hash")
+    private String passwordHash;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -104,6 +112,14 @@ public class CatalogUser {
 
     public LoginMethod getLoginMethod() {
         return loginMethod;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public Instant getCreatedAt() {

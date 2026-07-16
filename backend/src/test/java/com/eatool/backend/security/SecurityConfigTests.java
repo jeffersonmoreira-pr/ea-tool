@@ -18,11 +18,11 @@ class SecurityConfigTests {
     private MockMvc mockMvc;
 
     @Test
-    void unauthenticatedRequestToAppRootRedirectsToOidcLogin() throws Exception {
+    void unauthenticatedRequestToAppRootRedirectsToLoginPage() throws Exception {
         MvcResult result = mockMvc.perform(get("/")).andReturn();
 
         assertThat(result.getResponse().getStatus()).isIn(302, 401, 403);
-        assertThat(result.getResponse().getRedirectedUrl()).contains("/oauth2/authorization/keycloak");
+        assertThat(result.getResponse().getRedirectedUrl()).contains("/login.html");
     }
 
     @Test

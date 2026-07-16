@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +18,7 @@ import com.eatool.backend.common.NotFoundException;
 import com.eatool.backend.masterdata.BusinessAreaRepository;
 import com.eatool.backend.masterdata.DepartmentRepository;
 import com.eatool.backend.masterdata.VendorRepository;
+import com.eatool.backend.security.CurrentUserService;
 
 /**
  * Grants, revokes and enforces Edit Permission (issue #11, ADR-0006).
@@ -42,6 +42,7 @@ public class EditPermissionService {
     private final VendorRepository vendorRepository;
     private final DepartmentRepository departmentRepository;
     private final BusinessAreaRepository businessAreaRepository;
+    private final CurrentUserService currentUserService;
 
     public EditPermissionService(
             EditPermissionRepository editPermissionRepository,
@@ -49,13 +50,15 @@ public class EditPermissionService {
             ApplicationRepository applicationRepository,
             VendorRepository vendorRepository,
             DepartmentRepository departmentRepository,
-            BusinessAreaRepository businessAreaRepository) {
+            BusinessAreaRepository businessAreaRepository,
+            CurrentUserService currentUserService) {
         this.editPermissionRepository = editPermissionRepository;
         this.catalogUserRepository = catalogUserRepository;
         this.applicationRepository = applicationRepository;
         this.vendorRepository = vendorRepository;
         this.departmentRepository = departmentRepository;
         this.businessAreaRepository = businessAreaRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional
@@ -92,7 +95,7 @@ public class EditPermissionService {
     }
 
     @Transactional(readOnly = true)
-    public boolean canEdit(EditableRecordType recordType, UUID recordId, OidcUser principal) {
+    public boolean canEdit(EditableRecordType recordType, UUID recordId, Authentication principal) {
         if (isAdmin(principal)) {
             return true;
         }
@@ -105,7 +108,7 @@ public class EditPermissionService {
     }
 
     @Transactional(readOnly = true)
-    public void requireCanEdit(EditableRecordType recordType, UUID recordId, OidcUser principal) {
+    public void requireCanEdit(EditableRecordType recordType, UUID recordId, Authentication principal) {
         if (!canEdit(recordType, recordId, principal)) {
             throw new ForbiddenException("You do not have Edit Permission for this record.");
         }
@@ -135,19 +138,15 @@ public class EditPermissionService {
         };
     }
 
-    private boolean isAdmin(OidcUser principal) {
-        if (principal == null) {
-            return false;
-        }
-        return principal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
+    private boolean isAdmin(Authentication principal) {
+        return currentUserService.isAdmin(principal);
     }
 
-    private CatalogUser currentUser(OidcUser principal) {
-        if (principal == null || principal.getEmail() == null) {
+    private CatalogUser currentUser(Authentication principal) {
+        String email = currentUserService.email(principal);
+        if (email == null) {
             return null;
         }
-        return catalogUserRepository.findByEmail(principal.getEmail()).orElse(null);
+        return catalogUserRepository.findByEmail(email).orElse(null);
     }
 }

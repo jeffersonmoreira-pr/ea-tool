@@ -1723,82 +1723,180 @@
 
     const tbody = makeElement(document, "tbody", {});
     for (const user of users) {
-      const row = makeElement(document, "tr", { className: "users-table__row" });
-
-      const identityCell = makeElement(document, "td", {});
-      appendTextBlock(document, identityCell, "p", "users-table__name", user.name || "");
-      appendTextBlock(document, identityCell, "p", "users-table__email", user.email || "");
-      row.appendChild(identityCell);
-
-      const methodCell = makeElement(document, "td", {});
-      appendTextBlock(document, methodCell, "span", "badge", formatLoginMethodLabel(user.loginMethod));
-      row.appendChild(methodCell);
-
-      const roleCell = makeElement(document, "td", {});
-      const isSelf = currentUser && currentUser.email
-        && String(currentUser.email).toLowerCase() === String(user.email || "").toLowerCase();
-      if (isSelf) {
-        appendTextBlock(document, roleCell, "span", "badge users-table__role-self", formatRoleLabel(user.role));
-        appendTextBlock(document, roleCell, "span", "users-table__hint", "You");
-      } else {
-        const select = makeElement(document, "select", {
-          className: "users-table__role-select",
-          value: user.role,
-          attributes: { "aria-label": `Role for ${user.name || user.email}` },
-        });
-        for (const roleOption of ROLE_OPTIONS) {
-          const option = makeElement(document, "option", {
-            text: formatRoleLabel(roleOption),
-            value: roleOption,
-            attributes: { value: roleOption },
-          });
-          if (roleOption === String(user.role || "").toUpperCase()) {
-            option.selected = true;
-          }
-          select.appendChild(option);
-        }
-        select.addEventListener("change", function onRoleChange() {
-          const nextRole = select.value;
-          const previousRole = user.role;
-          select.disabled = true;
-          return apiClient
-            .updateCatalogUserRole(user.id, nextRole)
-            .then(function onUpdated(updated) {
-              user.role = updated && updated.role ? updated.role : nextRole;
-              status.textContent = `${user.name || user.email} is now ${formatRoleLabel(user.role)}.`;
-              select.disabled = false;
-            })
-            .catch(function onError(error) {
-              status.textContent = error.message;
-              select.value = previousRole;
-              select.disabled = false;
-            });
-        });
-        roleCell.appendChild(select);
-      }
-      row.appendChild(roleCell);
-
-      const scopeCell = makeElement(document, "td", {});
-      renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf);
-      row.appendChild(scopeCell);
-
-      const editPermissionsCell = makeElement(document, "td", {});
-      renderEditPermissionsCell(
-        document,
-        apiClient,
-        editPermissionsCell,
-        status,
-        user,
-        buildEditableRecordGroups(applications, vendors, departments, businessAreas),
+      tbody.appendChild(
+        buildUserRow(
+          document, apiClient, currentUser, user, status, departments, businessAreas, applications, vendors,
+        ),
       );
-      row.appendChild(editPermissionsCell);
-
-      tbody.appendChild(row);
     }
     table.appendChild(tbody);
 
-    section.append(table, status);
+    const createForm = buildCreateLocalUserForm(document, apiClient, status, function onCreated(created) {
+      users.push(created);
+      tbody.appendChild(
+        buildUserRow(
+          document, apiClient, currentUser, created, status, departments, businessAreas, applications, vendors,
+        ),
+      );
+    });
+
+    section.append(createForm, table, status);
     return section;
+  }
+
+  function buildUserRow(
+    document, apiClient, currentUser, user, status, departments, businessAreas, applications, vendors,
+  ) {
+    const row = makeElement(document, "tr", { className: "users-table__row" });
+
+    const identityCell = makeElement(document, "td", {});
+    appendTextBlock(document, identityCell, "p", "users-table__name", user.name || "");
+    appendTextBlock(document, identityCell, "p", "users-table__email", user.email || "");
+    row.appendChild(identityCell);
+
+    const methodCell = makeElement(document, "td", {});
+    appendTextBlock(document, methodCell, "span", "badge", formatLoginMethodLabel(user.loginMethod));
+    row.appendChild(methodCell);
+
+    const roleCell = makeElement(document, "td", {});
+    const isSelf = currentUser && currentUser.email
+      && String(currentUser.email).toLowerCase() === String(user.email || "").toLowerCase();
+    if (isSelf) {
+      appendTextBlock(document, roleCell, "span", "badge users-table__role-self", formatRoleLabel(user.role));
+      appendTextBlock(document, roleCell, "span", "users-table__hint", "You");
+    } else {
+      const select = makeElement(document, "select", {
+        className: "users-table__role-select",
+        value: user.role,
+        attributes: { "aria-label": `Role for ${user.name || user.email}` },
+      });
+      for (const roleOption of ROLE_OPTIONS) {
+        const option = makeElement(document, "option", {
+          text: formatRoleLabel(roleOption),
+          value: roleOption,
+          attributes: { value: roleOption },
+        });
+        if (roleOption === String(user.role || "").toUpperCase()) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      }
+      select.addEventListener("change", function onRoleChange() {
+        const nextRole = select.value;
+        const previousRole = user.role;
+        select.disabled = true;
+        return apiClient
+          .updateCatalogUserRole(user.id, nextRole)
+          .then(function onUpdated(updated) {
+            user.role = updated && updated.role ? updated.role : nextRole;
+            status.textContent = `${user.name || user.email} is now ${formatRoleLabel(user.role)}.`;
+            select.disabled = false;
+          })
+          .catch(function onError(error) {
+            status.textContent = error.message;
+            select.value = previousRole;
+            select.disabled = false;
+          });
+      });
+      roleCell.appendChild(select);
+    }
+    row.appendChild(roleCell);
+
+    const scopeCell = makeElement(document, "td", {});
+    renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf);
+    row.appendChild(scopeCell);
+
+    const editPermissionsCell = makeElement(document, "td", {});
+    renderEditPermissionsCell(
+      document,
+      apiClient,
+      editPermissionsCell,
+      status,
+      user,
+      buildEditableRecordGroups(applications, vendors, departments, businessAreas),
+    );
+    row.appendChild(editPermissionsCell);
+
+    return row;
+  }
+
+  function buildCreateLocalUserForm(document, apiClient, status, onCreated) {
+    const form = makeElement(document, "form", {
+      className: "local-user-form",
+      attributes: { "aria-label": "Create a Local Login account" },
+    });
+    appendTextBlock(document, form, "h3", "local-user-form__title", "Add Local Login user");
+    appendTextBlock(
+      document,
+      form,
+      "p",
+      "local-user-form__hint",
+      "Creates an account authenticated by username/password. An invite link to set the password is emailed to the user (logged in dev).",
+    );
+
+    const nameInput = makeElement(document, "input", {
+      className: "local-user-form__input",
+      type: "text",
+      name: "name",
+      attributes: { placeholder: "Full name", "aria-label": "Full name", required: "required" },
+    });
+    const emailInput = makeElement(document, "input", {
+      className: "local-user-form__input",
+      type: "email",
+      name: "email",
+      attributes: { placeholder: "Email", "aria-label": "Email", required: "required" },
+    });
+    const roleSelect = makeElement(document, "select", {
+      className: "local-user-form__input",
+      name: "role",
+      attributes: { "aria-label": "Initial role" },
+    });
+    for (const roleOption of ROLE_OPTIONS) {
+      const option = makeElement(document, "option", {
+        text: formatRoleLabel(roleOption),
+        value: roleOption,
+        attributes: { value: roleOption },
+      });
+      roleSelect.appendChild(option);
+    }
+
+    const submit = makeElement(document, "button", {
+      className: "local-user-form__submit",
+      text: "Create & invite",
+      attributes: { type: "submit" },
+    });
+
+    form.append(nameInput, emailInput, roleSelect, submit);
+
+    form.addEventListener("submit", function onSubmit(event) {
+      if (event && typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+      const payload = {
+        name: nameInput.value,
+        email: emailInput.value,
+        role: roleSelect.value,
+      };
+      submit.disabled = true;
+      return apiClient
+        .createLocalUser(payload)
+        .then(function onSuccess(created) {
+          status.textContent = `Invite sent to ${created.email}. They can set their password via the emailed link.`;
+          nameInput.value = "";
+          emailInput.value = "";
+          roleSelect.value = ROLE_OPTIONS[0];
+          submit.disabled = false;
+          if (typeof onCreated === "function") {
+            onCreated(created);
+          }
+        })
+        .catch(function onError(error) {
+          status.textContent = error.message;
+          submit.disabled = false;
+        });
+    });
+
+    return form;
   }
 
   function renderAccessScopeCell(document, apiClient, scopeCell, status, user, departments, businessAreas, isSelf) {
