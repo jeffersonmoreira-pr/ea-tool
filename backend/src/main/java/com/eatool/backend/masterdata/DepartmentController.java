@@ -23,8 +23,8 @@ import com.eatool.backend.common.NotFoundException;
  * REST API for Departments, ported from the frontend's former
  * localStorage-only rules in src/catalog.js
  * (createDepartment/updateDepartment/deleteDepartment). Any authenticated
- * Catalog User may read and write for now (see SecurityConfig); write
- * authorization by Role is out of scope here (issue #6).
+ * Catalog User may read; creating, editing or deleting requires an Editor or
+ * Admin Role, enforced centrally in SecurityConfig (see issue #6).
  */
 @RestController
 @RequestMapping("/api/departments")

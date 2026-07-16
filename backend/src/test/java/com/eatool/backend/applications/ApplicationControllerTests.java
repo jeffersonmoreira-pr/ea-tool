@@ -1,7 +1,7 @@
 package com.eatool.backend.applications;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,7 +84,7 @@ class ApplicationControllerTests {
         UUID[] refs = seedReferences();
 
         String createResponse = mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createApplicationRequest(refs[0], refs[1], refs[2], 4, "high")))
@@ -96,12 +96,12 @@ class ApplicationControllerTests {
                 .getContentAsString();
         String id = createResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
-        mockMvc.perform(get("/api/applications").with(oidcLogin()))
+        mockMvc.perform(get("/api/applications").with(editorLogin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/applications/" + id)
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createApplicationRequest(refs[0], refs[1], refs[2], 1, "low")))
@@ -109,7 +109,7 @@ class ApplicationControllerTests {
                 .andExpect(jsonPath("$.businessFitBand").value("low"))
                 .andExpect(jsonPath("$.timeClassification").value("Eliminate"));
 
-        mockMvc.perform(delete("/api/applications/" + id).with(oidcLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/applications/" + id).with(editorLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
@@ -132,7 +132,7 @@ class ApplicationControllerTests {
                 .formatted(refs[0], refs[1], refs[2]);
 
         mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -146,7 +146,7 @@ class ApplicationControllerTests {
         String body = createApplicationRequest(UUID.randomUUID(), refs[1], refs[2], 3, "medium");
 
         mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -172,7 +172,7 @@ class ApplicationControllerTests {
                 .formatted(refs[0], refs[1], refs[2]);
 
         mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
@@ -180,7 +180,7 @@ class ApplicationControllerTests {
 
         String duplicateBody = body.replace("Duplicate App", "duplicate app");
         mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(duplicateBody))
@@ -208,7 +208,7 @@ class ApplicationControllerTests {
                 .formatted(refs[0], refs[1], refs[2]);
 
         mockMvc.perform(post("/api/applications")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))

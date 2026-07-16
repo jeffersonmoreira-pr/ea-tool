@@ -1,7 +1,7 @@
 package com.eatool.backend.masterdata;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
+import static com.eatool.backend.support.OidcLogins.editorLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,7 +47,7 @@ class BusinessAreaControllerTests {
     @Test
     void createListUpdateAndDeleteBusinessArea() throws Exception {
         String createResponse = mockMvc.perform(post("/api/business-areas")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Customer Growth\"}"))
@@ -58,26 +58,26 @@ class BusinessAreaControllerTests {
                 .getContentAsString();
         String id = createResponse.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1");
 
-        mockMvc.perform(get("/api/business-areas").with(oidcLogin()))
+        mockMvc.perform(get("/api/business-areas").with(editorLogin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
 
         mockMvc.perform(put("/api/business-areas/" + id)
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Growth & Retention\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Growth & Retention"));
 
-        mockMvc.perform(delete("/api/business-areas/" + id).with(oidcLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/business-areas/" + id).with(editorLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void createRejectsBlankName() throws Exception {
         mockMvc.perform(post("/api/business-areas")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"\"}"))
@@ -90,7 +90,7 @@ class BusinessAreaControllerTests {
         businessAreaRepository.save(new BusinessArea("Revenue Management"));
 
         mockMvc.perform(post("/api/business-areas")
-                        .with(oidcLogin())
+                        .with(editorLogin())
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"revenue management\"}"))
@@ -126,7 +126,7 @@ class BusinessAreaControllerTests {
         application.setLastVerificationDate("");
         applicationRepository.save(application);
 
-        mockMvc.perform(delete("/api/business-areas/" + businessArea.getId()).with(oidcLogin()).with(csrf()))
+        mockMvc.perform(delete("/api/business-areas/" + businessArea.getId()).with(editorLogin()).with(csrf()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value("Business Area is in use by Application: Area App."));
     }
