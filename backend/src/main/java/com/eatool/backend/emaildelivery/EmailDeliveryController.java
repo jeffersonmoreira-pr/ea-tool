@@ -2,6 +2,7 @@ package com.eatool.backend.emaildelivery;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -10,11 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin-only API backing the Email Delivery (SMTP Relay) screen (issues #23-#26):
- * read and save the relay configuration and send a test email through it. Access
- * is restricted to Admins centrally in SecurityConfig (hasRole("ADMIN") on
- * /api/email-delivery/**). The password is never returned (see
- * {@link SmtpRelayConfigResponse}).
+ * Admin-only API backing the Email Delivery (SMTP Relay) screen (issues #23-#27):
+ * read, save, test and clear the relay configuration. Access is restricted to
+ * Admins centrally in SecurityConfig (hasRole("ADMIN") on /api/email-delivery/**).
+ * The password is never returned (see {@link SmtpRelayConfigResponse}).
  */
 @RestController
 @RequestMapping("/api/email-delivery")
@@ -42,6 +42,12 @@ public class EmailDeliveryController {
     @PostMapping("/test")
     public ResponseEntity<Void> sendTestEmail(@RequestBody SendTestEmailRequest request) {
         emailDeliveryService.sendTestEmail(request.recipient());
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> clear() {
+        emailDeliveryService.clearConfig();
         return ResponseEntity.noContent().build();
     }
 }

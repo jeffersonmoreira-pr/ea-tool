@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -28,14 +29,14 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Covers issues #23 (read), #24 (save) and #26 (test-send) of the Admin-only
- * Email Delivery (SMTP Relay) API. Only Admins may view, save or test the
- * configuration; Viewers/Editors are denied. The response reports whether a relay
- * is configured and whether a password is saved, but never exposes the password.
- * On save, the password is encrypted at rest, a blank password keeps the current
- * one, and the host/port/from/username inputs are validated. The test-send routes
- * the probe email through the current relay and reports success or a readable
- * failure reason.
+ * Covers issues #23 (read), #24 (save), #26 (test-send) and #27 (clear) of the
+ * Admin-only Email Delivery (SMTP Relay) API. Only Admins may view, save, test or
+ * clear the configuration; Viewers/Editors are denied. The response reports whether
+ * a relay is configured and whether a password is saved, but never exposes the
+ * password. On save, the password is encrypted at rest, a blank password keeps the
+ * current one, and the host/port/from/username inputs are validated. The test-send
+ * routes the probe email through the current relay and reports success or a readable
+ * failure reason. Clearing removes the relay so the system falls back to logging.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -343,5 +344,51 @@ class EmailDeliveryControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"recipient\":\"recipient@example.com\"}"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminClearsConfigurationAndGetReturnsEmptyState() throws Exception {
+        seedRelay();
+
+        mockMvc.perform(delete("/api/email-delivery")
+                        .with(adminLogin("admin@example.com")).with(csrf()))
+                .andExpect(status().isNoContent());
+
+        assertThat(repository.findFirstByOrderByUpdatedAtDesc()).isEmpty();
+
+        mockMvc.perform(get("/api/email-delivery").with(adminLogin("admin@example.com")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.configured").value(false));
+    }
+
+    @Test
+    void clearIsIdempotentWhenNoRelayConfigured() throws Exception {
+        mockMvc.perform(delete("/api/email-delivery")
+                        .with(adminLogin("admin@example.com")).with(csrf()))
+                .andExpect(status().isNoContent());
+
+        assertThat(repository.findFirstByOrderByUpdatedAtDesc()).isEmpty();
+    }
+
+    @Test
+    void viewerCannotClearConfiguration() throws Exception {
+        seedRelay();
+
+        mockMvc.perform(delete("/api/email-delivery")
+                        .with(viewerLogin()).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findFirstByOrderByUpdatedAtDesc()).isPresent();
+    }
+
+    @Test
+    void editorCannotClearConfiguration() throws Exception {
+        seedRelay();
+
+        mockMvc.perform(delete("/api/email-delivery")
+                        .with(editorLogin()).with(csrf()))
+                .andExpect(status().isForbidden());
+
+        assertThat(repository.findFirstByOrderByUpdatedAtDesc()).isPresent();
     }
 }

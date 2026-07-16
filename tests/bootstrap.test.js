@@ -2174,6 +2174,73 @@ test("test-email popover validates the recipient before calling the API", async 
   assert.match(collectText(popover), /valid recipient email/i);
 });
 
+test("admin clears the configuration after confirming and returns to the empty state", async () => {
+  let cleared = false;
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    clearEmailDeliveryConfig: () => {
+      cleared = true;
+      return Promise.resolve(undefined);
+    },
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  const clearButton = findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Clear configuration"))[0];
+  assert.ok(clearButton, "active state should offer a Clear configuration button");
+
+  const confirmDialog = document.getElementById("email-delivery-clear-confirm");
+  assert.equal(confirmDialog.hidden, true, "confirm dialog starts hidden");
+  clearButton.onclick();
+  assert.equal(confirmDialog.hidden, false, "clicking opens the confirm dialog");
+  assert.match(collectText(confirmDialog), /Invite emails will stop being sent/i);
+
+  const confirmButton = findAll(confirmDialog, (node) => node.tagName === "BUTTON" && node.textContent === "Remove configuration")[0];
+  await confirmButton.onclick();
+
+  assert.equal(cleared, true, "confirming calls the clear API");
+  const rendered = document.getElementById("email-delivery");
+  assert.match(collectText(rendered), /No relay configured/i, "screen returns to the empty state");
+  assert.ok(
+    !findAll(rendered, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Clear configuration"))[0],
+    "empty state has no Clear configuration button"
+  );
+});
+
+test("clear confirm dialog can be cancelled without calling the API", async () => {
+  let called = false;
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    clearEmailDeliveryConfig: () => {
+      called = true;
+      return Promise.resolve(undefined);
+    },
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  const clearButton = findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Clear configuration"))[0];
+  clearButton.onclick();
+  const confirmDialog = document.getElementById("email-delivery-clear-confirm");
+  const cancelButton = findAll(confirmDialog, (node) => node.tagName === "BUTTON" && node.textContent === "Cancel")[0];
+  cancelButton.onclick();
+
+  assert.equal(called, false, "cancelling must not call the API");
+  assert.equal(confirmDialog.hidden, true, "cancelling closes the confirm dialog");
+});
+
+test("empty-state screen offers no Clear configuration button", async () => {
+  const { document, root } = createActiveEmailDeliveryAdmin({
+    getEmailDeliveryConfig: () => Promise.resolve({ configured: false }),
+  });
+
+  await appApi.init(root);
+  const section = document.getElementById("email-delivery");
+  assert.ok(
+    !findAll(section, (node) => node.tagName === "BUTTON" && (node.textContent || "").includes("Clear configuration"))[0],
+    "no Clear configuration button when nothing is configured"
+  );
+  assert.ok(!document.getElementById("email-delivery-clear-confirm"), "no confirm dialog when nothing is configured");
+});
+
 test("non-admin does not get a test-email option (screen hidden)", async () => {
   const document = createDocument();
   const catalog = catalogApi.createInitialCatalog();

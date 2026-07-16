@@ -62,3 +62,9 @@ Isso levanta duas questões:
   canônico).
 - A entidade é singleton (resolvida por `findFirstByOrderByUpdatedAtDesc`); a tela
   edita sempre a mesma configuração, sem histórico de versões nesta fatia.
+- Um Admin pode **limpar** a configuração persistida (fatia #27) via
+  `DELETE /api/email-delivery` (Admin-only, mesma regra central de segurança). A
+  operação é idempotente e remove a linha singleton (`deleteAll`), revertendo o
+  sistema ao estado sem relay: a tela volta ao frame `Empty_State` e o envio de
+  convites cai no fallback de log em dev (consistente com ADR-0009 e a fatia #25). A
+  UI exige confirmação explícita antes de limpar.
